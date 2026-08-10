@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 20% 10%;
+    /* Primary matched to the Orrica Edge logo's orange */
+    --primary: 21 75% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 96%;
+    --secondary-foreground: 222 20% 12%;
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 21 90% 95%;
+    --accent-foreground: 21 75% 38%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 16% 90%;
+    --input: 220 16% 90%;
+    --ring: 21 75% 52%;
+    --radius: 0.9rem;
+    --brand-orange: 21 91% 55%;
+    --brand-ink: 222 30% 9%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+}
+
+/* Touch targets on mobile */
+@media (max-width: 768px) {
+  button, a[role="button"], input, select, textarea { min-height: 44px; }
+}
+
+/* Print / PDF-safe styles: used by the print route (app/resume/[id]/print) */
+@media print {
+  @page { size: A4; margin: 0; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+}
+
+.resume-page {
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: hsl(220 16% 85%); border-radius: 8px; }
+
+/* Premium landing-page utilities */
+.text-gradient-brand {
+  background: linear-gradient(90deg, hsl(var(--brand-ink)), hsl(var(--primary)), hsl(var(--brand-ink)));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-mesh-bg {
+  background-image:
+    radial-gradient(at 12% 20%, hsla(21, 91%, 60%, 0.18) 0px, transparent 55%),
+    radial-gradient(at 88% 10%, hsla(21, 91%, 55%, 0.10) 0px, transparent 50%),
+    radial-gradient(at 50% 95%, hsla(222, 40%, 15%, 0.06) 0px, transparent 55%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.shimmer-bg {
+  background: linear-gradient(110deg, #f4f4f5 8%, #ececee 18%, #f4f4f5 33%);
+  background-size: 200% 100%;
+}
