@@ -5,13 +5,32 @@ export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
-  const code = searchParams.get('code');
-  const returnTo = searchParams.get('returnTo') || '/dashboard';
 
-  if (code) {
-    const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+  const code = searchParams.get('code');
+
+  // No code received
+  if (!code) {
+    return NextResponse.redirect(
+      `${origin}/auth/auth-code-error`
+    );
   }
 
-  return NextResponse.redirect(`${origin}${returnTo}`);
+  const supabase = await createClient();
+
+  // Exchange Supabase auth code for session
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  // Verification failed
+  if (error) {
+    console.error('Supabase auth callback error:', error);
+
+    return NextResponse.redirect(
+      `${origin}/auth/auth-code-error`
+    );
+  }
+
+  // Email successfully verified
+  return NextResponse.redirect(
+    `${origin}/auth/verified`
+  );
 }
