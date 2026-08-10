@@ -11,7 +11,6 @@ import {
 
 import { createClient } from '@/lib/supabase/server';
 import { getResumeProgress } from '@/lib/resume-progress';
-import { Button } from '@/components/ui/button';
 import { SignOutButton } from '@/components/dashboard/SignOutButton';
 
 export default async function ActivityPage() {
@@ -51,16 +50,16 @@ export default async function ActivityPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-7">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 font-bold text-slate-900"
+            className="text-xl font-extrabold tracking-tight"
           >
             <span className="text-orange-500">Orrica</span>
-            <span>Edge</span>
+            <span className="text-slate-900">Edge</span>
           </Link>
 
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
             >
               Dashboard
             </Link>
@@ -89,12 +88,13 @@ export default async function ActivityPage() {
             </p>
           </div>
 
-          <Button asChild>
-            <Link href="/resume/new">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Create Resume
-            </Link>
-          </Button>
+          <Link
+            href="/resume/new"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            Create Resume
+          </Link>
         </div>
 
         {/* Stats */}
@@ -195,7 +195,7 @@ export default async function ActivityPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-base font-semibold text-slate-900 group-hover:text-orange-500">
+                          <h3 className="truncate text-base font-semibold text-slate-900 transition-colors group-hover:text-orange-500">
                             {resume.title || 'Untitled Resume'}
                           </h3>
 
@@ -259,12 +259,13 @@ export default async function ActivityPage() {
                 will appear here.
               </p>
 
-              <Button asChild className="mt-6">
-                <Link href="/resume/new">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Create my first resume
-                </Link>
-              </Button>
+              <Link
+                href="/resume/new"
+                className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Create my first resume
+              </Link>
             </div>
           )}
         </div>
