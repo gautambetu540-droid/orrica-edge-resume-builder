@@ -17,10 +17,14 @@ const SIDEBAR_SECTIONS: ResumeSectionId[] = [
   'certifications',
 ];
 
-function isRenderableSection(
-  sectionId: ResumeSectionId
-): sectionId is Exclude<ResumeSectionId, 'header'> {
-  return sectionId !== 'header';
+type SectionTitleKey = keyof typeof SECTION_TITLES;
+
+function getSectionTitle(id: ResumeSectionId): string {
+  if (id === 'header') {
+    return '';
+  }
+
+  return SECTION_TITLES[id as SectionTitleKey];
 }
 
 function ContactBlock({ data }: { data: ResumeData }) {
@@ -60,7 +64,7 @@ export function TwoColumnLayout({
   const ordered = [...settings.sections]
     .filter(
       (section) =>
-        section.visible && isRenderableSection(section.id)
+        section.visible && section.id !== 'header'
     )
     .sort((a, b) => a.order - b.order);
 
@@ -109,7 +113,7 @@ export function TwoColumnLayout({
           {sidebar.map((section) => (
             <div key={section.id}>
               <h2 className="uppercase text-[0.85em] font-semibold tracking-wider mb-2 text-white/95">
-                {SECTION_TITLES[section.id]}
+                {getSectionTitle(section.id)}
               </h2>
 
               <div className="text-white/90 [&_span]:text-white/90 [&_a]:text-white/90">
@@ -130,7 +134,7 @@ export function TwoColumnLayout({
             className="break-inside-avoid-page"
           >
             <SectionHeading preset={preset}>
-              {SECTION_TITLES[section.id]}
+              {getSectionTitle(section.id)}
             </SectionHeading>
 
             {renderSectionBody(section.id, data)}
