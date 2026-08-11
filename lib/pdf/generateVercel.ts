@@ -10,13 +10,16 @@ export interface GeneratePdfOptions {
 }
 
 function parseCookies(cookieHeader: string) {
-  return cookieHeader.split(';').map((pair) => {
-    const index = pair.indexOf('=');
-    if (index <= 0) return null;
-    const name = pair.slice(0, index).trim();
-    const value = pair.slice(index + 1).trim();
-    return name ? { name, value } : null;
-  }).filter((cookie): cookie is { name: string; value: string } => Boolean(cookie));
+  return cookieHeader
+    .split(';')
+    .map((pair) => {
+      const index = pair.indexOf('=');
+      if (index <= 0) return null;
+      const name = pair.slice(0, index).trim();
+      const value = pair.slice(index + 1).trim();
+      return name ? { name, value } : null;
+    })
+    .filter((cookie): cookie is { name: string; value: string } => Boolean(cookie));
 }
 
 async function chromiumPath(chromium: typeof import('@sparticuz/chromium').default) {
@@ -41,20 +44,35 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
   try {
     const page = await browser.newPage();
     const url = new URL(`/resume/${encodeURIComponent(resumeId)}/print`, baseUrl);
-    const cookies = parseCookies(cookieHeader).map(({ name, value }) => ({ name, value, domain: url.hostname, path: '/' }));
+
+    // Forward the authenticated Supabase cookies to the print page. Using the
+    // page URL instead of a hard-coded domain also works on Vercel preview URLs
+    // and custom domains.
+    const cookies = parseCookies(cookieHeader).map(({ name, value }) => ({
+      name,
+      value,
+      url: url.origin,
+      path: '/',
+    }));
     if (cookies.length) await page.setCookie(...cookies);
 
-    await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto(url.toString(), {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
     await page.waitForSelector('#resume-document-root', { timeout: 15_000 });
-    await page.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; });
+    await page.evaluate(async () => {
+      if (document.fonts?.ready) await document.fonts.ready;
+    });
     await page.emulateMediaType('print');
 
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      preferCSSPageSize: false,
+      preferCSSPageSize: true,
       displayHeaderFooter: false,
       margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
+      scale: 1,
     });
 
     return Buffer.from(pdf);
