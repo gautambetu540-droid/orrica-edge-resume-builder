@@ -11,15 +11,37 @@ const noStore = (body: unknown, status = 200) => NextResponse.json(body, {
   headers: { 'Cache-Control': 'private, no-store, max-age=0' },
 });
 
+const ProficiencySchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return 'professional';
+  const aliases: Record<string, string> = {
+    beginner: 'basic',
+    elementary: 'basic',
+    intermediate: 'conversational',
+    upperintermediate: 'professional',
+    'upper-intermediate': 'professional',
+    advanced: 'fluent',
+    native: 'native',
+  };
+  return aliases[normalized] ?? normalized;
+}, z.enum(['basic', 'conversational', 'professional', 'fluent', 'native']));
+
+const ResponsibilitiesSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string').join('\n');
+  if (value == null) return '';
+  return String(value);
+}, z.string().default(''));
+
 const ResumeSchema = z.object({
   personalInfo: z.object({ fullName: z.string().default(''), professionalTitle: z.string().default(''), email: z.string().default(''), phone: z.string().default(''), city: z.string().default(''), country: z.string().default(''), linkedin: z.string().optional(), portfolio: z.string().optional(), github: z.string().optional() }).default({ fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' }),
   summary: z.string().default(''),
-  experience: z.array(z.object({ company: z.string().default(''), jobTitle: z.string().default(''), location: z.string().optional(), startDate: z.string().default(''), endDate: z.string().optional(), currentlyWorking: z.boolean().default(false), responsibilities: z.string().default(''), achievements: z.array(z.string()).default([]) })).default([]),
+  experience: z.array(z.object({ company: z.string().default(''), jobTitle: z.string().default(''), location: z.string().optional(), startDate: z.string().default(''), endDate: z.string().optional(), currentlyWorking: z.boolean().default(false), responsibilities: ResponsibilitiesSchema, achievements: z.array(z.string()).default([]) })).default([]),
   education: z.array(z.object({ institution: z.string().default(''), degree: z.string().default(''), fieldOfStudy: z.string().default(''), startDate: z.string().default(''), endDate: z.string().optional(), grade: z.string().optional(), description: z.string().optional() })).default([]),
   skills: z.array(z.object({ category: z.enum(['technical', 'soft', 'tools', 'languages']), items: z.array(z.string()).default([]) })).default([]),
   projects: z.array(z.object({ name: z.string().default(''), role: z.string().optional(), description: z.string().default(''), technologies: z.array(z.string()).default([]), url: z.string().optional() })).default([]),
   certifications: z.array(z.object({ name: z.string().default(''), issuingOrganization: z.string().default(''), issueDate: z.string().optional(), credentialId: z.string().optional(), credentialUrl: z.string().optional() })).default([]),
-  languages: z.array(z.object({ language: z.string(), proficiency: z.enum(['basic', 'conversational', 'professional', 'fluent', 'native']) })).default([]),
+  languages: z.array(z.object({ language: z.string(), proficiency: ProficiencySchema })).default([]),
   achievements: z.array(z.object({ type: z.enum(['award', 'achievement', 'publication', 'volunteer', 'other']), title: z.string(), description: z.string().optional(), date: z.string().optional() })).default([]),
   targetRole: z.string().optional(),
 });
@@ -42,7 +64,7 @@ function normalize(data: z.infer<typeof ResumeSchema>) {
   };
 }
 
-const SYSTEM_PROMPT = `You are a resume data extraction engine. Read the supplied PDF directly and extract only facts explicitly present in it. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.\n\nRequired top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.\n\npersonalInfo keys: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.\nexperience items: company, jobTitle, location, startDate, endDate, currentlyWorking, responsibilities, achievements.\neducation items: institution, degree, fieldOfStudy, startDate, endDate, grade, description.\nskills categories must be exactly technical, soft, tools, or languages.\nproject items: name, role, description, technologies, url.\ncertification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.\nlanguage proficiency must be exactly basic, conversational, professional, fluent, or native.\nachievement type must be exactly award, achievement, publication, volunteer, or other.\nUse empty strings/arrays for information that is not present. Do not create placeholder facts.`;
+const SYSTEM_PROMPT = `You are a resume data extraction engine. Read the supplied PDF directly and extract only facts explicitly present in it. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.\n\nRequired top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.\n\npersonalInfo keys: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.\nexperience items: company, jobTitle, location, startDate, endDate, currentlyWorking, responsibilities, achievements. responsibilities must be a single string; if the source contains multiple bullets, join them with newline characters.\neducation items: institution, degree, fieldOfStudy, startDate, endDate, grade, description.\nskills categories must be exactly technical, soft, tools, or languages.\nproject items: name, role, description, technologies, url.\ncertification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.\nlanguage proficiency must be exactly basic, conversational, professional, fluent, or native. If proficiency is not stated, use professional.\nachievement type must be exactly award, achievement, publication, volunteer, or other.\nUse empty strings/arrays for information that is not present. Do not create placeholder facts.`;
 
 function cleanApiKey(value: string | undefined) {
   return value?.trim().replace(/^['"]|['"]$/g, '');
@@ -80,7 +102,6 @@ async function discoverAvailableModel(apiKey: string, configuredModel: string) {
   });
 
   if (!response.ok) {
-    // Do not hide a real authentication error from the caller.
     if (response.status === 401 || response.status === 403) {
       throw new Error('Gemini API authentication failed while checking available models. Verify GEMINI_API_KEY and the Google AI Studio project.');
     }
@@ -95,9 +116,6 @@ async function discoverAvailableModel(apiKey: string, configuredModel: string) {
   const exact = preferred.find((candidate) => available.includes(candidate));
   if (exact) return exact;
 
-  // If the preferred names are unavailable, use any Gemini Flash/Pro model that
-  // this exact API project advertises for generateContent. This avoids assuming
-  // that every AI Studio project exposes the same model catalog.
   const fallback = available.find((name) => /^gemini/i.test(name) && /(flash|pro)/i.test(name));
   if (fallback) return fallback;
 
@@ -119,8 +137,6 @@ export async function POST(request: NextRequest) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
-    // The original PDF is kept only in memory for this request and is never
-    // written to Supabase Storage or the resume database.
     const pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
     const configuredModel = cleanApiKey(process.env.GEMINI_RESUME_MODEL) || 'gemini-3.6-flash';
     const model = await discoverAvailableModel(apiKey, configuredModel);
@@ -134,7 +150,7 @@ export async function POST(request: NextRequest) {
           { inline_data: { mime_type: 'application/pdf', data: pdfBase64 } },
         ],
       }],
-      generationConfig: { temperature: 0, responseMimeType: 'application/json' },
+      generationConfig: { responseMimeType: 'application/json' },
     };
 
     let response: Response | undefined;
