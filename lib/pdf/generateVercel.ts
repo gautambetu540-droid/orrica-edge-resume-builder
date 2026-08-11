@@ -41,11 +41,12 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
 
   stage = 'browser-launch';
   console.info('[PDF]', requestId, 'launching Chromium');
+  const executablePath = await chromiumPath(chromium);
   const browser = await puppeteer.launch({
-    args: await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' }),
+    args: chromium.args,
     defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 1 },
-    executablePath: await chromiumPath(chromium),
-    headless: 'shell',
+    executablePath,
+    headless: true,
     timeout: 30_000,
   });
 
@@ -67,11 +68,14 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     if (cookies.length) await page.setCookie(...cookies);
 
     stage = 'page-load';
+    // Do not wait for networkidle0: analytics, preloads and other long-lived
+    // requests can keep a Vercel print page open indefinitely. The dedicated
+    // print page is server-rendered, so DOMContentLoaded is the reliable gate.
     await page.goto(url.toString(), {
-      waitUntil: ['domcontentloaded', 'networkidle0'],
+      waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
-    console.info('[PDF]', requestId, 'URL loaded');
+    console.info('[PDF]', requestId, 'URL loaded', { finalUrl: page.url() });
 
     stage = 'resume-render';
     await page.waitForSelector('#resume-document-root', { timeout: 15_000 });
@@ -85,6 +89,7 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
               image.addEventListener('error', () => resolve(), { once: true });
             })
       )));
+      await new Promise((resolve) => window.setTimeout(resolve, 150));
     });
     console.info('[PDF]', requestId, 'fonts and images ready');
 
@@ -93,7 +98,7 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     const pdf = Buffer.from(await page.pdf({
       format: 'A4',
       printBackground: true,
-      preferCSSPageSize: false,
+      preferCSSPageSize: true,
       displayHeaderFooter: false,
       margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
       scale: 1,
