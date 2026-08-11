@@ -12,7 +12,7 @@ function ContactLine({ info }: { info: PersonalInfo }) {
   ].filter(Boolean);
 
   return (
-    <div className="text-[0.9em] text-neutral-600 flex flex-wrap gap-x-2">
+    <div className="text-[0.88em] text-[var(--resume-muted)] flex flex-wrap gap-x-2 leading-snug">
       {parts.map((p, i) => (
         <span key={i} className="flex items-center gap-2">
           {p}
@@ -33,13 +33,17 @@ export function ResumeHeader({ info, preset }: { info: PersonalInfo; preset: Tem
     >
       <div className={centered ? '' : 'flex items-center gap-4'}>
         {showPhoto && !centered && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={info.photoUrl} alt="" className="w-16 h-16 rounded-full object-cover border" />
+          <img src={info.photoUrl} alt="" className="w-16 h-16 rounded-full object-cover border border-neutral-200" />
         )}
         <div>
-          <h1 className="text-[1.9em] font-bold leading-tight">{info.fullName || 'Your Name'}</h1>
+          <h1
+            className="font-bold leading-[1.05] tracking-[-0.035em]"
+            style={{ fontSize: 'calc(1.9em * var(--heading-scale))', color: '#111827' }}
+          >
+            {info.fullName || 'Your Name'}
+          </h1>
           {info.professionalTitle && (
-            <p className="text-[1.05em] mt-0.5" style={{ color: 'var(--accent)' }}>
+            <p className="font-medium mt-1" style={{ color: 'var(--accent)', fontSize: '1.02em' }}>
               {info.professionalTitle}
             </p>
           )}
