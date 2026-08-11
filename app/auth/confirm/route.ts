@@ -6,21 +6,21 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
   const tokenHash = searchParams.get('token_hash');
+  const code = searchParams.get('code');
   const type = searchParams.get('type');
 
-  if (!tokenHash || type !== 'email') {
+  if (type !== 'email' || (!tokenHash && !code)) {
     return NextResponse.redirect(`${origin}/login?error=verification_failed`);
   }
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'email',
-    });
+    const result = tokenHash
+      ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'email' })
+      : await supabase.auth.exchangeCodeForSession(code!);
 
-    if (error) {
-      console.error('Supabase email verification error:', error);
+    if (result.error) {
+      console.error('Supabase email verification error:', result.error);
       return NextResponse.redirect(`${origin}/login?error=verification_failed`);
     }
 
