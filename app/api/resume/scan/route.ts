@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { extractPdfText } from '@/lib/pdf-text';
-import { extractPdfWithDocumentAI } from '@/lib/document-ai-ocr';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -75,15 +74,18 @@ function addIds(data: z.infer<typeof Schema>) {
   return { ...data, experience: data.experience.map(x => ({ ...x, id: id() })), education: data.education.map(x => ({ ...x, id: id() })), skills: categories.map(c => ({ category: c, items: map.get(c) || [] })), projects: data.projects.map(x => ({ ...x, id: id() })), certifications: data.certifications.map(x => ({ ...x, id: id() })), languages: data.languages.map(x => ({ ...x, id: id() })), achievements: data.achievements.map(x => ({ ...x, id: id() })) };
 }
 
-const SYSTEM = `You are a resume extraction engine. Extract ONLY facts present in the supplied OCR text. Never invent or infer facts. Preserve exact full name, email, phone, employers, titles, dates, education and URLs. Put newest/current experience first and newest education first when supported. responsibilities MUST be a string, never an array. Language proficiency MUST be one of basic, conversational, professional, fluent, native; if absent use professional. Return ONLY JSON with personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole. Missing values are empty strings/arrays. personalInfo fields: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.`;
+const SYSTEM = `You are a resume extraction engine. Extract ONLY facts present in the supplied resume text or PDF. Never invent or infer facts. Preserve exact full name, email, phone, employers, titles, dates, education and URLs. Put newest/current experience first and newest education first when supported. responsibilities MUST be a string, never an array. Language proficiency MUST be one of basic, conversational, professional, fluent, native; if absent use professional. Return ONLY JSON with personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole. Missing values are empty strings/arrays. personalInfo fields: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.`;
 
 function parseJson(s: string) { const c = s.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim(); try { return JSON.parse(c); } catch { const a = c.indexOf('{'), b = c.lastIndexOf('}'); if (a >= 0 && b > a) return JSON.parse(c.slice(a, b + 1)); throw new Error('Gemini returned invalid JSON.'); } }
 
-async function runGemini(apiKey: string, resumeText: string) {
+async function runGemini(apiKey: string, resumeText: string, pdfBase64?: string) {
   const configured = (process.env.GEMINI_RESUME_MODEL || 'gemini-3.6-flash').replace(/^models\//, '').trim();
   const models = [configured, 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter((x, i, a) => x && a.indexOf(x) === i);
   for (const model of models) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ role: 'user', parts: [{ text: `Extract this resume:\n\n${resumeText}` }] }], generationConfig: { responseMimeType: 'application/json' } }), signal: AbortSignal.timeout(50000) });
+    const parts = pdfBase64
+      ? [{ text: 'Extract this resume PDF exactly. Read all visible text, including scanned/image pages, and return the required JSON.' }, { inlineData: { mimeType: 'application/pdf', data: pdfBase64 } }]
+      : [{ text: `Extract this resume:\n\n${resumeText}` }];
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json' } }), signal: AbortSignal.timeout(50000) });
     if (response.ok) { const payload = await response.json(); const out = payload.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text || '').join(''); if (out) return { data: parseJson(out), model }; }
     if (![404, 500, 502, 503].includes(response.status)) { const body = await response.text().catch(() => ''); throw new Error(body.slice(0, 500) || `Gemini error ${response.status}`); }
   }
@@ -100,12 +102,13 @@ export async function POST(request: NextRequest) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
     const buffer = Buffer.from(await file.arrayBuffer());
-    let resumeText = ''; let source = 'pdf-text';
+    let resumeText = '';
     try { resumeText = (await extractPdfText(buffer)).text; } catch (e) { console.warn('PDF text extraction failed', e); }
-    if (resumeText.replace(/\s/g, '').length < 100) { resumeText = await extractPdfWithDocumentAI(buffer); source = 'document-ai-ocr'; }
-    if (resumeText.replace(/\s/g, '').length < 30) return noStore({ error: 'No readable text found. Configure Document AI OCR for scanned PDFs.' }, 422);
-    const result = await runGemini(apiKey, resumeText.slice(0, 120000));
+    const hasText = resumeText.replace(/\s/g, '').length >= 100;
+    const result = hasText
+      ? await runGemini(apiKey, resumeText.slice(0, 120000))
+      : await runGemini(apiKey, '', buffer.toString('base64'));
     const parsed = Schema.parse(normalizeRaw(result.data));
-    return noStore({ data: addIds(parsed), source, model: result.model });
+    return noStore({ data: addIds(parsed), source: hasText ? 'pdf-text' : 'gemini-pdf', model: result.model });
   } catch (e) { console.error('Resume scan error:', e); return noStore({ error: e instanceof Error ? e.message : 'Could not scan this resume.' }, 500); }
 }
