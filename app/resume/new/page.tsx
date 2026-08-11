@@ -3,14 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { WizardShell } from '@/components/wizard/WizardShell';
+import { ImportResumeCard } from '@/components/wizard/ImportResumeCard';
 import { useDraftResume } from '@/lib/hooks/useDraftResume';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/components/ui/toaster';
+import type { ResumeData } from '@/lib/types/resume';
 
 export default function NewResumePage() {
   const router = useRouter();
   const { data, settings, updateData, updateSettings } = useDraftResume();
   const [finishing, setFinishing] = useState(false);
+
+  function handleImported(imported: ResumeData) {
+    updateData(() => imported);
+  }
 
   async function handleFinish() {
     setFinishing(true);
@@ -21,8 +27,6 @@ export default function NewResumePage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        // Preserve the draft (already in localStorage) and send them to sign
-        // up; /login will redirect back here with ?resume=1 to finish saving.
         router.push('/login?returnTo=/resume/new&reason=save');
         return;
       }
@@ -53,13 +57,18 @@ export default function NewResumePage() {
   }
 
   return (
-    <WizardShell
-      data={data}
-      settings={settings}
-      updateData={updateData}
-      updateSettings={updateSettings}
-      onFinish={handleFinish}
-      finishing={finishing}
-    />
+    <div className="min-h-dvh bg-white">
+      <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+        <ImportResumeCard onImported={handleImported} />
+      </div>
+      <WizardShell
+        data={data}
+        settings={settings}
+        updateData={updateData}
+        updateSettings={updateSettings}
+        onFinish={handleFinish}
+        finishing={finishing}
+      />
+    </div>
   );
 }
