@@ -1,27 +1,26 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ResumeDocument } from '@/components/templates/ResumeDocument';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
 
-const A4_WIDTH_PX = 794; // 210mm at 96dpi
-const A4_HEIGHT_PX = 1123; // 297mm at 96dpi
+const A4_WIDTH_PX = 794;
+const A4_HEIGHT_PX = 1123;
 
 export function PreviewPane({ data, settings }: { data: ResumeData; settings: ResumeSettings }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [autoScale, setAutoScale] = useState(1);
-  const [zoom, setZoom] = useState<number | null>(null); // null = fit to screen
+  const [zoom, setZoom] = useState<number | null>(null);
 
   useEffect(() => {
     function recompute() {
       const el = containerRef.current;
       if (!el) return;
-      const padding = 32;
+      const padding = 56;
       const availableWidth = el.clientWidth - padding;
-      const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
-      setAutoScale(scale);
+      setAutoScale(Math.min(1, Math.max(0.35, availableWidth / A4_WIDTH_PX)));
     }
     recompute();
     const ro = new ResizeObserver(recompute);
@@ -36,36 +35,51 @@ export function PreviewPane({ data, settings }: { data: ResumeData; settings: Re
   const effectiveScale = zoom ?? autoScale;
 
   return (
-    <div className="flex flex-col h-full bg-neutral-100">
-      <div className="flex items-center justify-center gap-1 py-2 border-b bg-white no-print">
-        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.max(0.4, (z ?? autoScale) - 0.1))}>
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <span className="text-xs w-12 text-center tabular-nums text-muted-foreground">
-          {Math.round(effectiveScale * 100)}%
-        </span>
-        <Button variant="ghost" size="icon" onClick={() => setZoom((z) => Math.min(2, (z ?? autoScale) + 0.1))}>
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => setZoom(null)} aria-label="Fit to screen">
-          <Maximize2 className="h-4 w-4" />
-        </Button>
+    <div className="flex h-full flex-col bg-[#f5f6f8]">
+      <div className="relative flex items-center justify-between border-b border-white/70 bg-white/80 px-4 py-2.5 shadow-[0_1px_0_rgba(15,23,42,.04)] backdrop-blur-xl no-print">
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-500">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
+            <Sparkles className="h-3.5 w-3.5" />
+          </span>
+          <span>Live preview</span>
+          <span className="hidden text-neutral-300 sm:inline">•</span>
+          <span className="hidden text-neutral-400 sm:inline">A4 · ready to export</span>
+        </div>
+        <div className="flex items-center gap-1 rounded-xl border border-neutral-200/80 bg-white/90 p-1 shadow-sm">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.max(0.4, (z ?? autoScale) - 0.1))} aria-label="Zoom out">
+            <ZoomOut className="h-3.5 w-3.5" />
+          </Button>
+          <span className="w-11 text-center text-[11px] font-semibold tabular-nums text-neutral-500">
+            {Math.round(effectiveScale * 100)}%
+          </span>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.min(2, (z ?? autoScale) + 0.1))} aria-label="Zoom in">
+            <ZoomIn className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom(null)} aria-label="Fit to screen">
+            <Maximize2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <div ref={containerRef} className="flex-1 overflow-auto flex justify-center py-6">
-        <div
-          style={{
-            width: A4_WIDTH_PX * effectiveScale,
-            height: A4_HEIGHT_PX * effectiveScale,
-          }}
-        >
+
+      <div ref={containerRef} className="hero-grid relative flex-1 overflow-auto px-4 py-7 sm:px-7">
+        <div className="pointer-events-none absolute left-[12%] top-8 h-28 w-28 rounded-full bg-orange-300/10 blur-3xl animate-float" />
+        <div className="pointer-events-none absolute right-[10%] top-[18%] h-36 w-36 rounded-full bg-blue-300/10 blur-3xl animate-float-slow" />
+        <div className="relative mx-auto w-fit animate-scale-in" style={{ paddingBottom: 12 }}>
           <div
             style={{
-              width: A4_WIDTH_PX,
-              transform: `scale(${effectiveScale})`,
-              transformOrigin: 'top left',
+              width: A4_WIDTH_PX * effectiveScale,
+              height: A4_HEIGHT_PX * effectiveScale,
             }}
           >
-            <ResumeDocument data={data} settings={settings} />
+            <div
+              style={{
+                width: A4_WIDTH_PX,
+                transform: `scale(${effectiveScale})`,
+                transformOrigin: 'top left',
+              }}
+            >
+              <ResumeDocument data={data} settings={settings} />
+            </div>
           </div>
         </div>
       </div>
