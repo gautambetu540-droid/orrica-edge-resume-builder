@@ -8,9 +8,7 @@ export const maxDuration = 60;
 
 const noStore = (body: unknown, status = 200) => NextResponse.json(body, {
   status,
-  headers: {
-    'Cache-Control': 'private, no-store, max-age=0',
-  },
+  headers: { 'Cache-Control': 'private, no-store, max-age=0' },
 });
 
 const ResumeSchema = z.object({
@@ -78,21 +76,11 @@ function extractGeminiError(body: string) {
 
 function publicGeminiError(status: number, detail: string) {
   const lower = detail.toLowerCase();
-  if (status === 401 || status === 403) {
-    return 'Gemini API authentication failed. Please verify the GEMINI_API_KEY in Vercel and redeploy.';
-  }
-  if (status === 404) {
-    return 'The configured Gemini model is not available for this API project. Please update GEMINI_RESUME_MODEL or use gemini-2.5-flash.';
-  }
-  if (status === 429) {
-    return 'Gemini API quota/rate limit reached. Please try again later or check the AI Studio quota for this project.';
-  }
-  if (status === 400) {
-    return `Gemini rejected the scan request. ${detail || 'Please try another PDF.'}`;
-  }
-  if (status === 500 || status === 502 || status === 503 || lower.includes('overload')) {
-    return 'Gemini is temporarily unavailable. Please try again in a moment.';
-  }
+  if (status === 401 || status === 403) return 'Gemini API authentication failed. Please verify the GEMINI_API_KEY in Vercel and redeploy.';
+  if (status === 404) return 'Gemini 2.5 Flash is not available to this API key/project. Please create/use the Gemini API key from the same Google AI Studio project where Gemini 2.5 Flash is available.';
+  if (status === 429) return 'Gemini API quota/rate limit reached. Please try again later or check the AI Studio quota for this project.';
+  if (status === 400) return `Gemini rejected the scan request. ${detail || 'Please try another PDF.'}`;
+  if (status === 500 || status === 502 || status === 503 || lower.includes('overload')) return 'Gemini is temporarily unavailable. Please try again in a moment.';
   return `Gemini scan failed (${status}). ${detail || 'Please try again.'}`;
 }
 
@@ -112,16 +100,16 @@ export async function POST(request: NextRequest) {
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
     // Keep the uploaded PDF transient. It is sent directly to Gemini as inline data
-    // and is never written to Supabase Storage or the resume database. This also
-    // avoids local PDF parsers rejecting otherwise readable PDFs with bad XRef tables.
+    // and is never written to Supabase Storage or the resume database.
     const pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
 
-    const model = (process.env.GEMINI_RESUME_MODEL || 'gemini-2.5-flash').trim() || 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const configuredModel = (process.env.GEMINI_RESUME_MODEL || '').trim().replace(/^['"]|['"]$/g, '');
+    // Always keep a known-good fallback. If an old/invalid environment variable is
+    // still deployed, a 404 from that model automatically retries Gemini 2.5 Flash.
+    const models = Array.from(new Set([configuredModel, 'gemini-2.5-flash'].filter(Boolean)));
+
     const body = {
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{
         role: 'user',
         parts: [
@@ -129,29 +117,37 @@ export async function POST(request: NextRequest) {
           { inline_data: { mime_type: 'application/pdf', data: pdfBase64 } },
         ],
       }],
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: 'application/json',
-      },
+      generationConfig: { temperature: 0, responseMimeType: 'application/json' },
     };
 
     let response: Response | undefined;
     let errorDetail = '';
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(50000),
-      });
+    let selectedModel = '';
 
-      if (response.ok) break;
-      errorDetail = extractGeminiError(await response.text().catch(() => ''));
-      if (![500, 502, 503].includes(response.status) || attempt === 1) break;
-      await new Promise((resolve) => setTimeout(resolve, 700));
+    for (const model of models) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(50000),
+        });
+
+        if (response.ok) {
+          selectedModel = model;
+          break;
+        }
+
+        errorDetail = extractGeminiError(await response.text().catch(() => ''));
+
+        // If this configured model does not exist for the project, immediately try
+        // the stable fallback instead of returning the misleading model error.
+        if (response.status === 404 && model !== 'gemini-2.5-flash') break;
+        if (![500, 502, 503].includes(response.status) || attempt === 1) break;
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      }
+      if (response?.ok) break;
     }
 
     if (!response?.ok) {
@@ -161,15 +157,13 @@ export async function POST(request: NextRequest) {
 
     const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     const raw = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
-    if (!raw) throw new Error('The scanner returned no resume data.');
+    if (!raw) throw new Error(`The scanner returned no resume data from ${selectedModel || 'Gemini'}.`);
 
     const result = ResumeSchema.parse(JSON.parse(raw));
-    return noStore({ data: normalize(result), source: 'gemini-pdf-scan' });
+    return noStore({ data: normalize(result), source: 'gemini-pdf-scan', model: selectedModel });
   } catch (error) {
     console.error('Resume scan error:', error);
-    if (error instanceof DOMException && error.name === 'TimeoutError') {
-      return noStore({ error: 'Gemini took too long to process this resume. Please try again.' }, 504);
-    }
+    if (error instanceof DOMException && error.name === 'TimeoutError') return noStore({ error: 'Gemini took too long to process this resume. Please try again.' }, 504);
     return noStore({ error: error instanceof Error ? error.message : 'Could not scan this resume.' }, 500);
   }
 }
