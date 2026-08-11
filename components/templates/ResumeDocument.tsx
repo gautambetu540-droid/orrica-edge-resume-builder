@@ -8,11 +8,6 @@ import { BrandFooter } from './BrandFooter';
 export interface ResumeDocumentProps {
   data: ResumeData;
   settings: ResumeSettings;
-
-  /**
-   * Set true only for the dedicated print/PDF route —
-   * disables shadow/border chrome.
-   */
   forPrint?: boolean;
 }
 
@@ -27,57 +22,38 @@ export function ResumeDocument({
     '--accent'?: string;
     '--section-gap'?: string;
     '--entry-gap'?: string;
+    '--heading-scale'?: string;
+    '--resume-text'?: string;
+    '--resume-muted'?: string;
   } = {
-    '--accent':
-      settings.accentColor || preset.defaultAccentColor,
-
-    '--section-gap': `${settings.sectionSpacing}px`,
-
-    '--entry-gap': `${Math.max(
-      8,
-      settings.sectionSpacing * 0.6
-    )}px`,
-
+    '--accent': settings.accentColor || preset.defaultAccentColor,
+    '--section-gap': `${Math.max(10, Math.min(28, settings.sectionSpacing))}px`,
+    '--entry-gap': `${Math.max(8, settings.sectionSpacing * 0.55)}px`,
+    '--heading-scale': String(Math.max(1, Math.min(1.35, settings.headingScale || 1.15))),
+    '--resume-text': '#20242a',
+    '--resume-muted': '#5f6873',
     fontFamily: FONT_STACKS[settings.font],
-
-    fontSize: `${settings.fontSize}pt`,
-
-    lineHeight: settings.lineSpacing,
-
-    // Two-column templates handle their own inset per-column.
-    // Single-column templates use a uniform margin.
-    padding:
-      preset.layout === 'two-column'
-        ? 0
-        : `${settings.margin}mm`,
-
-    color: '#1f2933',
+    fontSize: `${Math.max(9, Math.min(12, settings.fontSize))}pt`,
+    lineHeight: Math.max(1.15, Math.min(1.55, settings.lineSpacing)),
+    padding: preset.layout === 'two-column' ? 0 : `${Math.max(10, Math.min(25, settings.margin))}mm`,
+    color: '#20242a',
+    letterSpacing: '-0.005em',
+    WebkitFontSmoothing: 'antialiased',
+    textRendering: 'optimizeLegibility',
   };
 
   return (
     <div
-      className={`resume-page bg-white ${
-        forPrint
-          ? ''
-          : 'shadow-lg border border-neutral-200'
-      }`}
+      className={`resume-page bg-white ${forPrint ? '' : 'shadow-lg border border-neutral-200'}`}
       style={style}
       id="resume-document-root"
+      data-resume-font={settings.font}
     >
       {preset.layout === 'two-column' ? (
-        <TwoColumnLayout
-          data={data}
-          settings={settings}
-          preset={preset}
-        />
+        <TwoColumnLayout data={data} settings={settings} preset={preset} />
       ) : (
-        <SingleColumnLayout
-          data={data}
-          settings={settings}
-          preset={preset}
-        />
+        <SingleColumnLayout data={data} settings={settings} preset={preset} />
       )}
-
       <BrandFooter />
     </div>
   );
