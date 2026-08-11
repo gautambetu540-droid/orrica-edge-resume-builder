@@ -61,12 +61,45 @@ language proficiency must be exactly basic, conversational, professional, fluent
 achievement type must be exactly award, achievement, publication, volunteer, or other.
 Use empty strings/arrays for information that is not present. Do not create placeholder facts.`;
 
+function cleanApiKey(value: string | undefined) {
+  return value?.trim().replace(/^['"]|['"]$/g, '');
+}
+
+function extractGeminiError(body: string) {
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string; status?: string; code?: number } };
+    return parsed.error?.message || parsed.error?.status || '';
+  } catch {
+    return body.slice(0, 300).replace(/\s+/g, ' ');
+  }
+}
+
+function publicGeminiError(status: number, detail: string) {
+  const lower = detail.toLowerCase();
+  if (status === 401 || status === 403) {
+    return 'Gemini API authentication failed. Please verify the GEMINI_API_KEY in Vercel and redeploy.';
+  }
+  if (status === 404) {
+    return 'The configured Gemini model is not available for this API project. Please update GEMINI_RESUME_MODEL or use gemini-2.5-flash.';
+  }
+  if (status === 429) {
+    return 'Gemini API quota/rate limit reached. Please try again later or check the AI Studio quota for this project.';
+  }
+  if (status === 400) {
+    return `Gemini rejected the scan request. ${detail || 'Please try another PDF.'}`;
+  }
+  if (status === 500 || status === 502 || status === 503 || lower.includes('overload')) {
+    return 'Gemini is temporarily unavailable. Please try again in a moment.';
+  }
+  return `Gemini scan failed (${status}). ${detail || 'Please try again.'}`;
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return noStore({ error: 'Please sign in before importing a resume.' }, 401);
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = cleanApiKey(process.env.GEMINI_API_KEY);
   if (!apiKey) return noStore({ error: 'Resume scanning is not configured yet. Please contact support.' }, 503);
 
   try {
@@ -91,38 +124,44 @@ export async function POST(request: NextRequest) {
     if (text.length < 80) return noStore({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, 422);
 
     const model = process.env.GEMINI_RESUME_MODEL || 'gemini-2.5-flash';
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const body = {
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
       },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }],
-        },
-        contents: [{
-          role: 'user',
-          parts: [{ text: `Extract this resume into the requested structure. Do not rewrite it; extraction only.\n\n${text.slice(0, 50000)}` }],
-        }],
-        generationConfig: {
-          temperature: 0,
-          responseMimeType: 'application/json',
-        },
-      }),
-      signal: AbortSignal.timeout(50000),
-    });
+      contents: [{
+        role: 'user',
+        parts: [{ text: `Extract this resume into the requested structure. Do not rewrite it; extraction only.\n\n${text.slice(0, 50000)}` }],
+      }],
+      generationConfig: {
+        temperature: 0,
+        responseMimeType: 'application/json',
+      },
+    };
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
-      console.error('Gemini resume scan error:', response.status, errorBody);
-      if (response.status === 401 || response.status === 403) {
-        return noStore({ error: 'Resume scanning is temporarily unavailable. Please check the AI configuration.' }, 503);
-      }
-      if (response.status === 429) {
-        return noStore({ error: 'AI scan limit reached. Please try again later.' }, 429);
-      }
-      return noStore({ error: 'The AI scanner is temporarily unavailable. Please try again.' }, 502);
+    let response: Response | undefined;
+    let errorDetail = '';
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(50000),
+      });
+
+      if (response.ok) break;
+      errorDetail = extractGeminiError(await response.text().catch(() => ''));
+      // Retry only transient server failures. Never retry auth/quota/model/request errors.
+      if (![500, 502, 503].includes(response.status) || attempt === 1) break;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+    }
+
+    if (!response?.ok) {
+      console.error('Gemini resume scan error:', response?.status, errorDetail);
+      return noStore({ error: publicGeminiError(response?.status || 502, errorDetail) }, response?.status === 429 ? 429 : 502);
     }
 
     const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
@@ -133,6 +172,9 @@ export async function POST(request: NextRequest) {
     return noStore({ data: normalize(result), source: 'gemini-pdf-scan' });
   } catch (error) {
     console.error('Resume scan error:', error);
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      return noStore({ error: 'Gemini took too long to process this resume. Please try again.' }, 504);
+    }
     return noStore({ error: error instanceof Error ? error.message : 'Could not scan this resume.' }, 500);
   }
 }
