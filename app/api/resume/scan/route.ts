@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import OpenAI from 'openai';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -49,7 +48,14 @@ export async function POST(request: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'Resume scanning is not configured yet.' }, { status: 503 });
 
   try {
-    // Initialize OpenAI at request time, not module/build time.
+    // Load heavy/runtime packages only after a request reaches the route.
+    // This keeps Next.js route collection/build from evaluating them.
+    const [openaiModule, pdfParseModule] = await Promise.all([
+      import('openai'),
+      import('pdf-parse'),
+    ]);
+    const OpenAI = openaiModule.default;
+    const pdfParse = pdfParseModule.default;
     const openai = new OpenAI({ apiKey });
 
     const formData = await request.formData();
@@ -59,7 +65,6 @@ export async function POST(request: NextRequest) {
     if (file.size > 8 * 1024 * 1024) return NextResponse.json({ error: 'Please upload a PDF smaller than 8 MB.' }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { default: pdfParse } = await import('pdf-parse');
     const parsed = await pdfParse(buffer);
     const text = parsed.text.trim();
     if (text.length < 80) return NextResponse.json({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, { status: 422 });
