@@ -45,8 +45,8 @@
     "@dnd-kit/sortable": "8.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "react-to-print": "2.15.1",
-    "puppeteer-core": "23.0.0",
-    "@sparticuz/chromium": "123.0.1",
+    "puppeteer-core": "25.3.0",
+    "@sparticuz/chromium": "149.0.0",
     "date-fns": "3.6.0"
   },
   "devDependencies": {
