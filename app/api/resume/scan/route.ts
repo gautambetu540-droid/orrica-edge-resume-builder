@@ -42,19 +42,7 @@ function normalize(data: z.infer<typeof ResumeSchema>) {
   };
 }
 
-const SYSTEM_PROMPT = `You are a resume data extraction engine. Read the supplied PDF directly and extract only facts explicitly present in it. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.
-
-Required top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.
-
-personalInfo keys: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.
-experience items: company, jobTitle, location, startDate, endDate, currentlyWorking, responsibilities, achievements.
-education items: institution, degree, fieldOfStudy, startDate, endDate, grade, description.
-skills categories must be exactly technical, soft, tools, or languages.
-project items: name, role, description, technologies, url.
-certification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.
-language proficiency must be exactly basic, conversational, professional, fluent, or native.
-achievement type must be exactly award, achievement, publication, volunteer, or other.
-Use empty strings/arrays for information that is not present. Do not create placeholder facts.`;
+const SYSTEM_PROMPT = `You are a resume data extraction engine. Read the supplied PDF directly and extract only facts explicitly present in it. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.\n\nRequired top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.\n\npersonalInfo keys: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.\nexperience items: company, jobTitle, location, startDate, endDate, currentlyWorking, responsibilities, achievements.\neducation items: institution, degree, fieldOfStudy, startDate, endDate, grade, description.\nskills categories must be exactly technical, soft, tools, or languages.\nproject items: name, role, description, technologies, url.\ncertification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.\nlanguage proficiency must be exactly basic, conversational, professional, fluent, or native.\nachievement type must be exactly award, achievement, publication, volunteer, or other.\nUse empty strings/arrays for information that is not present. Do not create placeholder facts.`;
 
 function cleanApiKey(value: string | undefined) {
   return value?.trim().replace(/^['"]|['"]$/g, '');
@@ -82,7 +70,7 @@ type GeminiModel = { name?: string; supportedGenerationMethods?: string[] };
 
 async function discoverAvailableModel(apiKey: string, configuredModel: string) {
   const configured = configuredModel.replace(/^models\//, '').trim();
-  const preferred = [configured, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter(Boolean);
+  const preferred = [configured, 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter(Boolean);
 
   const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
     method: 'GET',
@@ -96,7 +84,7 @@ async function discoverAvailableModel(apiKey: string, configuredModel: string) {
     if (response.status === 401 || response.status === 403) {
       throw new Error('Gemini API authentication failed while checking available models. Verify GEMINI_API_KEY and the Google AI Studio project.');
     }
-    return configured || 'gemini-2.5-flash';
+    return configured || 'gemini-3.6-flash';
   }
 
   const payload = await response.json() as { models?: GeminiModel[] };
@@ -113,7 +101,7 @@ async function discoverAvailableModel(apiKey: string, configuredModel: string) {
   const fallback = available.find((name) => /^gemini/i.test(name) && /(flash|pro)/i.test(name));
   if (fallback) return fallback;
 
-  return configured || 'gemini-2.5-flash';
+  return configured || 'gemini-3.6-flash';
 }
 
 export async function POST(request: NextRequest) {
@@ -134,7 +122,7 @@ export async function POST(request: NextRequest) {
     // The original PDF is kept only in memory for this request and is never
     // written to Supabase Storage or the resume database.
     const pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
-    const configuredModel = cleanApiKey(process.env.GEMINI_RESUME_MODEL) || 'gemini-2.5-flash';
+    const configuredModel = cleanApiKey(process.env.GEMINI_RESUME_MODEL) || 'gemini-3.6-flash';
     const model = await discoverAvailableModel(apiKey, configuredModel);
 
     const body = {
@@ -152,7 +140,7 @@ export async function POST(request: NextRequest) {
     let response: Response | undefined;
     let errorDetail = '';
     let selectedModel = model;
-    const modelsToTry = [model, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter((value, index, array) => array.indexOf(value) === index);
+    const modelsToTry = [model, 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter((value, index, array) => array.indexOf(value) === index);
 
     for (const candidate of modelsToTry) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent`;
