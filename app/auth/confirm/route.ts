@@ -3,16 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
-function safeReturnTo(value: string | null) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/dashboard';
-  return value;
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type');
-  const next = safeReturnTo(searchParams.get('next'));
 
   if (!tokenHash || type !== 'email') {
     return NextResponse.redirect(`${origin}/login?error=verification_failed`);
@@ -30,7 +24,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${origin}/login?error=verification_failed`);
     }
 
-    return NextResponse.redirect(`${origin}${next}`);
+    // Do not leave the newly verified user signed in. The requested flow is:
+    // verify email -> show success screen -> user returns to the site -> logs in manually.
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${origin}/auth/verified`);
   } catch (error) {
     console.error('Email confirmation callback error:', error);
     return NextResponse.redirect(`${origin}/login?error=verification_failed`);
