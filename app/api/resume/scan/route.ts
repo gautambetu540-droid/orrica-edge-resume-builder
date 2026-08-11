@@ -12,10 +12,7 @@ const noStore = (body: unknown, status = 200) => NextResponse.json(body, {
 });
 
 const ResumeSchema = z.object({
-  personalInfo: z.object({
-    fullName: z.string().default(''), professionalTitle: z.string().default(''), email: z.string().default(''), phone: z.string().default(''), city: z.string().default(''), country: z.string().default(''),
-    linkedin: z.string().optional(), portfolio: z.string().optional(), github: z.string().optional(),
-  }).default({ fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' }),
+  personalInfo: z.object({ fullName: z.string().default(''), professionalTitle: z.string().default(''), email: z.string().default(''), phone: z.string().default(''), city: z.string().default(''), country: z.string().default(''), linkedin: z.string().optional(), portfolio: z.string().optional(), github: z.string().optional() }).default({ fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' }),
   summary: z.string().default(''),
   experience: z.array(z.object({ company: z.string().default(''), jobTitle: z.string().default(''), location: z.string().optional(), startDate: z.string().default(''), endDate: z.string().optional(), currentlyWorking: z.boolean().default(false), responsibilities: z.string().default(''), achievements: z.array(z.string()).default([]) })).default([]),
   education: z.array(z.object({ institution: z.string().default(''), degree: z.string().default(''), fieldOfStudy: z.string().default(''), startDate: z.string().default(''), endDate: z.string().optional(), grade: z.string().optional(), description: z.string().optional() })).default([]),
@@ -57,9 +54,7 @@ project items: name, role, description, technologies, url.
 certification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.
 language proficiency must be exactly basic, conversational, professional, fluent, or native.
 achievement type must be exactly award, achievement, publication, volunteer, or other.
-Use empty strings/arrays for information that is not present. Do not create placeholder facts.
-
-The PDF may be scanned, have unusual fonts, or contain a malformed cross-reference table. Do not reject it merely because its internal PDF structure is unusual; visually read the document and extract the resume content when possible.`;
+Use empty strings/arrays for information that is not present. Do not create placeholder facts.`;
 
 function cleanApiKey(value: string | undefined) {
   return value?.trim().replace(/^['"]|['"]$/g, '');
@@ -77,11 +72,48 @@ function extractGeminiError(body: string) {
 function publicGeminiError(status: number, detail: string) {
   const lower = detail.toLowerCase();
   if (status === 401 || status === 403) return 'Gemini API authentication failed. Please verify the GEMINI_API_KEY in Vercel and redeploy.';
-  if (status === 404) return 'Gemini 2.5 Flash is not available to this API key/project. Please create/use the Gemini API key from the same Google AI Studio project where Gemini 2.5 Flash is available.';
   if (status === 429) return 'Gemini API quota/rate limit reached. Please try again later or check the AI Studio quota for this project.';
   if (status === 400) return `Gemini rejected the scan request. ${detail || 'Please try another PDF.'}`;
   if (status === 500 || status === 502 || status === 503 || lower.includes('overload')) return 'Gemini is temporarily unavailable. Please try again in a moment.';
   return `Gemini scan failed (${status}). ${detail || 'Please try again.'}`;
+}
+
+type GeminiModel = { name?: string; supportedGenerationMethods?: string[] };
+
+async function discoverAvailableModel(apiKey: string, configuredModel: string) {
+  const configured = configuredModel.replace(/^models\//, '').trim();
+  const preferred = [configured, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter(Boolean);
+
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+    method: 'GET',
+    headers: { 'x-goog-api-key': apiKey },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (!response.ok) {
+    // Do not hide a real authentication error from the caller.
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Gemini API authentication failed while checking available models. Verify GEMINI_API_KEY and the Google AI Studio project.');
+    }
+    return configured || 'gemini-2.5-flash';
+  }
+
+  const payload = await response.json() as { models?: GeminiModel[] };
+  const available = (payload.models || [])
+    .filter((model) => model.name && model.supportedGenerationMethods?.includes('generateContent'))
+    .map((model) => model.name!.replace(/^models\//, ''));
+
+  const exact = preferred.find((candidate) => available.includes(candidate));
+  if (exact) return exact;
+
+  // If the preferred names are unavailable, use any Gemini Flash/Pro model that
+  // this exact API project advertises for generateContent. This avoids assuming
+  // that every AI Studio project exposes the same model catalog.
+  const fallback = available.find((name) => /^gemini/i.test(name) && /(flash|pro)/i.test(name));
+  if (fallback) return fallback;
+
+  return configured || 'gemini-2.5-flash';
 }
 
 export async function POST(request: NextRequest) {
@@ -99,14 +131,11 @@ export async function POST(request: NextRequest) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
-    // Keep the uploaded PDF transient. It is sent directly to Gemini as inline data
-    // and is never written to Supabase Storage or the resume database.
+    // The original PDF is kept only in memory for this request and is never
+    // written to Supabase Storage or the resume database.
     const pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
-
-    const configuredModel = (process.env.GEMINI_RESUME_MODEL || '').trim().replace(/^['"]|['"]$/g, '');
-    // Always keep a known-good fallback. If an old/invalid environment variable is
-    // still deployed, a 404 from that model automatically retries Gemini 2.5 Flash.
-    const models = Array.from(new Set([configuredModel, 'gemini-2.5-flash'].filter(Boolean)));
+    const configuredModel = cleanApiKey(process.env.GEMINI_RESUME_MODEL) || 'gemini-2.5-flash';
+    const model = await discoverAvailableModel(apiKey, configuredModel);
 
     const body = {
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
@@ -122,10 +151,11 @@ export async function POST(request: NextRequest) {
 
     let response: Response | undefined;
     let errorDetail = '';
-    let selectedModel = '';
+    let selectedModel = model;
+    const modelsToTry = [model, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'].filter((value, index, array) => array.indexOf(value) === index);
 
-    for (const model of models) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    for (const candidate of modelsToTry) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent`;
       for (let attempt = 0; attempt < 2; attempt += 1) {
         response = await fetch(url, {
           method: 'POST',
@@ -135,29 +165,30 @@ export async function POST(request: NextRequest) {
         });
 
         if (response.ok) {
-          selectedModel = model;
+          selectedModel = candidate;
           break;
         }
 
         errorDetail = extractGeminiError(await response.text().catch(() => ''));
-
-        // If this configured model does not exist for the project, immediately try
-        // the stable fallback instead of returning the misleading model error.
-        if (response.status === 404 && model !== 'gemini-2.5-flash') break;
+        if (response.status === 404) break;
         if (![500, 502, 503].includes(response.status) || attempt === 1) break;
         await new Promise((resolve) => setTimeout(resolve, 700));
       }
       if (response?.ok) break;
+      if (response?.status && ![404, 500, 502, 503].includes(response.status)) break;
     }
 
     if (!response?.ok) {
-      console.error('Gemini resume scan error:', response?.status, errorDetail);
-      return noStore({ error: publicGeminiError(response?.status || 502, errorDetail) }, response?.status === 429 ? 429 : 502);
+      console.error('Gemini resume scan error:', response?.status, selectedModel, errorDetail);
+      const detail = response?.status === 404
+        ? 'No Gemini model advertised by this API project supports generateContent. Check that the Gemini API is enabled for the same Google AI Studio project as GEMINI_API_KEY.'
+        : publicGeminiError(response?.status || 502, errorDetail);
+      return noStore({ error: detail }, response?.status === 429 ? 429 : 502);
     }
 
     const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
     const raw = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
-    if (!raw) throw new Error(`The scanner returned no resume data from ${selectedModel || 'Gemini'}.`);
+    if (!raw) throw new Error(`The scanner returned no resume data from ${selectedModel}.`);
 
     const result = ResumeSchema.parse(JSON.parse(raw));
     return noStore({ data: normalize(result), source: 'gemini-pdf-scan', model: selectedModel });
