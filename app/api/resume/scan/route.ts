@@ -65,11 +65,16 @@ export async function POST(request: NextRequest) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
-    // The uploaded PDF exists only in this request's memory. We parse it and send
-    // extracted text to the AI service; the original file is never written to
-    // Supabase Storage or the resume database.
+    // The uploaded PDF exists only in this request's memory. It is never written
+    // to Supabase Storage or the resume database.
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { default: pdfParse } = await import('pdf-parse');
+
+    // pdf-parse 1.1.x ships a debug harness in its package entry point that tries
+    // to open ./test/data/05-versions-space.pdf. Import its parser implementation
+    // directly so production/Vercel never executes that debug harness.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore The package does not publish a declaration for this internal entry.
+    const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse');
     const parsed = await pdfParse(buffer);
     const text = parsed.text.trim();
     if (text.length < 80) return noStore({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, 422);
