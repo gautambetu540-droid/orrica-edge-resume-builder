@@ -36,7 +36,6 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 1 },
     executablePath: await chromiumPath(chromium),
     headless: 'shell',
-    ignoreHTTPSErrors: true,
   });
 
   try {
