@@ -9,7 +9,6 @@ import {
   Download as DownloadIcon,
   FileText,
   LayoutGrid,
-  Lightbulb,
   Loader2,
   Pencil,
   Sparkles,
@@ -54,36 +53,22 @@ function SaveIndicator({ status }: { status: string }) {
   const error = status === 'error';
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-        error
-          ? 'border-red-200 bg-red-50 text-red-600'
-          : 'border-neutral-200 bg-white text-neutral-500'
-      }`}
-    >
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${error ? 'border-red-200 bg-red-50 text-red-600' : 'border-neutral-200 bg-white text-neutral-500'}`}>
       {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3 text-emerald-600" />}
       {error ? 'Saving again' : saving ? 'Saving' : 'Saved'}
     </span>
   );
 }
 
-function SectionNav({
-  active,
-  onSelect,
-  data,
-}: {
-  active: string;
-  onSelect: (key: string) => void;
-  data: ResumeData;
-}) {
+function SectionNav({ active, onSelect, data }: { active: string; onSelect: (key: string) => void; data: ResumeData }) {
   const completion = CONTENT_SECTIONS.filter((section) => {
     if (section.key === 'personal') return Boolean(data.personalInfo.fullName && data.personalInfo.email);
     if (section.key === 'summary') return Boolean(data.summary?.trim());
     if (section.key === 'experience') return data.experience.length > 0;
     if (section.key === 'education') return data.education.length > 0;
-    if (section.key === 'skills') return data.skills.length > 0;
+    if (section.key === 'skills') return data.skills.some((category) => category.items.length > 0);
     if (section.key === 'projects') return data.projects.length > 0;
-    return Boolean(data.additional?.length);
+    return data.certifications.length > 0 || data.languages.length > 0 || data.achievements.length > 0;
   }).length;
 
   return (
@@ -103,23 +88,15 @@ function SectionNav({
         <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Content</div>
         <div className="space-y-0.5">
           {CONTENT_SECTIONS.map((section, index) => {
-            const complete = completion > index;
             const selected = active === section.key;
             return (
-              <button
-                key={section.key}
-                type="button"
-                onClick={() => onSelect(section.key)}
-                className={`group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${selected ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`}
-              >
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${complete ? 'bg-emerald-50 text-emerald-600' : selected ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-400'}`}>
-                  {complete ? <Check className="h-3.5 w-3.5" /> : index + 1}
-                </span>
+              <button key={section.key} type="button" onClick={() => onSelect(section.key)} className={`group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${selected ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${selected ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-400'}`}>{index + 1}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12px] font-semibold">{section.label}</span>
                   <span className={`mt-0.5 block truncate text-[10px] ${selected ? 'text-orange-600/70' : 'text-neutral-400'}`}>{section.hint}</span>
                 </span>
-                <ChevronRight className={`h-3.5 w-3.5 transition-transform ${selected ? 'translate-x-0.5' : 'text-neutral-300'}`} />
+                <ChevronRight className={`h-3.5 w-3.5 ${selected ? 'text-orange-500' : 'text-neutral-300'}`} />
               </button>
             );
           })}
@@ -127,12 +104,12 @@ function SectionNav({
 
         <div className="mt-5 border-t border-neutral-100 pt-4">
           <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Tools</div>
-          <button type="button" className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-neutral-600 hover:bg-neutral-50" onClick={() => onSelect('__improve__')}>
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-neutral-100 text-neutral-700"><Sparkles className="h-3.5 w-3.5" /></span>
+          <button type="button" className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__improve__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__improve__')}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__improve__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><Sparkles className="h-3.5 w-3.5" /></span>
             <span className="text-[12px] font-semibold">Improve with AI</span>
           </button>
-          <button type="button" className="mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-neutral-600 hover:bg-neutral-50" onClick={() => onSelect('__design__')}>
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-neutral-100 text-neutral-700"><LayoutGrid className="h-3.5 w-3.5" /></span>
+          <button type="button" className={`mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__design__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__design__')}>
+            <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__design__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><LayoutGrid className="h-3.5 w-3.5" /></span>
             <span className="text-[12px] font-semibold">Design & template</span>
           </button>
         </div>
@@ -179,17 +156,7 @@ function ContentPanel({ sectionKey, ...props }: EditorProps & { sectionKey: stri
   );
 }
 
-export function EditorShell({
-  resumeId,
-  title,
-  data,
-  settings,
-}: {
-  resumeId: string;
-  title: string;
-  data: ResumeData;
-  settings: ResumeSettings;
-}) {
+export function EditorShell({ resumeId, title, data, settings }: { resumeId: string; title: string; data: ResumeData; settings: ResumeSettings }) {
   const store = useResumeStore();
   const [activeSection, setActiveSection] = useState('personal');
   const [mobileView, setMobileView] = useState<'edit' | 'preview' | 'design'>('edit');
@@ -204,7 +171,7 @@ export function EditorShell({
   }
 
   const fileName = `${(store.data.personalInfo.fullName || 'Resume').replace(/\s+/g, '_')}_Resume.pdf`;
-  const panel = activeSection === '__improve__' ? 'improve' : activeSection === '__design__' ? 'design' : 'content';
+  const panel: Panel = activeSection === '__improve__' ? 'improve' : activeSection === '__design__' ? 'design' : 'content';
 
   return (
     <div className="flex h-dvh flex-col bg-neutral-100 text-neutral-950">
@@ -216,12 +183,7 @@ export function EditorShell({
         </Link>
         <div className="h-5 w-px bg-neutral-200" />
         <div className="min-w-0 flex-1">
-          <input
-            value={store.title}
-            onChange={(event) => store.setTitle(event.target.value)}
-            className="w-full max-w-[300px] truncate bg-transparent text-sm font-semibold outline-none placeholder:text-neutral-400"
-            aria-label="Resume name"
-          />
+          <input value={store.title} onChange={(event) => store.setTitle(event.target.value)} className="w-full max-w-[300px] truncate bg-transparent text-sm font-semibold outline-none placeholder:text-neutral-400" aria-label="Resume name" />
           <div className="mt-0.5 text-[10px] text-neutral-400">Orrica Edge Resume Builder</div>
         </div>
         <SaveIndicator status={store.saveStatus} />
@@ -233,7 +195,6 @@ export function EditorShell({
 
       <div className="hidden min-h-0 flex-1 md:flex">
         <SectionNav active={activeSection} onSelect={setActiveSection} data={store.data} />
-
         <section className="w-[430px] shrink-0 overflow-y-auto border-r border-neutral-200 bg-white" aria-label="Resume editor">
           <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
             <span className="text-xs font-semibold text-neutral-700">{panel === 'content' ? 'Edit content' : panel === 'design' ? 'Design' : 'Improve'}</span>
@@ -241,7 +202,6 @@ export function EditorShell({
           </div>
           <ContentPanel sectionKey={activeSection} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
         </section>
-
         <section className="min-w-0 flex-1" aria-label="Live resume preview">
           <PreviewPane data={store.data} settings={store.settings} />
         </section>
@@ -257,9 +217,7 @@ export function EditorShell({
             <>
               <div className="flex gap-2 overflow-x-auto border-b border-neutral-200 bg-white px-3 py-2">
                 {CONTENT_SECTIONS.map((section) => (
-                  <button key={section.key} type="button" onClick={() => setActiveSection(section.key)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === section.key ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                    {section.label}
-                  </button>
+                  <button key={section.key} type="button" onClick={() => setActiveSection(section.key)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === section.key ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>{section.label}</button>
                 ))}
               </div>
               <ContentPanel sectionKey={activeSection} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
@@ -279,20 +237,10 @@ export function EditorShell({
 }
 
 function MobileNavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
-  return (
-    <button type="button" onClick={onClick} className={`flex min-h-[58px] flex-col items-center justify-center gap-1 ${active ? 'text-orange-600' : 'text-neutral-400'}`}>
-      {icon}
-      <span className="text-[10px] font-semibold">{label}</span>
-    </button>
-  );
+  return <button type="button" onClick={onClick} className={`flex min-h-[58px] flex-col items-center justify-center gap-1 ${active ? 'text-orange-600' : 'text-neutral-400'}`}>{icon}<span className="text-[10px] font-semibold">{label}</span></button>;
 }
 
 function MobileDownloadButton({ resumeId, fileName }: { resumeId: string; fileName: string }) {
   const { download, downloading } = useDownloadPdf(resumeId, fileName);
-  return (
-    <button type="button" onClick={download} disabled={downloading} className="flex min-h-[58px] flex-col items-center justify-center gap-1 text-orange-600 disabled:opacity-60">
-      {downloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <DownloadIcon className="h-5 w-5" />}
-      <span className="text-[10px] font-semibold">Download</span>
-    </button>
-  );
+  return <button type="button" onClick={download} disabled={downloading} className="flex min-h-[58px] flex-col items-center justify-center gap-1 text-orange-600 disabled:opacity-60">{downloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <DownloadIcon className="h-5 w-5" />}<span className="text-[10px] font-semibold">Download</span></button>;
 }
