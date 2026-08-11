@@ -3,7 +3,15 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+const noStore = (body: unknown, status = 200) => NextResponse.json(body, {
+  status,
+  headers: {
+    'Cache-Control': 'private, no-store, max-age=0',
+  },
+});
 
 const ResumeSchema = z.object({
   personalInfo: z.object({
@@ -42,32 +50,29 @@ function normalize(data: z.infer<typeof ResumeSchema>) {
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Please sign in before importing a resume.' }, { status: 401 });
+  if (!user) return noStore({ error: 'Please sign in before importing a resume.' }, 401);
 
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'Resume scanning is not configured yet.' }, { status: 503 });
+  if (!apiKey) return noStore({ error: 'Resume scanning is not configured yet.' }, 503);
 
   try {
-    // Load heavy/runtime packages only after a request reaches the route.
-    // This keeps Next.js route collection/build from evaluating them.
-    const [openaiModule, pdfParseModule] = await Promise.all([
-      import('openai'),
-      import('pdf-parse'),
-    ]);
-    const OpenAI = openaiModule.default;
-    const pdfParse = pdfParseModule.default;
+    const { default: OpenAI } = await import('openai');
     const openai = new OpenAI({ apiKey });
 
     const formData = await request.formData();
     const file = formData.get('file');
-    if (!(file instanceof File)) return NextResponse.json({ error: 'Please select a PDF resume.' }, { status: 400 });
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return NextResponse.json({ error: 'Only PDF resumes are supported.' }, { status: 400 });
-    if (file.size > 8 * 1024 * 1024) return NextResponse.json({ error: 'Please upload a PDF smaller than 8 MB.' }, { status: 400 });
+    if (!(file instanceof File)) return noStore({ error: 'Please select a PDF resume.' }, 400);
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
+    if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
+    // The uploaded PDF exists only in this request's memory. We parse it and send
+    // extracted text to the AI service; the original file is never written to
+    // Supabase Storage or the resume database.
     const buffer = Buffer.from(await file.arrayBuffer());
+    const { default: pdfParse } = await import('pdf-parse');
     const parsed = await pdfParse(buffer);
     const text = parsed.text.trim();
-    if (text.length < 80) return NextResponse.json({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, { status: 422 });
+    if (text.length < 80) return noStore({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, 422);
 
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_RESUME_MODEL || 'gpt-4o-mini',
@@ -82,9 +87,9 @@ export async function POST(request: NextRequest) {
     const raw = completion.choices[0]?.message?.content;
     if (!raw) throw new Error('The scanner returned no resume data.');
     const result = ResumeSchema.parse(JSON.parse(raw));
-    return NextResponse.json({ data: normalize(result), source: 'ai-pdf-scan' });
+    return noStore({ data: normalize(result), source: 'ai-pdf-scan' });
   } catch (error) {
     console.error('Resume scan error:', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not scan this resume.' }, { status: 500 });
+    return noStore({ error: error instanceof Error ? error.message : 'Could not scan this resume.' }, 500);
   }
 }
