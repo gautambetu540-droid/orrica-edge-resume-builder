@@ -47,7 +47,7 @@ function normalize(data: z.infer<typeof ResumeSchema>) {
   };
 }
 
-const SYSTEM_PROMPT = `You are a resume data extraction engine. Extract only facts explicitly present in the supplied resume. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.
+const SYSTEM_PROMPT = `You are a resume data extraction engine. Read the supplied PDF directly and extract only facts explicitly present in it. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.
 
 Required top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.
 
@@ -59,7 +59,9 @@ project items: name, role, description, technologies, url.
 certification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.
 language proficiency must be exactly basic, conversational, professional, fluent, or native.
 achievement type must be exactly award, achievement, publication, volunteer, or other.
-Use empty strings/arrays for information that is not present. Do not create placeholder facts.`;
+Use empty strings/arrays for information that is not present. Do not create placeholder facts.
+
+The PDF may be scanned, have unusual fonts, or contain a malformed cross-reference table. Do not reject it merely because its internal PDF structure is unusual; visually read the document and extract the resume content when possible.`;
 
 function cleanApiKey(value: string | undefined) {
   return value?.trim().replace(/^['"]|['"]$/g, '');
@@ -109,21 +111,12 @@ export async function POST(request: NextRequest) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return noStore({ error: 'Only PDF resumes are supported.' }, 400);
     if (file.size > 8 * 1024 * 1024) return noStore({ error: 'Please upload a PDF smaller than 8 MB.' }, 400);
 
-    // The uploaded PDF exists only in this request's memory. It is never written
-    // to Supabase Storage or the resume database.
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Keep the uploaded PDF transient. It is sent directly to Gemini as inline data
+    // and is never written to Supabase Storage or the resume database. This also
+    // avoids local PDF parsers rejecting otherwise readable PDFs with bad XRef tables.
+    const pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
 
-    // pdf-parse 1.1.x ships a debug harness in its package entry point that tries
-    // to open ./test/data/05-versions-space.pdf. Import its parser implementation
-    // directly so production/Vercel never executes that debug harness.
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore The package does not publish a declaration for this internal entry.
-    const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse');
-    const parsed = await pdfParse(buffer);
-    const text = parsed.text.trim();
-    if (text.length < 80) return noStore({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, 422);
-
-    const model = process.env.GEMINI_RESUME_MODEL || 'gemini-2.5-flash';
+    const model = (process.env.GEMINI_RESUME_MODEL || 'gemini-2.5-flash').trim() || 'gemini-2.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     const body = {
       systemInstruction: {
@@ -131,7 +124,10 @@ export async function POST(request: NextRequest) {
       },
       contents: [{
         role: 'user',
-        parts: [{ text: `Extract this resume into the requested structure. Do not rewrite it; extraction only.\n\n${text.slice(0, 50000)}` }],
+        parts: [
+          { text: 'Extract this resume PDF into the requested structure. Extraction only; do not rewrite or invent information.' },
+          { inline_data: { mime_type: 'application/pdf', data: pdfBase64 } },
+        ],
       }],
       generationConfig: {
         temperature: 0,
@@ -154,7 +150,6 @@ export async function POST(request: NextRequest) {
 
       if (response.ok) break;
       errorDetail = extractGeminiError(await response.text().catch(() => ''));
-      // Retry only transient server failures. Never retry auth/quota/model/request errors.
       if (![500, 502, 503].includes(response.status) || attempt === 1) break;
       await new Promise((resolve) => setTimeout(resolve, 700));
     }
