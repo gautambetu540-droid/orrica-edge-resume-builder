@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core', 'pdf-parse'],
   outputFileTracingIncludes: {
-    '/api/resume/*/pdf': [
-      './node_modules/@sparticuz/chromium/bin/**/*',
-    ],
+    '/api/resume/*/pdf': ['./node_modules/@sparticuz/chromium/bin/**/*'],
   },
 };
 
