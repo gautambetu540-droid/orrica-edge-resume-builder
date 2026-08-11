@@ -8,12 +8,10 @@ const nextConfig = {
     'puppeteer-core',
     'pdf-parse',
     'openai',
-    '@google-cloud/documentai',
   ],
 
-  // Explicitly copy Chromium's executable payload into the traced server
-  // function. The API route pattern covers both the direct route and any
-  // route-handler nesting Next may produce during output-file tracing.
+  // Explicitly copy Chromium's executable payload into traced server
+  // functions so the binary is available at runtime on Vercel.
   outputFileTracingIncludes: {
     '/*': [
       './node_modules/@sparticuz/chromium/bin/**/*',
