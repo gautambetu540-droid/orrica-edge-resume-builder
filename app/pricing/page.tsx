@@ -1,59 +1,18 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 
-const FEATURES = [
-  'Unlimited resumes',
-  '10 professional templates',
-  'AI summary & bullet generation',
-  'ATS job-match scoring',
-  'Full typography & color customization',
-  'Unlimited PDF downloads',
-];
+export const metadata: Metadata = {
+  title: 'Free Resume Builder Pricing',
+  description: 'See Orrica Edge pricing. Build and download professional resumes with AI writing tools, ATS-ready templates and PDF export.',
+  alternates: { canonical: '/pricing' },
+};
+
+const FEATURES = ['Unlimited resumes', '10 professional templates', 'AI summary & bullet generation', 'ATS job-match scoring', 'Typography & color customization', 'PDF downloads'];
 
 export default function PricingPage() {
-  return (
-    <div className="min-h-dvh bg-white">
-      <SiteHeader />
-      <div className="max-w-3xl mx-auto px-4 py-16 sm:py-24 text-center">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-accent text-accent-foreground px-3 py-1.5 rounded-full mb-5">
-          <Sparkles className="h-3.5 w-3.5" /> Simple, honest pricing
-        </span>
-        <h1 className="text-3xl sm:text-5xl font-bold mb-4">Free to build. Free to download.</h1>
-        <p className="text-muted-foreground max-w-lg mx-auto mb-12">
-          Orrica Edge is free to use — no credit card, no paywalled downloads. Build as many resumes as you need.
-        </p>
-
-        <div className="rounded-2xl border-2 border-primary/20 bg-white shadow-xl shadow-primary/5 p-8 max-w-md mx-auto text-left relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
-            Current Plan
-          </div>
-          <h2 className="text-xl font-bold mb-1">Free</h2>
-          <p className="text-3xl font-bold mb-5">
-            $0 <span className="text-base font-normal text-muted-foreground">/ forever</span>
-          </p>
-          <ul className="space-y-2.5 mb-7">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-2 text-sm">
-                <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                {f}
-              </li>
-            ))}
-          </ul>
-          <Link href="/resume/new">
-            <Button size="lg" className="w-full">
-              Create My Resume
-            </Button>
-          </Link>
-        </div>
-
-        <p className="text-xs text-muted-foreground mt-8">
-          Have questions about limits or larger team usage? Reach out from the <Link href="/about" className="text-primary">About</Link> page.
-        </p>
-      </div>
-      <SiteFooter />
-    </div>
-  );
+  return <div className="min-h-dvh bg-white"><SiteHeader /><main className="mx-auto max-w-4xl px-5 py-16 text-center sm:py-24"><span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700"><Sparkles className="h-3.5 w-3.5" /> Simple, honest pricing</span><h1 className="mt-5 text-4xl font-semibold tracking-[-0.045em] sm:text-6xl">Build a better resume without a paywall.</h1><p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground">The current Orrica Edge experience is free to build and download. No credit card is required to start.</p><div className="mx-auto mt-12 max-w-md overflow-hidden rounded-3xl border-2 border-orange-200 bg-white text-left shadow-2xl shadow-orange-500/10"><div className="bg-orange-500 px-6 py-3 text-center text-xs font-black uppercase tracking-widest text-white">Current plan</div><div className="p-7"><h2 className="text-xl font-bold">Free</h2><p className="mt-2 text-4xl font-black">$0 <span className="text-base font-medium text-muted-foreground">/ forever</span></p><ul className="mt-7 space-y-3">{FEATURES.map((f) => <li key={f} className="flex items-start gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />{f}</li>)}</ul><Link href="/resume/new" className="mt-8 block"><Button size="lg" className="h-12 w-full rounded-xl font-bold">Create my resume</Button></Link></div></div><p className="mx-auto mt-8 max-w-lg text-xs leading-5 text-muted-foreground">Plan details can evolve as the product grows. For questions or feedback, visit <Link href="/about" className="font-semibold text-orange-600">About Orrica Edge</Link>.</p></main><SiteFooter /></div>;
 }
