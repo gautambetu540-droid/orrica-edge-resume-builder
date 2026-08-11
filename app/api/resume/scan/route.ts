@@ -47,18 +47,29 @@ function normalize(data: z.infer<typeof ResumeSchema>) {
   };
 }
 
+const SYSTEM_PROMPT = `You are a resume data extraction engine. Extract only facts explicitly present in the supplied resume. Never invent, infer, improve, rewrite, or hallucinate facts. Preserve names, employers, dates, education, skills, URLs, certifications and achievements as accurately as possible. Missing values must be empty strings, empty arrays, or omitted optional fields. Return ONLY valid JSON.
+
+Required top-level keys: personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole.
+
+personalInfo keys: fullName, professionalTitle, email, phone, city, country, linkedin, portfolio, github.
+experience items: company, jobTitle, location, startDate, endDate, currentlyWorking, responsibilities, achievements.
+education items: institution, degree, fieldOfStudy, startDate, endDate, grade, description.
+skills categories must be exactly technical, soft, tools, or languages.
+project items: name, role, description, technologies, url.
+certification items: name, issuingOrganization, issueDate, credentialId, credentialUrl.
+language proficiency must be exactly basic, conversational, professional, fluent, or native.
+achievement type must be exactly award, achievement, publication, volunteer, or other.
+Use empty strings/arrays for information that is not present. Do not create placeholder facts.`;
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return noStore({ error: 'Please sign in before importing a resume.' }, 401);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return noStore({ error: 'Resume scanning is not configured yet.' }, 503);
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return noStore({ error: 'Resume scanning is not configured yet. Please contact support.' }, 503);
 
   try {
-    const { default: OpenAI } = await import('openai');
-    const openai = new OpenAI({ apiKey });
-
     const formData = await request.formData();
     const file = formData.get('file');
     if (!(file instanceof File)) return noStore({ error: 'Please select a PDF resume.' }, 400);
@@ -79,20 +90,47 @@ export async function POST(request: NextRequest) {
     const text = parsed.text.trim();
     if (text.length < 80) return noStore({ error: 'This looks like an image-only PDF. Please upload a searchable/text PDF.' }, 422);
 
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_RESUME_MODEL || 'gpt-4o-mini',
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: 'Extract the supplied resume into JSON. Never invent facts. Preserve names, employers, dates, education, skills, URLs and achievements. Missing information must be empty. Return only valid JSON with keys personalInfo, summary, experience, education, skills, projects, certifications, languages, achievements, targetRole. Skills categories must be technical, soft, tools or languages. Language proficiency must be basic, conversational, professional, fluent or native.' },
-        { role: 'user', content: `Extract this resume into the requested structure. Do not rewrite it; extraction only.\n\n${text.slice(0, 50000)}` },
-      ],
+    const model = process.env.GEMINI_RESUME_MODEL || 'gemini-2.5-flash';
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }],
+        },
+        contents: [{
+          role: 'user',
+          parts: [{ text: `Extract this resume into the requested structure. Do not rewrite it; extraction only.\n\n${text.slice(0, 50000)}` }],
+        }],
+        generationConfig: {
+          temperature: 0,
+          responseMimeType: 'application/json',
+        },
+      }),
+      signal: AbortSignal.timeout(50000),
     });
 
-    const raw = completion.choices[0]?.message?.content;
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      console.error('Gemini resume scan error:', response.status, errorBody);
+      if (response.status === 401 || response.status === 403) {
+        return noStore({ error: 'Resume scanning is temporarily unavailable. Please check the AI configuration.' }, 503);
+      }
+      if (response.status === 429) {
+        return noStore({ error: 'AI scan limit reached. Please try again later.' }, 429);
+      }
+      return noStore({ error: 'The AI scanner is temporarily unavailable. Please try again.' }, 502);
+    }
+
+    const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const raw = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
     if (!raw) throw new Error('The scanner returned no resume data.');
+
     const result = ResumeSchema.parse(JSON.parse(raw));
-    return noStore({ data: normalize(result), source: 'ai-pdf-scan' });
+    return noStore({ data: normalize(result), source: 'gemini-pdf-scan' });
   } catch (error) {
     console.error('Resume scan error:', error);
     return noStore({ error: error instanceof Error ? error.message : 'Could not scan this resume.' }, 500);
