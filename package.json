@@ -47,10 +47,12 @@
     "react-to-print": "2.15.1",
     "puppeteer-core": "25.3.0",
     "@sparticuz/chromium": "149.0.0",
-    "date-fns": "3.6.0"
+    "date-fns": "3.6.0",
+    "pdf-parse": "1.1.1"
   },
   "devDependencies": {
     "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.5",
+    "@types/pdf-parse": "1.1.4"
   }
 }
