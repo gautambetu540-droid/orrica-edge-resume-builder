@@ -5,15 +5,14 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 20% 10%;
+    --foreground: 222 30% 9%;
     --card: 0 0% 100%;
-    --card-foreground: 222 20% 10%;
-    /* Primary matched to the Orrica Edge logo's orange */
+    --card-foreground: 222 30% 9%;
     --primary: 21 75% 52%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 20% 96%;
-    --secondary-foreground: 222 20% 12%;
-    --muted: 220 20% 96%;
+    --secondary: 220 20% 97%;
+    --secondary-foreground: 222 30% 12%;
+    --muted: 220 18% 96%;
     --muted-foreground: 220 9% 46%;
     --accent: 21 90% 95%;
     --accent-foreground: 21 75% 38%;
@@ -22,7 +21,7 @@
     --border: 220 16% 90%;
     --input: 220 16% 90%;
     --ring: 21 75% 52%;
-    --radius: 0.9rem;
+    --radius: 0.7rem;
     --brand-orange: 21 91% 55%;
     --brand-ink: 222 30% 9%;
   }
@@ -34,12 +33,10 @@
   html { scroll-behavior: smooth; }
 }
 
-/* Touch targets on mobile */
 @media (max-width: 768px) {
   button, a[role="button"], input, select, textarea { min-height: 44px; }
 }
 
-/* Print / PDF-safe styles: used by the print route (app/resume/[id]/print) */
 @media print {
   @page { size: A4; margin: 0; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -55,29 +52,49 @@
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: hsl(220 16% 85%); border-radius: 8px; }
 
-/* Premium landing-page utilities */
 .text-gradient-brand {
-  background: linear-gradient(90deg, hsl(var(--brand-ink)), hsl(var(--primary)), hsl(var(--brand-ink)));
-  background-size: 200% auto;
+  background: linear-gradient(110deg, hsl(var(--brand-ink)) 10%, hsl(var(--primary)) 55%, hsl(var(--brand-ink)) 95%);
+  background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .gradient-mesh-bg {
-  background-image:
-    radial-gradient(at 12% 20%, hsla(21, 91%, 60%, 0.18) 0px, transparent 55%),
-    radial-gradient(at 88% 10%, hsla(21, 91%, 55%, 0.10) 0px, transparent 50%),
-    radial-gradient(at 50% 95%, hsla(222, 40%, 15%, 0.06) 0px, transparent 55%);
+  background:
+    radial-gradient(circle at 15% 20%, hsla(21, 91%, 60%, 0.12), transparent 30%),
+    radial-gradient(circle at 85% 15%, hsla(220, 70%, 55%, 0.07), transparent 28%),
+    linear-gradient(180deg, #fff 0%, #fbfbfc 100%);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .shimmer-bg {
   background: linear-gradient(110deg, #f4f4f5 8%, #ececee 18%, #f4f4f5 33%);
   background-size: 200% 100%;
 }
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.animate-float { animation: float-soft 5s ease-in-out infinite; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up { animation: fade-up 500ms ease-out both; }
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-x { animation: gradient-x 5s ease infinite; }
