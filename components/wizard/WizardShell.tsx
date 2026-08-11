@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
@@ -14,6 +14,7 @@ import { EducationStep } from './steps/EducationStep';
 import { SkillsStep } from './steps/SkillsStep';
 import { ProjectsStep } from './steps/ProjectsStep';
 import { MoreStep } from './steps/MoreStep';
+import { createClient } from '@/lib/supabase/client';
 
 export interface StepProps {
   data: ResumeData;
@@ -38,9 +39,35 @@ function MiniPreview({ data, settings }: { data: ResumeData; settings: ResumeSet
 
 export function WizardShell({ data, settings, updateData, updateSettings, onFinish, finishing }: StepProps & { onFinish: () => void; finishing?: boolean }) {
   const [stepIndex, setStepIndex] = useState(0);
+  const [accountName, setAccountName] = useState('');
   const step = STEPS[stepIndex];
   const isLast = stepIndex === STEPS.length - 1;
   const StepComponent = step.Component;
+
+  useEffect(() => {
+    const supabase = createClient();
+    let active = true;
+
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active) return;
+      const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+      setAccountName(name.trim());
+    }
+
+    loadUser();
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      const user = session?.user;
+      const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+      setAccountName(name.trim());
+    });
+
+    return () => {
+      active = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
 
   function goNext() {
     if (step.key === 'personal') {
@@ -67,7 +94,17 @@ export function WizardShell({ data, settings, updateData, updateSettings, onFini
           <a href="/" className="shrink-0" aria-label="Orrica Edge home"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-7 w-auto" /></a>
           <div className="h-5 w-px bg-neutral-200" />
           <div className="min-w-0"><div className="text-xs font-semibold text-neutral-900">Create your resume</div><div className="text-[10px] text-neutral-400">Your progress is saved in this browser</div></div>
-          <div className="ml-auto flex items-center gap-2 text-[10px] font-medium text-neutral-400"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Private by default</div>
+          <div className="ml-auto flex items-center gap-3">
+            {accountName ? (
+              <div className="flex max-w-[220px] items-center gap-2 rounded-full border border-neutral-200 bg-white px-2.5 py-1.5 shadow-sm" title={accountName}>
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-50 text-[10px] font-black text-orange-700"><UserRound className="h-3.5 w-3.5" /></span>
+                <div className="min-w-0"><div className="truncate text-[11px] font-bold text-neutral-800">{accountName}</div><div className="text-[9px] text-emerald-600">Signed in</div></div>
+              </div>
+            ) : (
+              <div className="hidden items-center gap-2 text-[10px] font-medium text-neutral-400 sm:flex"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Private by default</div>
+            )}
+            {accountName && <div className="hidden items-center gap-2 text-[10px] font-medium text-neutral-400 lg:flex"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Private by default</div>}
+          </div>
         </div>
       </header>
 
