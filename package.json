@@ -2,6 +2,7 @@
   "name": "orrica-edge-resume-builder",
   "version": "1.0.0",
   "private": true,
+  "engines": { "node": ">=22.12.0" },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -45,7 +46,7 @@
     "@dnd-kit/sortable": "8.0.0",
     "@dnd-kit/utilities": "3.2.2",
     "react-to-print": "2.15.1",
-    "puppeteer-core": "25.3.0",
+    "puppeteer-core": "25.1.0",
     "@sparticuz/chromium": "149.0.0",
     "date-fns": "3.6.0",
     "pdf-parse": "1.1.1"
