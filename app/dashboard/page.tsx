@@ -15,40 +15,30 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login?returnTo=/dashboard');
 
+  const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'there';
+
   return (
     <div className="min-h-dvh bg-secondary/30">
       <IdleLogout />
 
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo-orricaedge.png"
-              alt="Orrica Edge"
-              className="h-7 w-auto"
-            />
+      <header className="border-b bg-white">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <Link href="/" aria-label="Orrica Edge home">
+            <img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-7 w-auto" />
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/activity"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
+            <Link href="/activity" className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground sm:flex">
               <Activity className="h-4 w-4" />
               My Activity
             </Link>
-
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user.email}
-            </span>
-
+            <span className="hidden text-sm font-semibold text-neutral-700 sm:inline">{userName}</span>
             <SignOutButton />
           </div>
         </div>
       </header>
 
-      <DashboardClient />
+      <DashboardClient userName={userName} />
     </div>
   );
 }
