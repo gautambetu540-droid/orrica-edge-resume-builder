@@ -4,7 +4,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orrica-edge-resume-
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/dashboard', '/settings', '/api/', '/auth/'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/dashboard', '/settings', '/api/', '/auth/', '/login', '/signup'] }],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
 }
