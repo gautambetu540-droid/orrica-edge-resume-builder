@@ -30,8 +30,20 @@
 @layer base {
   * { @apply border-border; }
   html { scroll-behavior: smooth; }
-  body { @apply bg-background text-foreground; -webkit-tap-highlight-color: transparent; text-rendering: optimizeLegibility; }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv11' 1, 'ss01' 1;
+    font-kerning: normal;
+  }
   ::selection { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+}
+
+@layer components {
+  .font-display { font-family: var(--font-jakarta), sans-serif; letter-spacing: -0.035em; }
+  .font-ui { font-family: var(--font-jakarta), sans-serif; }
+  .font-reading { font-family: var(--font-inter), sans-serif; }
 }
 
 @media (max-width: 768px) { button, a[role="button"], input, select, textarea { min-height: 44px; } }
