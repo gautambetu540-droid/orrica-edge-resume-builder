@@ -29,7 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    // Render on the exact deployment/domain that received this request. This
+    // avoids preview/production domain mismatches when NEXT_PUBLIC_APP_URL is
+    // stale or points at a different deployment.
+    const baseUrl = req.nextUrl.origin;
     const pdfBuffer = await generateResumePdf({
       resumeId: params.id,
       baseUrl,
@@ -49,6 +52,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
   } catch (error) {
     console.error('PDF generation error:', error);
-    return NextResponse.json({ error: 'We could not generate your PDF right now. Please try again in a moment.' }, { status: 500 });
+    return NextResponse.json({
+      error: error instanceof Error
+        ? `We could not generate your PDF: ${error.message}`
+        : 'We could not generate your PDF right now. Please try again in a moment.',
+    }, { status: 500 });
   }
 }
