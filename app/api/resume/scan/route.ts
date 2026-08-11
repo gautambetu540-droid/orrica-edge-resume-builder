@@ -6,8 +6,6 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 const ResumeSchema = z.object({
   personalInfo: z.object({
     fullName: z.string().default(''), professionalTitle: z.string().default(''), email: z.string().default(''), phone: z.string().default(''), city: z.string().default(''), country: z.string().default(''),
@@ -46,9 +44,14 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Please sign in before importing a resume.' }, { status: 401 });
-  if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: 'Resume scanning is not configured yet.' }, { status: 503 });
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return NextResponse.json({ error: 'Resume scanning is not configured yet.' }, { status: 503 });
 
   try {
+    // Initialize OpenAI at request time, not module/build time.
+    const openai = new OpenAI({ apiKey });
+
     const formData = await request.formData();
     const file = formData.get('file');
     if (!(file instanceof File)) return NextResponse.json({ error: 'Please select a PDF resume.' }, { status: 400 });
