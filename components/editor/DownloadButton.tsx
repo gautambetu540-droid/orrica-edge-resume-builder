@@ -9,33 +9,78 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
 
-  function download() {
+  async function download() {
     if (downloading) return;
     setDownloading(true);
     setDownloaded(false);
 
-    // Start the real GET request directly from the user gesture. This avoids
-    // mobile browsers blocking a synthetic `a.click()` after an async fetch.
-    // The API responds with Content-Disposition: attachment, so the browser
-    // owns the actual file download and streams it directly to Downloads.
-    const endpoint = `/api/resume/${encodeURIComponent(resumeId)}/pdf`;
-    const link = document.createElement('a');
-    link.href = endpoint;
-    link.download = fileName;
-    link.rel = 'noopener';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const endpoint = `/api/resume/${encodeURIComponent(resumeId)}/pdf`;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 75_000);
 
-    // The server validates the generated PDF before returning it. We mark the
-    // client action as started rather than pretending that a Blob was created.
-    window.setTimeout(() => {
-      setDownloading(false);
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { Accept: 'application/pdf, application/json' },
+        signal: controller.signal,
+      });
+
+      window.clearTimeout(timeout);
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        let message = `PDF generation failed (${response.status})`;
+        if (contentType.includes('application/json')) {
+          const body = await response.json().catch(() => null);
+          if (body?.message) message = body.message;
+          else if (body?.error) message = body.error;
+        } else {
+          const text = await response.text().catch(() => '');
+          if (text) message = text.slice(0, 240);
+        }
+        throw new Error(message);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.toLowerCase().includes('application/pdf')) {
+        throw new Error('The server returned an invalid PDF response. Please try again.');
+      }
+
+      const blob = await response.blob();
+      if (!blob.size) {
+        throw new Error('The generated PDF is empty. Please try again.');
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName || 'Orrica_Edge_Resume.pdf';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 2200);
-      toast({ title: 'PDF download started', description: 'Your resume is being saved as a PDF.' });
-    }, 350);
+      toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
+    } catch (error) {
+      const message = error instanceof Error && error.name === 'AbortError'
+        ? 'PDF generation timed out. Please try again.'
+        : error instanceof Error
+          ? error.message
+          : 'Could not generate the PDF. Please try again.';
+
+      toast({
+        title: 'Download failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return { download, downloading, downloaded };
