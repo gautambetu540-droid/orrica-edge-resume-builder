@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { href: '/templates', label: 'Templates' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/#how-it-works', label: 'How it works' },
-  { href: '/scan', label: 'Resume Scanner' },
   { href: '/#faq', label: 'FAQ' },
 ];
 
