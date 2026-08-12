@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, Check, FileText, Palette, ShieldCheck, Sparkles, Upload, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
@@ -40,6 +41,36 @@ function MiniPreview({ data, settings }: { data: ResumeData; settings: ResumeSet
         <ResumeDocument data={data} settings={settings} />
       </div>
     </div>
+  );
+}
+
+function QuickStart({ accountName }: { accountName: string }) {
+  return (
+    <section className="oe-quick-start mb-4 overflow-hidden rounded-[24px] p-3 sm:mb-6 sm:rounded-[28px] sm:p-4" aria-label="Quick start">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 px-1 sm:px-2">
+          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-orange-600 sm:text-[10px]">
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shadow-[0_0_0_5px_rgba(249,115,22,.08)]" />
+            {accountName ? `Welcome back, ${accountName.split(' ')[0]}` : 'Start your resume'}
+          </div>
+          <h2 className="mt-1 text-base font-bold tracking-[-0.025em] text-neutral-950 sm:text-lg">Choose the fastest way to begin.</h2>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:min-w-[520px] sm:grid-cols-3">
+          <a href="#resume-import" className="oe-quick-action group">
+            <span className="oe-quick-icon bg-orange-50 text-orange-600"><Upload className="h-4 w-4" /></span>
+            <span><strong>Scan resume</strong><small>PDF import</small></span>
+          </a>
+          <Link href="/templates" className="oe-quick-action group">
+            <span className="oe-quick-icon bg-violet-50 text-violet-600"><Palette className="h-4 w-4" /></span>
+            <span><strong>Templates</strong><small>Pick a style</small></span>
+          </Link>
+          <a href="#resume-builder" className="oe-quick-action group">
+            <span className="oe-quick-icon bg-emerald-50 text-emerald-600"><Sparkles className="h-4 w-4" /></span>
+            <span><strong>Build with AI</strong><small>Write smarter</small></span>
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -99,8 +130,9 @@ export function WizardShell({ data, settings, updateData, updateSettings, onFini
       </header>
 
       <main className="relative mx-auto max-w-7xl px-3.5 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-        <div className="mx-auto mb-4 max-w-5xl sm:mb-6"><ResumeImportCard updateData={updateData} /></div>
-        <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_390px] lg:gap-6">
+        <QuickStart accountName={accountName} />
+        <div id="resume-import" className="mx-auto mb-4 max-w-5xl scroll-mt-24 sm:mb-6"><ResumeImportCard updateData={updateData} /></div>
+        <div id="resume-builder" className="grid gap-4 scroll-mt-24 lg:grid-cols-[220px_minmax(0,1fr)_390px] lg:gap-6">
           <aside className="hidden lg:block"><div className="sticky top-24"><div className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Build your resume</div><div className="space-y-1">{STEPS.map((item, index) => { const active = index === stepIndex; const completed = index < stepIndex; return <div key={item.key} className={`flex items-center gap-3 rounded-xl px-3 py-3 transition-all duration-300 ${active ? 'oe-glass shadow-sm' : 'hover:bg-white/55'}`}><span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${completed ? 'bg-emerald-50 text-emerald-600' : active ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'border border-neutral-200 bg-white/80 text-neutral-400'}`}>{completed ? <Check className="h-3.5 w-3.5" /> : index + 1}</span><div className="min-w-0"><div className={`text-xs font-semibold ${active ? 'text-orange-700' : 'text-neutral-700'}`}>{item.label}</div><div className="mt-0.5 truncate text-[10px] text-neutral-400">{item.description}</div></div></div>; })}</div><div className="oe-glass-pulse mt-6 rounded-2xl p-4"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600"><Sparkles className="h-4 w-4" /></div><div className="mt-3 text-xs font-semibold">AI summary is ready</div><p className="mt-1 text-[10px] leading-5 text-neutral-400">Add your real experience and let AI turn it into a concise, truthful summary.</p></div></div></aside>
 
           <section className="min-w-0">
