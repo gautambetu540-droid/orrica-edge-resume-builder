@@ -9,51 +9,33 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
 
-  async function download() {
+  function download() {
     if (downloading) return;
     setDownloading(true);
     setDownloaded(false);
-    try {
-      const res = await fetch(`/api/resume/${resumeId}/pdf`, {
-        method: 'GET',
-        cache: 'no-store',
-        credentials: 'include',
-        headers: { Accept: 'application/pdf, application/json' },
-      });
 
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error || `PDF generation failed (${res.status})`);
-      }
+    // Start the real GET request directly from the user gesture. This avoids
+    // mobile browsers blocking a synthetic `a.click()` after an async fetch.
+    // The API responds with Content-Disposition: attachment, so the browser
+    // owns the actual file download and streams it directly to Downloads.
+    const endpoint = `/api/resume/${encodeURIComponent(resumeId)}/pdf`;
+    const link = document.createElement('a');
+    link.href = endpoint;
+    link.download = fileName;
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-      const blob = await res.blob();
-      if (!blob.size || blob.type !== 'application/pdf') {
-        throw new Error('The PDF response was empty or invalid. Please try again.');
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      // Keep the object URL alive briefly so Chromium completes the download.
-      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    // The server validates the generated PDF before returning it. We mark the
+    // client action as started rather than pretending that a Blob was created.
+    window.setTimeout(() => {
+      setDownloading(false);
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 2200);
-      toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
-    } catch (err) {
-      toast({
-        title: 'Could not generate PDF',
-        description: (err as Error).message,
-        variant: 'error',
-      });
-    } finally {
-      setDownloading(false);
-    }
+      toast({ title: 'PDF download started', description: 'Your resume is being saved as a PDF.' });
+    }, 350);
   }
 
   return { download, downloading, downloaded };
