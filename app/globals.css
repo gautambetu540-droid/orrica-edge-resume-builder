@@ -70,11 +70,14 @@ header.z-40{box-shadow:0 12px 40px -34px rgba(15,23,42,.42);background:rgba(255,
 .oe-glow-orb{position:absolute;border-radius:999px;filter:blur(35px);pointer-events:none;opacity:.65;animation:float-soft 6s ease-in-out infinite;}
 .oe-glow-orb.orange{background:rgba(255,122,61,.16)}.oe-glow-orb.violet{background:rgba(124,92,255,.12);animation-delay:-2s}
 .oe-glass-pulse{background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,244,238,.64));border:1px solid rgba(255,255,255,.88);box-shadow:0 20px 60px -42px rgba(255,105,45,.5);animation:pulse-glow 4s ease-in-out infinite;backdrop-filter:blur(18px);}
-.oe-3d-button{position:relative;overflow:hidden;background:linear-gradient(145deg,#ff7b45,#f45e20)!important;box-shadow:0 11px 0 #cf4916,0 20px 35px -18px rgba(244,94,32,.6)!important;transform:translateY(-2px);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;}
-.oe-3d-button::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 25%,rgba(255,255,255,.28) 45%,transparent 65%);transform:translateX(-110%);transition:transform .55s ease;}
-.oe-3d-button:hover{filter:saturate(1.06);transform:translateY(-4px)!important;box-shadow:0 13px 0 #cf4916,0 26px 42px -18px rgba(244,94,32,.66)!important;}
-.oe-3d-button:hover::after{transform:translateX(110%)}
-.oe-3d-button:active{transform:translateY(4px)!important;box-shadow:0 4px 0 #cf4916,0 10px 20px -14px rgba(244,94,32,.45)!important;}
+
+/* Clean premium Create Resume button: compact, balanced and aligned with the desktop navbar. */
+.oe-3d-button{position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(135deg,#ff7a45 0%,#f45d20 100%)!important;border:1px solid rgba(214,72,18,.28);box-shadow:0 4px 0 #cf4916,0 10px 24px -16px rgba(244,94,32,.62)!important;transform:translateY(0);transition:transform .18s cubic-bezier(.22,1,.36,1),box-shadow .18s ease,filter .18s ease!important;}
+.oe-3d-button::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 28%,rgba(255,255,255,.25) 48%,transparent 68%);transform:translateX(-115%);transition:transform .55s ease;pointer-events:none;}
+.oe-3d-button:hover{filter:saturate(1.05) brightness(1.01);transform:translateY(-2px)!important;box-shadow:0 6px 0 #cf4916,0 15px 28px -16px rgba(244,94,32,.64)!important;}
+.oe-3d-button:hover::after{transform:translateX(115%)}
+.oe-3d-button:active{transform:translateY(2px)!important;box-shadow:0 2px 0 #cf4916,0 7px 16px -12px rgba(244,94,32,.45)!important;}
+.oe-3d-button:focus-visible{outline:3px solid rgba(255,105,45,.22);outline-offset:3px;}
 .oe-quick-start{position:relative;background:rgba(255,255,255,.68);border:1px solid rgba(255,255,255,.9);box-shadow:0 24px 70px -50px rgba(15,23,42,.45),inset 0 1px 0 rgba(255,255,255,.95);backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px);}
 .oe-quick-action{display:flex;min-height:58px;align-items:center;gap:8px;border-radius:16px;border:1px solid rgba(15,23,42,.055);background:rgba(255,255,255,.66);padding:8px;box-shadow:0 10px 30px -24px rgba(15,23,42,.4);transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease,border-color .22s ease,background .22s ease;}
 .oe-quick-action:hover{transform:translateY(-3px);background:rgba(255,255,255,.9);border-color:rgba(255,105,45,.16);box-shadow:0 18px 38px -25px rgba(15,23,42,.36);}
@@ -93,7 +96,7 @@ header.z-40{box-shadow:0 12px 40px -34px rgba(15,23,42,.42);background:rgba(255,
 @keyframes border-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(255,105,45,0)}50%{box-shadow:0 0 0 10px rgba(255,105,45,.05),0 16px 50px -22px rgba(255,105,45,.45)}}
 .animate-float{animation:float-soft 5s ease-in-out infinite}.animate-float-slow{animation:float-slow 7s ease-in-out infinite}.animate-fade-in-up{animation:fade-up 720ms cubic-bezier(.22,1,.36,1) both}.animate-scale-in{animation:scale-in 780ms cubic-bezier(.22,1,.36,1) both}.animate-gradient-x{animation:gradient-x 6s ease infinite}.animate-shimmer{animation:shimmer 2.8s ease-in-out infinite}.animate-pulse-glow{animation:pulse-glow 3.2s ease-in-out infinite}.reveal-1{animation-delay:80ms}.reveal-2{animation-delay:160ms}.reveal-3{animation-delay:240ms}.reveal-4{animation-delay:320ms}.reveal-5{animation-delay:400ms}.reveal-6{animation-delay:480ms}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 @media(max-width:767px){
   body{font-size:15px;}
@@ -107,6 +110,10 @@ header.z-40{box-shadow:0 12px 40px -34px rgba(15,23,42,.42);background:rgba(255,
   .oe-wizard-panel{border-radius:20px!important;box-shadow:0 24px 70px -50px rgba(15,23,42,.42);padding:15px!important;}
   .oe-wizard-panel input,.oe-wizard-panel textarea,.oe-wizard-panel select{font-size:16px!important;}
   .oe-wizard-panel label{font-size:13px;}
-  .oe-3d-button{box-shadow:0 7px 0 #cf4916,0 16px 28px -16px rgba(244,94,32,.6)!important;}
-  .oe-3d-button:hover{box-shadow:0 8px 0 #cf4916,0 18px 30px -16px rgba(244,94,32,.62)!important;}
+  .oe-3d-button{box-shadow:0 3px 0 #cf4916,0 8px 20px -14px rgba(244,94,32,.58)!important;}
+  .oe-3d-button:hover{box-shadow:0 4px 0 #cf4916,0 11px 22px -14px rgba(244,94,32,.6)!important;}
+}
+
+@media(min-width:1024px){
+  .oe-glass-nav .oe-3d-button{height:46px!important;min-height:46px!important;border-radius:13px!important;padding-left:22px!important;padding-right:22px!important;font-size:14px!important;}
 }
