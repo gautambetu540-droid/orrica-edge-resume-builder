@@ -22,18 +22,19 @@ function getApiKey() {
   return key;
 }
 
-// Keep the default on a widely available model. A custom GEMINI_RESUME_MODEL
-// can still be supplied, but unavailable model IDs automatically fall back.
-export const AI_MODEL = process.env.GEMINI_RESUME_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+export const AI_MODEL = process.env.GEMINI_RESUME_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 async function generateContent(request: ChatRequest) {
   const apiKey = getApiKey();
   const configuredModel = (request.model || AI_MODEL).replace(/^models\//, '').trim();
-  const models = [configuredModel, 'gemini-2.5-flash', 'gemini-2.0-flash'].filter((x, i, a) => x && a.indexOf(x) === i);
+  const models = [configuredModel, 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter((x, i, a) => x && a.indexOf(x) === i);
   const systemMessage = request.messages.find((message) => message.role === 'system');
   const contents = request.messages.filter((message) => message.role !== 'system').map((message) => ({ role: message.role === 'assistant' ? 'model' : 'user', parts: [{ text: message.content }] }));
   if (!contents.length) contents.push({ role: 'user', parts: [{ text: '' }] });
-  const generationConfig: Record<string, unknown> = { temperature: request.temperature ?? 0.4, maxOutputTokens: request.max_tokens ?? 1200 };
+
+  // Gemini 3.x rejects deprecated sampling parameters such as temperature.
+  // Do not send temperature/top_p/top_k; maxOutputTokens remains supported.
+  const generationConfig: Record<string, unknown> = { maxOutputTokens: request.max_tokens ?? 1200 };
   if (request.response_format?.type === 'json_object') generationConfig.responseMimeType = 'application/json';
 
   let lastMessage = 'Gemini API request failed.';
@@ -50,7 +51,7 @@ async function generateContent(request: ChatRequest) {
       lastMessage = `Gemini returned no text${data.candidates?.[0]?.finishReason ? ` (${data.candidates[0].finishReason})` : ''}.`;
     } else {
       lastMessage = data.error?.message || `Gemini API request failed with status ${response.status}.`;
-      if (![404, 429, 500, 502, 503].includes(response.status)) break;
+      if (![400, 404, 429, 500, 502, 503].includes(response.status)) break;
     }
   }
   throw new Error(`Gemini API error: ${lastMessage}`);
