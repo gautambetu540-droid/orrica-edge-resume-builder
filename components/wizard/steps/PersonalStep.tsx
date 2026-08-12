@@ -24,10 +24,10 @@ export function PersonalStep({ data, updateData }: StepProps) {
   }
 
   return (
-    <div className="grid sm:grid-cols-2 gap-4">
+    <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
       {FIELDS.map((f) => (
-        <div key={f.key} className={f.key === 'fullName' || f.key === 'professionalTitle' ? 'sm:col-span-2' : ''}>
-          <Label htmlFor={f.key}>
+        <div key={f.key} className={`min-w-0 ${f.key === 'fullName' || f.key === 'professionalTitle' ? 'sm:col-span-2' : ''}`}>
+          <Label htmlFor={f.key} className="mb-1.5 text-[13px] font-semibold leading-5 text-neutral-800 sm:mb-2 sm:text-sm">
             {f.label}
             {f.required && <span className="text-destructive"> *</span>}
           </Label>
@@ -38,6 +38,7 @@ export function PersonalStep({ data, updateData }: StepProps) {
             placeholder={f.placeholder}
             value={info[f.key] ?? ''}
             onChange={(e) => set(f.key, e.target.value)}
+            className="h-11 rounded-xl px-3.5 text-[14px] shadow-[0_1px_0_rgba(15,23,42,.02)] placeholder:text-[13px] sm:h-11 sm:text-sm"
           />
         </div>
       ))}
