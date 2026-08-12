@@ -1,14 +1,11 @@
-// Per request: this credit appears ONLY on the resume document itself
-// (live preview + exported PDF/print) — never in the app's own UI chrome
-// (navbar, dashboard, etc.), which uses the standalone logo instead
-// (see components/landing/SiteHeader.tsx). Text-only, small, centered.
+// Small text-only credit rendered inside the resume document and exported PDF.
 export function BrandFooter() {
   return (
     <div
-      className="text-center pt-4 mt-2 opacity-50"
-      style={{ fontSize: '7pt', fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}
+      className="mt-5 border-t border-neutral-200/70 pt-3 text-center"
+      style={{ fontSize: '7pt', fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif", color: '#7b8490', letterSpacing: '0.01em' }}
     >
-      Made with Orrica Edge
+      Crafted with Orrica Edge Resume Builder
     </div>
   );
 }
