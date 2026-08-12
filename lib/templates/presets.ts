@@ -1,9 +1,5 @@
 import { ResumeFont, TemplateId } from '@/lib/types/resume';
 
-// Maps our curated font choices to real font-family stacks. Inter, Source
-// Sans 3 and IBM Plex Sans are loaded via next/font in app/layout.tsx and
-// app/resume/[id]/print/page.tsx; Merriweather/Georgia use safe fallbacks so
-// PDF rendering never silently substitutes an unintended font.
 export const FONT_STACKS: Record<ResumeFont, string> = {
   inter: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
   'source-sans-3': "var(--font-source-sans-3), ui-sans-serif, system-ui, sans-serif",
@@ -13,129 +9,89 @@ export const FONT_STACKS: Record<ResumeFont, string> = {
 };
 
 export type TemplateLayout = 'single-column' | 'two-column';
+export type HeaderVariant = 'clean' | 'centered' | 'banner' | 'editorial' | 'compact';
+export type SidebarVariant = 'solid' | 'soft' | 'plain';
 
 export interface TemplatePreset {
   id: TemplateId;
   name: string;
   layout: TemplateLayout;
   headerAlign: 'left' | 'center';
+  headerVariant: HeaderVariant;
+  sidebarVariant: SidebarVariant;
   sectionHeadingStyle: 'uppercase-underline' | 'uppercase-accent' | 'small-caps-line' | 'bold-plain';
   dividers: boolean;
   photoAllowed: boolean;
   defaultAccentColor: string;
+  recommendedFont: ResumeFont;
+  defaultFontSize: number;
+  defaultHeadingScale: number;
+  defaultLineSpacing: number;
+  defaultSectionSpacing: number;
+  defaultMargin: number;
   description: string;
 }
 
 export const TEMPLATE_PRESETS: Record<TemplateId, TemplatePreset> = {
   'modern-ats': {
-    id: 'modern-ats',
-    name: 'Modern ATS',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'uppercase-accent',
-    dividers: false,
-    photoAllowed: false,
-    defaultAccentColor: '#4338ca',
-    description: 'Clean single-column layout tuned for maximum ATS parsing accuracy.',
+    id: 'modern-ats', name: 'ATS Clean', layout: 'single-column', headerAlign: 'left', headerVariant: 'clean', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'uppercase-accent', dividers: true, photoAllowed: false, defaultAccentColor: '#111827', recommendedFont: 'source-sans-3',
+    defaultFontSize: 10.2, defaultHeadingScale: 1.08, defaultLineSpacing: 1.28, defaultSectionSpacing: 13, defaultMargin: 15,
+    description: 'Clean, recruiter-friendly single column inspired by the most readable sample resumes.',
   },
   'classic-professional': {
-    id: 'classic-professional',
-    name: 'Classic Professional',
-    layout: 'single-column',
-    headerAlign: 'center',
-    sectionHeadingStyle: 'uppercase-underline',
-    dividers: true,
-    photoAllowed: false,
-    defaultAccentColor: '#1f2937',
-    description: 'Traditional centered header with underlined section headings.',
+    id: 'classic-professional', name: 'Classic Orange', layout: 'single-column', headerAlign: 'left', headerVariant: 'compact', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'uppercase-underline', dividers: true, photoAllowed: false, defaultAccentColor: '#c2410c', recommendedFont: 'source-sans-3',
+    defaultFontSize: 10.1, defaultHeadingScale: 1.08, defaultLineSpacing: 1.24, defaultSectionSpacing: 12, defaultMargin: 15,
+    description: 'Crisp black typography with restrained orange rules and a polished professional hierarchy.',
   },
   minimal: {
-    id: 'minimal',
-    name: 'Minimal',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'small-caps-line',
-    dividers: false,
-    photoAllowed: false,
-    defaultAccentColor: '#0f172a',
-    description: 'Understated typography-first design with generous whitespace.',
+    id: 'minimal', name: 'Minimal Mono', layout: 'single-column', headerAlign: 'center', headerVariant: 'centered', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'small-caps-line', dividers: false, photoAllowed: false, defaultAccentColor: '#111827', recommendedFont: 'inter',
+    defaultFontSize: 10.4, defaultHeadingScale: 1.05, defaultLineSpacing: 1.3, defaultSectionSpacing: 14, defaultMargin: 16,
+    description: 'Minimal one-page layout with a centered identity block and quiet section dividers.',
   },
   executive: {
-    id: 'executive',
-    name: 'Executive',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'bold-plain',
-    dividers: true,
-    photoAllowed: false,
-    defaultAccentColor: '#7c2d12',
-    description: 'Confident serif-friendly design suited for senior leadership resumes.',
+    id: 'executive', name: 'Editorial Teal', layout: 'single-column', headerAlign: 'center', headerVariant: 'banner', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'bold-plain', dividers: false, photoAllowed: false, defaultAccentColor: '#2f7f78', recommendedFont: 'merriweather',
+    defaultFontSize: 10.4, defaultHeadingScale: 1.08, defaultLineSpacing: 1.3, defaultSectionSpacing: 15, defaultMargin: 0,
+    description: 'Editorial serif resume with a strong teal masthead, matching the premium sample style.',
   },
   'modern-two-column': {
-    id: 'modern-two-column',
-    name: 'Modern Two Column',
-    layout: 'two-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'uppercase-accent',
-    dividers: false,
-    photoAllowed: true,
-    defaultAccentColor: '#0369a1',
-    description: 'Sidebar for contact/skills, main column for experience — great information density.',
+    id: 'modern-two-column', name: 'Teal Sidebar', layout: 'two-column', headerAlign: 'left', headerVariant: 'clean', sidebarVariant: 'solid',
+    sectionHeadingStyle: 'uppercase-accent', dividers: false, photoAllowed: false, defaultAccentColor: '#08736f', recommendedFont: 'merriweather',
+    defaultFontSize: 10.2, defaultHeadingScale: 1.08, defaultLineSpacing: 1.28, defaultSectionSpacing: 15, defaultMargin: 0,
+    description: 'High-impact two-column executive layout with a deep teal information sidebar.',
   },
   'fresh-graduate': {
-    id: 'fresh-graduate',
-    name: 'Fresh Graduate',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'uppercase-accent',
-    dividers: false,
-    photoAllowed: false,
-    defaultAccentColor: '#15803d',
-    description: 'Education-forward ordering, ideal for early-career candidates with limited work history.',
+    id: 'fresh-graduate', name: 'Academic Purple', layout: 'single-column', headerAlign: 'left', headerVariant: 'editorial', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'uppercase-accent', dividers: true, photoAllowed: false, defaultAccentColor: '#4527a0', recommendedFont: 'merriweather',
+    defaultFontSize: 10.3, defaultHeadingScale: 1.1, defaultLineSpacing: 1.28, defaultSectionSpacing: 14, defaultMargin: 15,
+    description: 'Academic-inspired layout with strong purple labels, rules and structured information rows.',
   },
   'bold-header': {
-    id: 'bold-header',
-    name: 'Bold Header',
-    layout: 'single-column',
-    headerAlign: 'center',
-    sectionHeadingStyle: 'uppercase-accent',
-    dividers: false,
-    photoAllowed: false,
-    defaultAccentColor: '#be123c',
-    description: 'A confident centered header with vivid section accents — great for standing out.',
+    id: 'bold-header', name: 'Bold Executive', layout: 'single-column', headerAlign: 'left', headerVariant: 'editorial', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'bold-plain', dividers: true, photoAllowed: false, defaultAccentColor: '#0f172a', recommendedFont: 'inter',
+    defaultFontSize: 10.4, defaultHeadingScale: 1.14, defaultLineSpacing: 1.3, defaultSectionSpacing: 15, defaultMargin: 16,
+    description: 'Modern executive hierarchy with oversized name, strong section labels and generous whitespace.',
   },
   'elegant-serif': {
-    id: 'elegant-serif',
-    name: 'Elegant Serif',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'small-caps-line',
-    dividers: true,
-    photoAllowed: false,
-    defaultAccentColor: '#78350f',
-    description: 'Refined serif-friendly styling with hairline dividers — a timeless, editorial feel.',
+    id: 'elegant-serif', name: 'Editorial Serif', layout: 'single-column', headerAlign: 'left', headerVariant: 'editorial', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'small-caps-line', dividers: true, photoAllowed: false, defaultAccentColor: '#374151', recommendedFont: 'georgia',
+    defaultFontSize: 10.3, defaultHeadingScale: 1.08, defaultLineSpacing: 1.3, defaultSectionSpacing: 14, defaultMargin: 16,
+    description: 'Refined serif typography with editorial rules and balanced page rhythm.',
   },
   'compact-ats': {
-    id: 'compact-ats',
-    name: 'Compact ATS',
-    layout: 'single-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'bold-plain',
-    dividers: false,
-    photoAllowed: false,
-    defaultAccentColor: '#334155',
-    description: 'Tight spacing and dense layout to fit more content on one page without losing clarity.',
+    id: 'compact-ats', name: 'Compact One Page', layout: 'single-column', headerAlign: 'left', headerVariant: 'compact', sidebarVariant: 'plain',
+    sectionHeadingStyle: 'bold-plain', dividers: true, photoAllowed: false, defaultAccentColor: '#1f2937', recommendedFont: 'ibm-plex-sans',
+    defaultFontSize: 9.6, defaultHeadingScale: 1.02, defaultLineSpacing: 1.2, defaultSectionSpacing: 9, defaultMargin: 13,
+    description: 'Dense but readable one-page format for candidates with more content to fit.',
   },
   'creative-sidebar': {
-    id: 'creative-sidebar',
-    name: 'Creative Sidebar',
-    layout: 'two-column',
-    headerAlign: 'left',
-    sectionHeadingStyle: 'uppercase-accent',
-    dividers: false,
-    photoAllowed: true,
-    defaultAccentColor: '#9333ea',
-    description: 'Vivid sidebar layout with photo support — ideal for design and creative roles.',
+    id: 'creative-sidebar', name: 'Classic Sidebar', layout: 'two-column', headerAlign: 'left', headerVariant: 'clean', sidebarVariant: 'soft',
+    sectionHeadingStyle: 'uppercase-underline', dividers: true, photoAllowed: true, defaultAccentColor: '#111827', recommendedFont: 'source-sans-3',
+    defaultFontSize: 10.1, defaultHeadingScale: 1.06, defaultLineSpacing: 1.24, defaultSectionSpacing: 13, defaultMargin: 0,
+    description: 'Clean two-column profile with a light sidebar, closely matching classic sample layouts.',
   },
 };
 
