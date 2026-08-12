@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Keep native/server-only packages outside the webpack bundle.
-  // @sparticuz/chromium must remain in node_modules so its bin directory
-  // can be resolved correctly at runtime on Vercel.
+  // Chromium and Puppeteer must stay external so @sparticuz/chromium
+  // can resolve its bundled Brotli payload at runtime instead of from a
+  // webpack-generated path.
   serverExternalPackages: [
     '@sparticuz/chromium',
     'puppeteer-core',
@@ -10,14 +10,15 @@ const nextConfig = {
     'openai',
   ],
 
-  // Explicitly copy Chromium's executable payload into traced server
-  // functions so the binary is available at runtime on Vercel.
+  // Explicitly include the complete Chromium package in the traced
+  // serverless function. This is intentionally broader than only `bin/`
+  // because the Chromium resolver can need package metadata/helpers too.
   outputFileTracingIncludes: {
     '/*': [
-      './node_modules/@sparticuz/chromium/bin/**/*',
+      './node_modules/@sparticuz/chromium/**/*',
     ],
     '/api/resume/*/pdf': [
-      './node_modules/@sparticuz/chromium/bin/**/*',
+      './node_modules/@sparticuz/chromium/**/*',
     ],
   },
 };
