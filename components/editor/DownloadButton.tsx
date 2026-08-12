@@ -39,95 +39,54 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   } finally { window.clearTimeout(timeout); }
 }
 
-/**
- * The visible ResumeDocument is the single source of truth.
- * We clone that exact DOM, keep it fully renderable, and export the clone at
- * A4 CSS width. No alternate resume template/data is used for the PDF.
- */
+/** Export the actual visible ResumeDocument. Preview is the single source of truth. */
 async function downloadExactPreview(fileName: string) {
-  const source = document.getElementById('resume-document-root');
+  const source = document.getElementById('resume-document-root') as HTMLElement | null;
   if (!source) throw new Error('Resume preview is not available.');
 
   const html2pdfModule = await import('html2pdf.js');
   const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
   if (typeof html2pdf !== 'function') throw new Error('PDF renderer failed to load.');
 
-  const clone = source.cloneNode(true) as HTMLElement;
-  clone.removeAttribute('id');
-  clone.style.width = '794px';
-  clone.style.maxWidth = '794px';
-  clone.style.minWidth = '794px';
-  clone.style.height = 'auto';
-  clone.style.minHeight = '1123px';
-  clone.style.margin = '0';
-  clone.style.transform = 'none';
-  clone.style.boxShadow = 'none';
-  clone.style.border = '0';
-  clone.style.overflow = 'visible';
-  clone.style.background = '#fff';
-  clone.style.position = 'relative';
-  clone.style.visibility = 'visible';
-  clone.style.opacity = '1';
-  clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
+  // Do NOT clone, hide, move, resize or restyle the preview. html2canvas gets
+  // the exact same DOM node that the user is looking at in the editor.
+  await document.fonts.ready;
+  const images = Array.from(source.querySelectorAll('img'));
+  await Promise.all(images.map((img) => {
+    if (img.complete) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+    });
+  }));
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  // Put the fully visible clone below the current document rather than behind
-  // the page. z-index:-1/visibility:hidden can cause html2canvas to paint white
-  // pages on mobile Chrome. It is outside the user's viewport, but remains a
-  // normal renderable element for the browser's layout/paint engine.
-  const capture = document.createElement('div');
-  capture.style.position = 'absolute';
-  capture.style.left = '0';
-  capture.style.top = `${Math.max(document.documentElement.scrollHeight, window.innerHeight) + 64}px`;
-  capture.style.width = '794px';
-  capture.style.height = 'auto';
-  capture.style.overflow = 'visible';
-  capture.style.background = '#fff';
-  capture.style.pointerEvents = 'none';
-  capture.style.zIndex = '0';
-  capture.appendChild(clone);
-  document.body.appendChild(capture);
+  const width = source.offsetWidth;
+  const height = source.scrollHeight;
+  if (width < 500 || height < 500) throw new Error('Resume preview is not ready for PDF export.');
 
-  try {
-    await document.fonts.ready;
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    const rect = clone.getBoundingClientRect();
-    if (rect.width < 700 || rect.height < 500) throw new Error('Preview could not be prepared for PDF export.');
-
-    await html2pdf().set({
+  await html2pdf()
+    .set({
       margin: 0,
       filename: fileName || 'Orrica_Edge_Resume.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
-        scale: 2,
+        scale: Math.min(2.5, Math.max(1.5, window.devicePixelRatio || 2)),
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
         logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 794,
-        windowHeight: Math.max(Math.ceil(rect.height), 1123),
-        width: 794,
-        onclone: (clonedDocument: Document) => {
-          const root = clonedDocument.querySelector('[data-resume-font]') as HTMLElement | null;
-          if (root) {
-            root.style.width = '794px';
-            root.style.maxWidth = '794px';
-            root.style.minWidth = '794px';
-            root.style.height = 'auto';
-            root.style.minHeight = '1123px';
-            root.style.overflow = 'visible';
-            root.style.transform = 'none';
-          }
-        },
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        windowWidth: Math.max(document.documentElement.clientWidth, width),
+        windowHeight: Math.max(document.documentElement.clientHeight, height),
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page'] },
-    }).from(clone).save();
-  } finally {
-    capture.remove();
-  }
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page', '.avoid-page-break'] },
+    })
+    .from(source)
+    .save();
 }
 
 export function useDownloadPdf(resumeId: string, fileName: string) {
