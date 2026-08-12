@@ -34,17 +34,13 @@ async function downloadFromServer(resumeId: string, fileName: string) {
     });
 
     const contentType = (response.headers.get('content-type') || '').toLowerCase();
-
     if (!response.ok) {
       const body = contentType.includes('application/json')
         ? await response.json().catch(() => null)
         : null;
       throw new Error(body?.message || body?.error || `PDF generation failed (${response.status})`);
     }
-
-    if (!contentType.includes('application/pdf')) {
-      throw new Error('Server returned a non-PDF response.');
-    }
+    if (!contentType.includes('application/pdf')) throw new Error('Server returned a non-PDF response.');
 
     const blob = await response.blob();
     if (blob.size < 100) throw new Error('Server returned an empty PDF.');
@@ -56,60 +52,54 @@ async function downloadFromServer(resumeId: string, fileName: string) {
 
 async function downloadFromBrowser(fileName: string) {
   const source = document.getElementById('resume-document-root');
-  if (!source) {
-    throw new Error('Resume preview is not available. Please open the resume editor and try again.');
-  }
+  if (!source) throw new Error('Resume preview is not available. Please open the resume editor and try again.');
 
-  // html2pdf 0.14 includes current html2canvas/jsPDF fixes. Use the module
-  // namespace fallback because Next can expose CommonJS packages differently
-  // depending on the bundling target.
   const html2pdfModule = await import('html2pdf.js');
   const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
-  if (typeof html2pdf !== 'function') {
-    throw new Error('PDF renderer failed to load.');
-  }
-
-  const clone = source.cloneNode(true) as HTMLElement;
-  clone.removeAttribute('id');
-  clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
-
-  // Keep the capture layer in the document viewport. The previous implementation
-  // put it at left:-100000px, which can make html2canvas calculate an invalid
-  // capture rectangle on mobile/Chrome and produce no downloadable file.
-  clone.style.width = '210mm';
-  clone.style.minHeight = '297mm';
-  clone.style.height = 'auto';
-  clone.style.margin = '0';
-  clone.style.transform = 'none';
-  clone.style.boxShadow = 'none';
-  clone.style.border = '0';
-  clone.style.position = 'relative';
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.zIndex = '0';
-  clone.style.background = '#ffffff';
-  clone.style.overflow = 'visible';
+  if (typeof html2pdf !== 'function') throw new Error('PDF renderer failed to load.');
 
   const host = document.createElement('div');
   host.id = 'orrica-pdf-capture-layer';
-  host.style.position = 'fixed';
-  host.style.inset = '0';
-  host.style.width = '100vw';
-  host.style.height = '100vh';
-  host.style.overflow = 'auto';
-  host.style.zIndex = '2147483000';
-  host.style.background = '#ffffff';
-  host.style.visibility = 'hidden';
-  host.style.pointerEvents = 'none';
+  Object.assign(host.style, {
+    position: 'fixed',
+    inset: '0',
+    width: '100vw',
+    height: '100vh',
+    overflow: 'auto',
+    zIndex: '2147483000',
+    background: '#ffffff',
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  });
+
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.id = 'resume-document-root';
+  clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
+  Object.assign(clone.style, {
+    display: 'block',
+    position: 'relative',
+    width: '210mm',
+    minWidth: '210mm',
+    maxWidth: '210mm',
+    minHeight: '297mm',
+    height: 'auto',
+    margin: '0',
+    transform: 'none',
+    boxShadow: 'none',
+    border: '0',
+    overflow: 'visible',
+    background: '#ffffff',
+  });
+
   host.appendChild(clone);
   document.body.appendChild(host);
 
   try {
     await document.fonts.ready;
-
-    // Give the browser one layout frame so computed styles and fonts are fully
-    // available before html2canvas clones the DOM.
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    const rect = clone.getBoundingClientRect();
+    if (rect.width < 100 || rect.height < 100) throw new Error('Resume preview could not be laid out for PDF export.');
 
     await html2pdf()
       .set({
@@ -122,29 +112,13 @@ async function downloadFromBrowser(fileName: string) {
           allowTaint: false,
           backgroundColor: '#ffffff',
           logging: false,
-          windowWidth: 794,
+          width: Math.round(rect.width),
+          windowWidth: Math.max(794, Math.round(rect.width)),
           scrollX: 0,
           scrollY: 0,
-          onclone: (clonedDocument: Document) => {
-            const capture = clonedDocument.getElementById('orrica-pdf-capture-layer');
-            if (capture) {
-              capture.style.visibility = 'visible';
-              capture.style.position = 'absolute';
-              capture.style.inset = 'auto';
-              capture.style.left = '0';
-              capture.style.top = '0';
-              capture.style.width = '794px';
-              capture.style.height = 'auto';
-              capture.style.overflow = 'visible';
-              capture.style.background = '#ffffff';
-            }
-          },
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-        pagebreak: {
-          mode: ['css', 'legacy'],
-          avoid: ['.break-inside-avoid-page'],
-        },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page'] },
       })
       .from(clone)
       .save();
@@ -163,24 +137,27 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
     setDownloaded(false);
 
     try {
-      // Primary: client-side PDF. This avoids Vercel/Chromium limits.
-      await downloadFromBrowser(fileName);
+      // Primary: server-side Chromium renders the actual ResumeDocument with
+      // all CSS, fonts, colours, sections and pagination. This gives the PDF
+      // the same complete content as the print view instead of a partial DOM
+      // snapshot from a responsive/mobile preview.
+      await downloadFromServer(resumeId, fileName);
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 2200);
-      toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
-    } catch (clientError) {
-      // Server renderer remains a real fallback for older browsers or if the
-      // client capture library cannot render a particular resume.
+      toast({ title: 'Resume downloaded', description: 'Your complete resume PDF is ready.' });
+    } catch (serverError) {
+      // Fallback: browser-side export for environments where server Chromium
+      // is temporarily unavailable.
       try {
-        await downloadFromServer(resumeId, fileName);
+        await downloadFromBrowser(fileName);
         setDownloaded(true);
         window.setTimeout(() => setDownloaded(false), 2200);
-        toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
-      } catch (serverError) {
-        const clientMessage = clientError instanceof Error ? clientError.message : '';
+        toast({ title: 'Resume downloaded', description: 'Your complete resume PDF is ready.' });
+      } catch (clientError) {
         const serverMessage = serverError instanceof Error ? serverError.message : '';
+        const clientMessage = clientError instanceof Error ? clientError.message : '';
         const message = serverMessage || clientMessage || 'Could not generate the PDF. Please try again.';
-        console.error('Resume PDF download failed', { clientError, serverError });
+        console.error('Resume PDF download failed', { serverError, clientError });
         toast({ title: 'Download failed', description: message, variant: 'error' });
       }
     } finally {
@@ -211,22 +188,14 @@ export function DownloadButton({
       variant={variant}
       className={[
         variant === 'default'
-          ? 'relative overflow-hidden border-0 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 text-white shadow-[0_8px_28px_-12px_rgba(249,115,22,.8)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-12px_rgba(249,115,22,.9)]'
+          ? 'group relative overflow-hidden border-0 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 text-white shadow-[0_8px_28px_-12px_rgba(249,115,22,.8)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-12px_rgba(249,115,22,.9)]'
           : '',
         className || '',
       ].join(' ')}
     >
-      {downloading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : downloaded ? (
-        <Check className="h-4 w-4 animate-scale-in" />
-      ) : (
-        <Download className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
-      )}
+      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 animate-scale-in" /> : <Download className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />}
       <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
-      {!downloading && !downloaded && variant === 'default' && (
-        <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />
-      )}
+      {!downloading && !downloaded && variant === 'default' && <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />}
     </Button>
   );
 }
