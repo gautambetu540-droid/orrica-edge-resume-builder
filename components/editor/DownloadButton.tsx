@@ -5,6 +5,112 @@ import { Check, Download, Loader2, Printer, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 
+function triggerBlobDownload(blob: Blob, fileName: string) {
+  if (!blob.size) throw new Error('Generated PDF is empty.');
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = fileName || 'Orrica_Edge_Resume.pdf';
+  link.rel = 'noopener';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
+async function downloadFromServer(resumeId: string, fileName: string) {
+  const endpoint = `/api/resume/${encodeURIComponent(resumeId)}/pdf`;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 75_000);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'include',
+      headers: { Accept: 'application/pdf, application/json' },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.message || body?.error || `PDF generation failed (${response.status})`);
+    }
+
+    const type = (response.headers.get('content-type') || '').toLowerCase();
+    if (!type.includes('application/pdf')) throw new Error('Server returned a non-PDF response.');
+
+    const blob = await response.blob();
+    if (blob.size < 100) throw new Error('Server returned an empty PDF.');
+    triggerBlobDownload(blob, fileName);
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function downloadFromBrowser(fileName: string) {
+  const source = document.getElementById('resume-document-root');
+  if (!source) throw new Error('Resume preview is not available. Please open the resume editor and try again.');
+
+  const html2pdfModule = await import('html2pdf.js');
+  const html2pdf = html2pdfModule.default;
+
+  // Capture a clean A4 clone rather than the scaled mobile preview.
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.removeAttribute('id');
+  clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
+  clone.style.width = '210mm';
+  clone.style.minHeight = '297mm';
+  clone.style.height = 'auto';
+  clone.style.margin = '0';
+  clone.style.transform = 'none';
+  clone.style.boxShadow = 'none';
+  clone.style.border = '0';
+  clone.style.position = 'fixed';
+  clone.style.left = '-100000px';
+  clone.style.top = '0';
+  clone.style.zIndex = '-1';
+  clone.style.background = '#ffffff';
+  clone.style.overflow = 'visible';
+
+  const host = document.createElement('div');
+  host.style.position = 'fixed';
+  host.style.left = '-100000px';
+  host.style.top = '0';
+  host.style.width = '210mm';
+  host.style.background = '#fff';
+  host.appendChild(clone);
+  document.body.appendChild(host);
+
+  try {
+    await document.fonts.ready;
+    await html2pdf()
+      .set({
+        margin: 0,
+        filename: fileName || 'Orrica_Edge_Resume.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: Math.min(2, window.devicePixelRatio || 1.5),
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: 794,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+        pagebreak: {
+          mode: ['css', 'legacy'],
+          avoid: ['.break-inside-avoid-page'],
+        },
+      })
+      .from(clone)
+      .save();
+  } finally {
+    host.remove();
+  }
+}
+
 export function useDownloadPdf(resumeId: string, fileName: string) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -15,69 +121,28 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
     setDownloaded(false);
 
     try {
-      const endpoint = `/api/resume/${encodeURIComponent(resumeId)}/pdf`;
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 75_000);
-
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        cache: 'no-store',
-        credentials: 'include',
-        headers: { Accept: 'application/pdf, application/json' },
-        signal: controller.signal,
-      });
-
-      window.clearTimeout(timeout);
-
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type') || '';
-        let message = `PDF generation failed (${response.status})`;
-        if (contentType.includes('application/json')) {
-          const body = await response.json().catch(() => null);
-          if (body?.message) message = body.message;
-          else if (body?.error) message = body.error;
-        } else {
-          const text = await response.text().catch(() => '');
-          if (text) message = text.slice(0, 240);
-        }
-        throw new Error(message);
-      }
-
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.toLowerCase().includes('application/pdf')) {
-        throw new Error('The server returned an invalid PDF response. Please try again.');
-      }
-
-      const blob = await response.blob();
-      if (!blob.size) {
-        throw new Error('The generated PDF is empty. Please try again.');
-      }
-
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = fileName || 'Orrica_Edge_Resume.pdf';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+      // Primary path: browser-side PDF. This does not depend on Vercel
+      // Chromium, Lambda binaries, Puppeteer, or server execution limits.
+      await downloadFromBrowser(fileName);
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 2200);
       toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
-    } catch (error) {
-      const message = error instanceof Error && error.name === 'AbortError'
-        ? 'PDF generation timed out. Please try again.'
-        : error instanceof Error
-          ? error.message
-          : 'Could not generate the PDF. Please try again.';
-
-      toast({
-        title: 'Download failed',
-        description: message,
-        variant: 'error',
-      });
+    } catch (clientError) {
+      // Fallback: retain the server renderer for environments where the
+      // browser cannot render/capture the resume.
+      try {
+        await downloadFromServer(resumeId, fileName);
+        setDownloaded(true);
+        window.setTimeout(() => setDownloaded(false), 2200);
+        toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
+      } catch (serverError) {
+        const message = serverError instanceof Error
+          ? serverError.message
+          : clientError instanceof Error
+            ? clientError.message
+            : 'Could not generate the PDF. Please try again.';
+        toast({ title: 'Download failed', description: message, variant: 'error' });
+      }
     } finally {
       setDownloading(false);
     }
@@ -118,7 +183,7 @@ export function DownloadButton({
       ) : (
         <Download className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
       )}
-      <span>{downloading ? 'Preparing PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
+      <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
       {!downloading && !downloaded && variant === 'default' && (
         <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />
       )}
