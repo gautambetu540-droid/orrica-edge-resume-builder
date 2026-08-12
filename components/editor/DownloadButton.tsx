@@ -40,7 +40,6 @@ const nextFrame = () => new Promise<void>((resolve) => {
   requestAnimationFrame(() => { requestAnimationFrame(() => resolve()); });
 });
 
-/** Browser fallback. Uses the same live preview DOM and lets html2pdf create only the A4 pages the content actually needs. */
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root') as HTMLElement | null;
   if (!source) throw new Error('Resume preview is not available.');
@@ -89,8 +88,6 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
     if (downloading) return;
     setDownloading(true); setDownloaded(false);
     try {
-      // Canonical export: server renders the exact ResumeDocument/print page.
-      // This avoids the common html2canvas one-page -> two-page rounding bug.
       await downloadFromServer(resumeId, fileName);
       setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
       toast({ title: 'Resume downloaded', description: 'The PDF uses the same A4 layout as your preview.' });
@@ -111,9 +108,22 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
 
 export function DownloadButton({ resumeId, fileName, variant = 'default', className }: { resumeId: string; fileName: string; variant?: 'default' | 'outline'; className?: string }) {
   const { download, downloading, downloaded } = useDownloadPdf(resumeId, fileName);
-  return <Button onClick={download} disabled={downloading} variant={variant} className={[variant === 'default' ? 'oe-3d-button group relative overflow-hidden border-0 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 text-white shadow-[0_10px_32px_-14px_rgba(249,115,22,.8)]' : '', className || ''].join(' ')}>{downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 animate-scale-in" /> : <Download className="h-4 w-4" />}<span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>{!downloading && !downloaded && variant === 'default' && <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />}</Button>;
+  return (
+    <Button
+      onClick={download}
+      disabled={downloading}
+      variant={variant === 'default' ? 'outline' : variant}
+      className={[
+        'h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950',
+        className || '',
+      ].join(' ')}
+    >
+      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 text-emerald-600" /> : <Download className="h-4 w-4" />}
+      <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
+    </Button>
+  );
 }
 
 export function PrintButton({ resumeId }: { resumeId: string }) {
-  return <Button variant="outline" onClick={() => window.open(`/resume/${resumeId}/print`, '_blank', 'noopener,noreferrer')} className="border-neutral-200 bg-white/80 transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50"><Printer className="h-4 w-4" />Print Resume</Button>;
+  return <Button variant="outline" onClick={() => window.open(`/resume/${resumeId}/print`, '_blank', 'noopener,noreferrer')} className="h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950"><Printer className="h-4 w-4" />Print Resume</Button>;
 }
