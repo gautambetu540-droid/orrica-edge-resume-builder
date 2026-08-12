@@ -13,49 +13,49 @@ export function SampleResumeCard({
   compact?: boolean;
   scoreBadge?: boolean;
 }) {
+  const isTeal = accent.toLowerCase() === '#2f7f78' || accent.toLowerCase() === '#08736f';
+  const isPurple = accent.toLowerCase() === '#4527a0';
+  const isOrange = accent.toLowerCase() === '#c2410c';
+  const serif = isTeal || isPurple;
+  const scale = compact ? 0.62 : 1;
+  const fontFamily = serif ? "Georgia, 'Times New Roman', serif" : "var(--font-source-sans-3), Arial, sans-serif";
+  const shellStyle = { fontFamily } as React.CSSProperties;
+
   const body = (
-    <div className={compact ? 'p-3 text-[6px] leading-tight' : 'p-6 text-[10px] leading-snug'}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="font-bold tracking-tight text-neutral-900" style={{ fontSize: compact ? '9px' : '15px' }}>Alex Morgan</div>
-          <div className="mt-0.5 font-semibold" style={{ color: accent, fontSize: compact ? '6px' : '10px' }}>Senior Product Designer</div>
+    <div className={compact ? 'p-3 text-[6px] leading-[1.22]' : 'p-6 text-[10px] leading-[1.28]'} style={shellStyle}>
+      <div className={`flex items-start justify-between gap-3 ${isTeal ? 'border-b-0' : ''}`}>
+        <div className="min-w-0">
+          <div className="font-bold leading-none tracking-[-0.035em] text-neutral-950" style={{ fontSize: compact ? '10px' : '22px' }}>Alex Morgan</div>
+          <div className="mt-1 font-medium" style={{ color: accent, fontSize: compact ? '6px' : '11px' }}>Senior Product Designer</div>
         </div>
-        <div className="h-6 w-6 shrink-0 rounded-full" style={{ backgroundColor: accent, opacity: 0.15 }} />
+        {layout !== 'two-column' && <div className="shrink-0 text-right text-neutral-400" style={{ fontSize: compact ? '4.5px' : '7px' }}>alex@email.com<br />San Francisco, CA<br />linkedin.com/in/alexmorgan</div>}
       </div>
 
-      <div className="mt-1.5 text-neutral-400" style={{ fontSize: compact ? '5px' : '8px' }}>
-        alex.morgan@email.com · San Francisco, CA · linkedin.com/in/alexmorgan · alexmorgan.design
-      </div>
-      <div className="my-3 h-px bg-neutral-100" />
+      {isTeal ? (
+        <div className="mt-3 px-3 py-2 text-white" style={{ backgroundColor: accent }}>
+          <div className="font-bold tracking-[0.08em]" style={{ fontSize: compact ? '8px' : '16px' }}>ALEX MORGAN</div>
+          <div className="mt-0.5 italic" style={{ fontSize: compact ? '5px' : '9px' }}>Senior Product Designer</div>
+        </div>
+      ) : (
+        <div className="mt-2 h-px w-full" style={{ backgroundColor: isOrange ? accent : '#d1d5db' }} />
+      )}
 
       <SectionTitle accent={accent} compact>Profile</SectionTitle>
-      <p className="mb-3 text-neutral-500">
+      <p className="mb-3 text-neutral-600">
         Product designer with 7+ years of experience turning complex workflows into clear, accessible digital products. Strong across product strategy, design systems, research and cross-functional delivery.
       </p>
 
       <SectionTitle accent={accent} compact>Experience</SectionTitle>
-      <Experience title="Lead Product Designer" company="Northwind Co." dates="2022 — Present" compact={compact} bullets={[
-        'Redesigned onboarding and activation journeys, improving activation by 24%.',
-        'Led a team of 4 designers across 3 product lines and established a shared design review process.',
-        'Partnered with product and engineering to launch a self-serve workflow used by 80K+ monthly users.',
-      ]} />
-      <Experience title="Product Designer" company="Fieldstone Labs" dates="2019 — 2022" compact={compact} bullets={[
-        'Built and shipped a design system adopted across 6 customer-facing applications.',
-        'Ran user interviews and usability studies that reduced checkout friction and support requests.',
-      ]} />
-
-      <SectionTitle accent={accent} compact>Selected projects</SectionTitle>
-      <div className="mb-3">
-        <div className="font-semibold text-neutral-800">Northwind Design System <span className="font-normal text-neutral-400">· 2023</span></div>
-        <p className="mt-0.5 text-neutral-500">Created reusable patterns, accessibility guidance and contribution standards for a 12-person product organization.</p>
-      </div>
+      <Experience title="Lead Product Designer" company="Northwind Co." dates="2022 — Present" compact={compact} />
+      <Experience title="Product Designer" company="Fieldstone Labs" dates="2019 — 2022" compact={compact} />
+      <Experience title="UX Designer" company="Studio North" dates="2017 — 2019" compact={compact} />
 
       <SectionTitle accent={accent} compact>Education</SectionTitle>
-      <div className="mb-3"><div className="font-semibold text-neutral-800">B.A. Interaction Design</div><div className="text-neutral-500">California College of the Arts · 2019</div></div>
+      <div className="mb-3"><div className="font-semibold text-neutral-900">B.A. Interaction Design</div><div className="text-neutral-500">California College of the Arts · 2019</div></div>
 
       <SectionTitle accent={accent} compact>Skills</SectionTitle>
-      <div className="flex flex-wrap gap-1">
-        {SKILLS.map((skill) => <span key={skill} className="rounded-full px-1.5 py-0.5 font-medium text-neutral-600" style={{ backgroundColor: `${accent}14`, fontSize: compact ? '5px' : '8px' }}>{skill}</span>)}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {SKILLS.map((skill) => <span key={skill} className="text-neutral-600">{isPurple ? '• ' : '— '}{skill}</span>)}
       </div>
 
       {!compact && <>
@@ -66,18 +66,29 @@ export function SampleResumeCard({
   );
 
   if (layout === 'two-column') {
-    return <div className="relative flex h-full w-full overflow-hidden bg-white"><div className="w-[30%] shrink-0" style={{ backgroundColor: accent }} /><div className="flex-1">{body}</div>{scoreBadge && <ScoreBadge accent={accent} />}</div>;
+    return (
+      <div className="relative flex h-full w-full overflow-hidden bg-white" style={shellStyle}>
+        <aside className="w-[31%] shrink-0 border-r p-3" style={{ backgroundColor: accent === '#111827' ? '#f7f7f7' : `${accent}10`, borderColor: `${accent}35` }}>
+          <div className="font-bold uppercase tracking-[0.12em]" style={{ color: accent, fontSize: compact ? '5px' : '8px' }}>CONTACT</div>
+          <div className="mt-2 space-y-1 text-neutral-600" style={{ fontSize: compact ? '4.5px' : '7px' }}>alex@email.com<br />+91 98765 43210<br />San Francisco, CA<br />linkedin.com</div>
+          <div className="mt-4 border-t pt-3" style={{ borderColor: `${accent}30` }}><div className="font-bold uppercase tracking-[0.12em]" style={{ color: accent, fontSize: compact ? '5px' : '8px' }}>EDUCATION</div><div className="mt-2 text-neutral-600" style={{ fontSize: compact ? '4.5px' : '7px' }}>B.A. Interaction Design<br />2019</div></div>
+          <div className="mt-4 border-t pt-3" style={{ borderColor: `${accent}30` }}><div className="font-bold uppercase tracking-[0.12em]" style={{ color: accent, fontSize: compact ? '5px' : '8px' }}>SKILLS</div><div className="mt-2 space-y-1 text-neutral-600" style={{ fontSize: compact ? '4.5px' : '7px' }}>{SKILLS.slice(0,5).map((skill) => <div key={skill}>{skill}</div>)}</div></div>
+        </aside>
+        <div className="min-w-0 flex-1">{body}</div>
+        {scoreBadge && <ScoreBadge accent={accent} />}
+      </div>
+    );
   }
 
   return <div className="relative h-full w-full overflow-hidden bg-white">{body}{scoreBadge && <ScoreBadge accent={accent} />}</div>;
 }
 
 function SectionTitle({ accent, compact, children }: { accent: string; compact: boolean; children: React.ReactNode }) {
-  return <div className="mb-1.5 font-semibold uppercase tracking-wide" style={{ color: accent, fontSize: compact ? '5.5px' : '9px' }}>{children}</div>;
+  return <div className="mb-1.5 mt-3 border-b pb-1 font-bold uppercase tracking-[0.08em]" style={{ color: accent, borderColor: `${accent}55`, fontSize: compact ? '5.5px' : '8.5px' }}>{children}</div>;
 }
 
-function Experience({ title, company, dates, bullets, compact }: { title: string; company: string; dates: string; bullets: string[]; compact: boolean }) {
-  return <div className="mb-3"><div className="flex items-start justify-between gap-2 font-medium text-neutral-800"><span>{title} — {company}</span><span className="shrink-0 text-neutral-400">{dates}</span></div><ul className="mt-1 space-y-0.5 text-neutral-500">{bullets.map((bullet) => <li key={bullet}>• {bullet}</li>)}</ul></div>;
+function Experience({ title, company, dates, compact }: { title: string; company: string; dates: string; compact: boolean }) {
+  return <div className="mb-3"><div className="flex items-start justify-between gap-2 font-semibold text-neutral-900"><span>{title}<span className="font-normal text-neutral-500"> · {company}</span></span><span className="shrink-0 font-normal text-neutral-400">{dates}</span></div><ul className="mt-1 space-y-0.5 text-neutral-600"><li>• Redesigned core workflows, improving activation and usability.</li><li>• Partnered with product and engineering to ship measurable improvements.</li></ul></div>;
 }
 
 function ScoreBadge({ accent }: { accent: string }) {
