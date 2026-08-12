@@ -11,12 +11,13 @@ export interface ResumeDocumentProps {
   forPrint?: boolean;
 }
 
-export function ResumeDocument({
-  data,
-  settings,
-  forPrint = false,
-}: ResumeDocumentProps) {
+export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocumentProps) {
   const preset = TEMPLATE_PRESETS[settings.template];
+  const pagePadding = preset.layout === 'two-column'
+    ? 0
+    : preset.headerVariant === 'banner'
+      ? `0 ${Math.max(10, Math.min(25, settings.margin))}mm ${Math.max(10, Math.min(25, settings.margin))}mm`
+      : `${Math.max(10, Math.min(25, settings.margin))}mm`;
 
   const style: React.CSSProperties & {
     '--accent'?: string;
@@ -35,7 +36,7 @@ export function ResumeDocument({
     fontFamily: FONT_STACKS[settings.font],
     fontSize: `${Math.max(9, Math.min(12, settings.fontSize))}pt`,
     lineHeight: Math.max(1.15, Math.min(1.55, settings.lineSpacing)),
-    padding: preset.layout === 'two-column' ? 0 : `${Math.max(10, Math.min(25, settings.margin))}mm`,
+    padding: pagePadding,
     color: '#20242a',
     letterSpacing: '-0.005em',
     WebkitFontSmoothing: 'antialiased',
