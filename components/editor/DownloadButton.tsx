@@ -39,7 +39,12 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   } finally { window.clearTimeout(timeout); }
 }
 
-/** Export the actual visible ResumeDocument. Preview is the single source of truth. */
+/**
+ * Export the same ResumeDocument as the live preview.
+ * We copy only the DOM node, then render it in a real painted A4 capture
+ * surface at the viewport origin. This avoids the blank-canvas problem caused
+ * by capturing transformed/scrolling preview containers or off-screen nodes.
+ */
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root') as HTMLElement | null;
   if (!source) throw new Error('Resume preview is not available.');
@@ -48,45 +53,60 @@ async function downloadExactPreview(fileName: string) {
   const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
   if (typeof html2pdf !== 'function') throw new Error('PDF renderer failed to load.');
 
-  // Do NOT clone, hide, move, resize or restyle the preview. html2canvas gets
-  // the exact same DOM node that the user is looking at in the editor.
   await document.fonts.ready;
   const images = Array.from(source.querySelectorAll('img'));
-  await Promise.all(images.map((img) => {
-    if (img.complete) return Promise.resolve();
-    return new Promise<void>((resolve) => {
-      const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
-      img.addEventListener('load', done, { once: true });
-      img.addEventListener('error', done, { once: true });
-    });
-  }));
+  await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise<void>((resolve) => {
+    const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+    img.addEventListener('load', done, { once: true });
+    img.addEventListener('error', done, { once: true });
+  })));
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  const width = source.offsetWidth;
-  const height = source.scrollHeight;
-  if (width < 500 || height < 500) throw new Error('Resume preview is not ready for PDF export.');
+  const capture = document.createElement('div');
+  Object.assign(capture.style, {
+    position: 'fixed', left: '0', top: '0', width: '794px', minHeight: '1123px',
+    margin: '0', padding: '0', overflow: 'visible', background: '#fff',
+    pointerEvents: 'none', zIndex: '2147483647', opacity: '0.001',
+  });
 
-  await html2pdf()
-    .set({
+  const clone = source.cloneNode(true) as HTMLElement;
+  clone.removeAttribute('id');
+  Object.assign(clone.style, {
+    width: '794px', maxWidth: '794px', minWidth: '794px', height: 'auto',
+    minHeight: '1123px', margin: '0', transform: 'none', boxShadow: 'none',
+    border: '0', overflow: 'visible', background: '#fff', visibility: 'visible', opacity: '1',
+  });
+  clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
+  capture.appendChild(clone);
+  document.body.appendChild(capture);
+
+  try {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const rect = clone.getBoundingClientRect();
+    if (rect.width < 700 || rect.height < 500) throw new Error('Resume preview is not ready for PDF export.');
+
+    await html2pdf().set({
       margin: 0,
       filename: fileName || 'Orrica_Edge_Resume.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
-        scale: Math.min(2.5, Math.max(1.5, window.devicePixelRatio || 2)),
+        scale: 2,
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
         logging: false,
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        windowWidth: Math.max(document.documentElement.clientWidth, width),
-        windowHeight: Math.max(document.documentElement.clientHeight, height),
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 794,
+        windowHeight: Math.max(Math.ceil(rect.height), 1123),
+        width: 794,
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page', '.avoid-page-break'] },
-    })
-    .from(source)
-    .save();
+    }).from(clone).save();
+  } finally {
+    capture.remove();
+  }
 }
 
 export function useDownloadPdf(resumeId: string, fileName: string) {
