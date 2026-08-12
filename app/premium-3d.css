@@ -1,30 +1,30 @@
 /* Orrica Edge — clean premium visual system
    Flat, polished UI. No 3D transforms, raised button edges, or purple accents. */
-:root {
-  --oe-orange:#f26a21;
-  --oe-orange-dark:#d95316;
-  --oe-orange-soft:#fff3eb;
-  --oe-ink:#161616;
-  --oe-muted:#6f7378;
-  --oe-line:#e7e5e2;
-  --oe-surface:#ffffff;
-  --oe-page:#faf9f7;
-}
+:root{--oe-orange:#f26a21;--oe-orange-dark:#d95316;--oe-orange-soft:#fff3eb;--oe-ink:#161616;--oe-muted:#6f7378;--oe-line:#e7e5e2;--oe-surface:#fff;--oe-page:#faf9f7;}
 
 .oe-3d-scene{perspective:none;perspective-origin:initial;transform-style:flat;}
 .oe-3d-card{position:relative;transform:none;transform-style:flat;transition:box-shadow 180ms ease,border-color 180ms ease,background-color 180ms ease;}
 .oe-3d-card:hover{transform:none;box-shadow:0 12px 32px -24px rgba(20,20,20,.22);border-color:rgba(242,106,33,.18);}
 
 /* Simple flat primary button — intentionally NOT 3D. */
-.oe-3d-button{position:relative;isolation:isolate;transform:none!important;overflow:hidden;color:#fff!important;background:var(--oe-orange)!important;border:1px solid var(--oe-orange)!important;box-shadow:none!important;border-radius:12px;transition:background-color 160ms ease,border-color 160ms ease,opacity 160ms ease,transform 160ms ease!important;}
-.oe-3d-button::after{display:none;}
-.oe-3d-button:hover{transform:translateY(-1px)!important;background:var(--oe-orange-dark)!important;border-color:var(--oe-orange-dark)!important;box-shadow:none!important;}
-.oe-3d-button:active{transform:none!important;box-shadow:none!important;}
-.oe-3d-button:focus-visible{outline:3px solid rgba(242,106,33,.18);outline-offset:2px;}
+.oe-3d-button,.magnetic-button{position:relative;isolation:isolate;transform:none!important;overflow:hidden;color:#fff!important;background:var(--oe-orange)!important;border:1px solid var(--oe-orange)!important;box-shadow:none!important;border-radius:12px;transition:background-color 160ms ease,border-color 160ms ease,opacity 160ms ease,transform 160ms ease!important;}
+.oe-3d-button::after,.magnetic-button::before,.magnetic-button::after{display:none!important;}
+.oe-3d-button:hover,.magnetic-button:hover{transform:translateY(-1px)!important;background:var(--oe-orange-dark)!important;border-color:var(--oe-orange-dark)!important;box-shadow:none!important;}
+.oe-3d-button:active,.magnetic-button:active{transform:none!important;box-shadow:none!important;}
+.oe-3d-button:focus-visible,.magnetic-button:focus-visible{outline:3px solid rgba(242,106,33,.18);outline-offset:2px;}
+
+/* Clean site palette: white, warm-neutral surfaces, charcoal text and Orrica orange. */
+.text-gradient-brand{background:linear-gradient(110deg,#161616 0%,#161616 55%,#d95316 100%)!important;background-size:100% auto!important;animation:none!important;}
+.gradient-mesh-bg{background:radial-gradient(circle at 10% 8%,rgba(242,106,33,.08),transparent 25%),linear-gradient(180deg,#fff 0%,#faf9f7 100%)!important;}
+.gradient-mesh-bg::after{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.45))!important;}
+.hero-grid{background-image:linear-gradient(rgba(20,20,20,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(20,20,20,.035) 1px,transparent 1px)!important;}
 
 .oe-glass-nav{background:rgba(255,255,255,.96);border-bottom:1px solid var(--oe-line);box-shadow:0 5px 20px -18px rgba(20,20,20,.24);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
 .oe-glass{position:relative;isolation:isolate;border:1px solid rgba(20,20,20,.08);background:rgba(255,255,255,.88);box-shadow:0 12px 34px -28px rgba(20,20,20,.22);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
 .oe-glass::before,.oe-glass::after{display:none;}
+
+.premium-surface,.glass-card{transform:none!important;transform-style:flat!important;transition:box-shadow 180ms ease,border-color 180ms ease,background-color 180ms ease!important;}
+.premium-surface:hover,.glass-card:hover{transform:none!important;box-shadow:0 14px 36px -28px rgba(20,20,20,.24)!important;border-color:rgba(242,106,33,.16)!important;}
 
 .oe-glow-orb{position:absolute;border-radius:999px;pointer-events:none;filter:blur(42px);opacity:.5;animation:oe-orb-float 8s ease-in-out infinite;}
 .oe-glow-orb.orange{background:rgba(242,106,33,.12);}
@@ -43,5 +43,5 @@
 
 @keyframes oe-orb-float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-10px,0)}}
 
-@media(max-width:767px){.oe-3d-scene{perspective:none}.oe-3d-card:hover{transform:none}.oe-glow-orb{filter:blur(32px);opacity:.35}.oe-3d-button{border-radius:11px}}
-@media(prefers-reduced-motion:reduce){.oe-3d-card,.oe-3d-button,.oe-glow-orb,.oe-glass-pulse{animation:none!important;transition:none!important;transform:none!important;}}
+@media(max-width:767px){.oe-3d-scene{perspective:none}.oe-3d-card:hover{transform:none}.oe-glow-orb{filter:blur(32px);opacity:.35}.oe-3d-button,.magnetic-button{border-radius:11px}}
+@media(prefers-reduced-motion:reduce){.oe-3d-card,.oe-3d-button,.magnetic-button,.oe-glow-orb,.oe-glass-pulse{animation:none!important;transition:none!important;transform:none!important;}}
