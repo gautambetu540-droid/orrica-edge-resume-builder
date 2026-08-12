@@ -33,13 +33,18 @@ async function downloadFromServer(resumeId: string, fileName: string) {
       signal: controller.signal,
     });
 
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+
     if (!response.ok) {
-      const body = await response.json().catch(() => null);
+      const body = contentType.includes('application/json')
+        ? await response.json().catch(() => null)
+        : null;
       throw new Error(body?.message || body?.error || `PDF generation failed (${response.status})`);
     }
 
-    const type = (response.headers.get('content-type') || '').toLowerCase();
-    if (!type.includes('application/pdf')) throw new Error('Server returned a non-PDF response.');
+    if (!contentType.includes('application/pdf')) {
+      throw new Error('Server returned a non-PDF response.');
+    }
 
     const blob = await response.blob();
     if (blob.size < 100) throw new Error('Server returned an empty PDF.');
@@ -51,15 +56,26 @@ async function downloadFromServer(resumeId: string, fileName: string) {
 
 async function downloadFromBrowser(fileName: string) {
   const source = document.getElementById('resume-document-root');
-  if (!source) throw new Error('Resume preview is not available. Please open the resume editor and try again.');
+  if (!source) {
+    throw new Error('Resume preview is not available. Please open the resume editor and try again.');
+  }
 
+  // html2pdf 0.14 includes current html2canvas/jsPDF fixes. Use the module
+  // namespace fallback because Next can expose CommonJS packages differently
+  // depending on the bundling target.
   const html2pdfModule = await import('html2pdf.js');
-  const html2pdf = html2pdfModule.default;
+  const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
+  if (typeof html2pdf !== 'function') {
+    throw new Error('PDF renderer failed to load.');
+  }
 
-  // Capture a clean A4 clone rather than the scaled mobile preview.
   const clone = source.cloneNode(true) as HTMLElement;
   clone.removeAttribute('id');
   clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
+
+  // Keep the capture layer in the document viewport. The previous implementation
+  // put it at left:-100000px, which can make html2canvas calculate an invalid
+  // capture rectangle on mobile/Chrome and produce no downloadable file.
   clone.style.width = '210mm';
   clone.style.minHeight = '297mm';
   clone.style.height = 'auto';
@@ -67,36 +83,62 @@ async function downloadFromBrowser(fileName: string) {
   clone.style.transform = 'none';
   clone.style.boxShadow = 'none';
   clone.style.border = '0';
-  clone.style.position = 'fixed';
-  clone.style.left = '-100000px';
+  clone.style.position = 'relative';
+  clone.style.left = '0';
   clone.style.top = '0';
-  clone.style.zIndex = '-1';
+  clone.style.zIndex = '0';
   clone.style.background = '#ffffff';
   clone.style.overflow = 'visible';
 
   const host = document.createElement('div');
+  host.id = 'orrica-pdf-capture-layer';
   host.style.position = 'fixed';
-  host.style.left = '-100000px';
-  host.style.top = '0';
-  host.style.width = '210mm';
-  host.style.background = '#fff';
+  host.style.inset = '0';
+  host.style.width = '100vw';
+  host.style.height = '100vh';
+  host.style.overflow = 'auto';
+  host.style.zIndex = '2147483000';
+  host.style.background = '#ffffff';
+  host.style.visibility = 'hidden';
+  host.style.pointerEvents = 'none';
   host.appendChild(clone);
   document.body.appendChild(host);
 
   try {
     await document.fonts.ready;
+
+    // Give the browser one layout frame so computed styles and fonts are fully
+    // available before html2canvas clones the DOM.
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
     await html2pdf()
       .set({
         margin: 0,
         filename: fileName || 'Orrica_Edge_Resume.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-          scale: Math.min(2, window.devicePixelRatio || 1.5),
+          scale: Math.min(2, Math.max(1.5, window.devicePixelRatio || 1.5)),
           useCORS: true,
           allowTaint: false,
           backgroundColor: '#ffffff',
           logging: false,
           windowWidth: 794,
+          scrollX: 0,
+          scrollY: 0,
+          onclone: (clonedDocument: Document) => {
+            const capture = clonedDocument.getElementById('orrica-pdf-capture-layer');
+            if (capture) {
+              capture.style.visibility = 'visible';
+              capture.style.position = 'absolute';
+              capture.style.inset = 'auto';
+              capture.style.left = '0';
+              capture.style.top = '0';
+              capture.style.width = '794px';
+              capture.style.height = 'auto';
+              capture.style.overflow = 'visible';
+              capture.style.background = '#ffffff';
+            }
+          },
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
         pagebreak: {
@@ -121,26 +163,24 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
     setDownloaded(false);
 
     try {
-      // Primary path: browser-side PDF. This does not depend on Vercel
-      // Chromium, Lambda binaries, Puppeteer, or server execution limits.
+      // Primary: client-side PDF. This avoids Vercel/Chromium limits.
       await downloadFromBrowser(fileName);
       setDownloaded(true);
       window.setTimeout(() => setDownloaded(false), 2200);
       toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
     } catch (clientError) {
-      // Fallback: retain the server renderer for environments where the
-      // browser cannot render/capture the resume.
+      // Server renderer remains a real fallback for older browsers or if the
+      // client capture library cannot render a particular resume.
       try {
         await downloadFromServer(resumeId, fileName);
         setDownloaded(true);
         window.setTimeout(() => setDownloaded(false), 2200);
         toast({ title: 'Resume downloaded', description: 'Your PDF is ready.' });
       } catch (serverError) {
-        const message = serverError instanceof Error
-          ? serverError.message
-          : clientError instanceof Error
-            ? clientError.message
-            : 'Could not generate the PDF. Please try again.';
+        const clientMessage = clientError instanceof Error ? clientError.message : '';
+        const serverMessage = serverError instanceof Error ? serverError.message : '';
+        const message = serverMessage || clientMessage || 'Could not generate the PDF. Please try again.';
+        console.error('Resume PDF download failed', { clientError, serverError });
         toast({ title: 'Download failed', description: message, variant: 'error' });
       }
     } finally {
