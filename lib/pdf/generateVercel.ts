@@ -9,28 +9,16 @@ export interface GeneratePdfOptions {
   cookieHeader: string;
 }
 
-function parseCookies(cookieHeader: string) {
-  return cookieHeader
-    .split(';')
-    .map((pair) => {
-      const index = pair.indexOf('=');
-      if (index <= 0) return null;
-      const name = pair.slice(0, index).trim();
-      const value = pair.slice(index + 1).trim();
-      return name ? { name, value } : null;
-    })
-    .filter((cookie): cookie is { name: string; value: string } => Boolean(cookie));
-}
-
 async function chromiumPath(chromium: typeof import('@sparticuz/chromium').default) {
-  if (process.env.CHROME_EXECUTABLE_PATH) return process.env.CHROME_EXECUTABLE_PATH;
+  const configured = process.env.CHROME_EXECUTABLE_PATH;
+  if (configured && fs.existsSync(configured)) return configured;
 
   const tracedBin = path.join(process.cwd(), 'node_modules', '@sparticuz', 'chromium', 'bin');
   if (fs.existsSync(tracedBin)) {
     try {
       return await chromium.executablePath(tracedBin);
     } catch (error) {
-      console.warn('[PDF] traced Chromium path failed, falling back to package resolver', error);
+      console.warn('[PDF] traced Chromium path failed; using package resolver', error);
     }
   }
 
@@ -41,55 +29,66 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
   const requestId = `pdf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   const startedAt = Date.now();
   let stage = 'initializing';
+  let browser: import('puppeteer-core').Browser | null = null;
+
   console.info('[PDF]', requestId, 'generation started', { resumeId });
 
-  const puppeteer = (await import('puppeteer-core')).default;
-  const chromium = (await import('@sparticuz/chromium')).default;
-  chromium.setGraphicsMode = false;
-
-  stage = 'browser-launch';
-  const executablePath = await chromiumPath(chromium);
-  console.info('[PDF]', requestId, 'launching Chromium', { executablePath });
-
-  const args = await puppeteer.defaultArgs({
-    args: chromium.args,
-    headless: 'shell',
-  });
-
-  const browser = await puppeteer.launch({
-    args,
-    defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 1 },
-    executablePath,
-    headless: 'shell',
-    timeout: 30_000,
-  });
-
   try {
-    stage = 'page-create';
-    const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(30_000);
-    page.setDefaultTimeout(20_000);
+    const puppeteer = (await import('puppeteer-core')).default;
+    const chromium = (await import('@sparticuz/chromium')).default;
+    chromium.setGraphicsMode = false;
 
-    const url = new URL(`/resume/${encodeURIComponent(resumeId)}/print`, baseUrl);
-    const cookies = parseCookies(cookieHeader).map(({ name, value }) => ({
-      name,
-      value,
-      url: url.origin,
-      path: '/',
-      secure: url.protocol === 'https:',
-    }));
-    if (cookies.length) await page.setCookie(...cookies);
+    stage = 'browser-launch';
+    const executablePath = await chromiumPath(chromium);
+    if (!executablePath || !fs.existsSync(executablePath)) {
+      throw new Error(`Chromium executable was not found: ${executablePath || 'empty path'}`);
+    }
 
-    stage = 'page-load';
-    await page.goto(url.toString(), {
-      waitUntil: 'domcontentloaded',
+    const args = await puppeteer.defaultArgs({
+      args: chromium.args,
+      headless: 'shell',
+    });
+
+    browser = await puppeteer.launch({
+      args,
+      defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 1 },
+      executablePath,
+      headless: 'shell',
       timeout: 30_000,
     });
 
-    // A redirect to login/404 must never be turned into a blank PDF.
+    stage = 'page-create';
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(35_000);
+    page.setDefaultTimeout(20_000);
+
+    const url = new URL(`/resume/${encodeURIComponent(resumeId)}/print`, baseUrl);
+
+    // Keep the exact browser session cookie header. This is more reliable for
+    // Supabase SSR cookies than reconstructing individual cookies by hand.
+    if (cookieHeader) {
+      await page.setExtraHTTPHeaders({ Cookie: cookieHeader });
+    }
+
+    stage = 'page-load';
+    const response = await page.goto(url.toString(), {
+      waitUntil: 'domcontentloaded',
+      timeout: 35_000,
+    });
+
+    if (!response) {
+      throw new Error('The print page did not return a response.');
+    }
+
+    const status = response.status();
+    if (status < 200 || status >= 300) {
+      throw new Error(`Print page returned HTTP ${status}.`);
+    }
+
     const finalUrl = page.url();
-    if (!finalUrl.includes(`/resume/${encodeURIComponent(resumeId)}/print`)) {
-      throw new Error(`Print page redirected unexpectedly: ${finalUrl}`);
+    const expectedPath = `/resume/${encodeURIComponent(resumeId)}/print`;
+    if (new URL(finalUrl).pathname !== expectedPath) {
+      throw new Error(`Print page redirected to ${new URL(finalUrl).pathname}.`);
     }
 
     stage = 'resume-render';
@@ -118,8 +117,8 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       scale: 1,
     }));
 
-    if (pdf.length === 0) throw new Error('Generated PDF is empty.');
-    if (pdf.subarray(0, 4).toString() !== '%PDF') throw new Error('Generated PDF failed signature validation.');
+    if (pdf.length < 5) throw new Error('Generated PDF is empty.');
+    if (pdf.subarray(0, 5).toString() !== '%PDF-') throw new Error('Generated PDF failed signature validation.');
 
     console.info('[PDF]', requestId, 'generation completed', {
       bytes: pdf.length,
@@ -136,7 +135,11 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     });
     throw error;
   } finally {
-    for (const openPage of await browser.pages()) await openPage.close().catch(() => undefined);
-    await browser.close().catch(() => undefined);
+    if (browser) {
+      for (const openPage of await browser.pages()) {
+        await openPage.close().catch(() => undefined);
+      }
+      await browser.close().catch(() => undefined);
+    }
   }
 }
