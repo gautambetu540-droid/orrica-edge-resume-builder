@@ -51,14 +51,19 @@ const SYSTEM = `You are a resume extraction engine. Extract ONLY facts present i
 function parseJson(s: string) { const c = s.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim(); try { return JSON.parse(c); } catch { const a = c.indexOf('{'), b = c.lastIndexOf('}'); if (a >= 0 && b > a) return JSON.parse(c.slice(a, b + 1)); throw new Error('AI returned invalid structured data.'); } }
 
 async function runGemini(apiKey: string, resumeText: string, pdfBase64?: string) {
-  const configured = (process.env.GEMINI_RESUME_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash').replace(/^models\//, '').trim();
-  const models = [configured, 'gemini-2.5-flash', 'gemini-2.0-flash'].filter((x, i, a) => x && a.indexOf(x) === i);
+  const configured = (process.env.GEMINI_RESUME_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash').replace(/^models\//, '').trim();
+  const models = [configured, 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter((x, i, a) => x && a.indexOf(x) === i);
+  let lastStatus = 0;
+  let lastMessage = '';
   for (const model of models) {
     const parts = pdfBase64 ? [{ text: 'Extract this resume PDF exactly. Read all visible text, including scanned/image pages, and return the required JSON.' }, { inlineData: { mimeType: 'application/pdf', data: pdfBase64 } }] : [{ text: `Extract this resume:\n\n${resumeText}` }];
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json', temperature: 0.1 } }), signal: AbortSignal.timeout(50000), cache: 'no-store' });
-    if (response.ok) { const payload = await response.json(); const out = payload.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text || '').join(''); if (out) return { data: parseJson(out), model }; }
-    if (![404, 429, 500, 502, 503].includes(response.status)) break;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json' } }), signal: AbortSignal.timeout(50000), cache: 'no-store' });
+    if (response.ok) { const payload = await response.json(); const out = payload.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text || '').join(''); if (out) return { data: parseJson(out), model }; lastStatus = 502; lastMessage = 'Gemini returned no structured output.'; continue; }
+    lastStatus = response.status;
+    try { const error = await response.json(); lastMessage = error?.error?.message || ''; } catch { lastMessage = ''; }
+    if (![400, 404, 429, 500, 502, 503].includes(response.status)) break;
   }
+  console.error('Gemini resume scan failed:', { lastStatus, lastMessage });
   throw new Error('Resume scanning is temporarily unavailable. Please try again.');
 }
 
@@ -77,7 +82,6 @@ export async function POST(request: NextRequest) {
     const hasText = resumeText.replace(/\s/g, '').length >= 100;
     const result = hasText ? await runGemini(apiKey, resumeText.slice(0, 120000)) : await runGemini(apiKey, '', buffer.toString('base64'));
     const parsed = Schema.parse(normalizeRaw(result.data));
-    // The uploaded PDF exists only in request memory and is never inserted into Supabase/storage.
     return noStore({ data: addIds(parsed), source: hasText ? 'pdf-text' : 'gemini-pdf', model: result.model });
   } catch (e) { console.error('Resume scan error:', e); return noStore({ error: e instanceof Error && /PDF|scan|configured/i.test(e.message) ? e.message : 'Could not scan this resume right now.' }, 500); }
 }
