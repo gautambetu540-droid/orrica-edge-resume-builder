@@ -23,10 +23,7 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 75_000);
   try {
-    const response = await fetch(`/api/resume/${encodeURIComponent(resumeId)}/pdf`, {
-      method: 'GET', cache: 'no-store', credentials: 'include',
-      headers: { Accept: 'application/pdf, application/json' }, signal: controller.signal,
-    });
+    const response = await fetch(`/api/resume/${encodeURIComponent(resumeId)}/pdf`, { method: 'GET', cache: 'no-store', credentials: 'include', headers: { Accept: 'application/pdf, application/json' }, signal: controller.signal });
     const contentType = (response.headers.get('content-type') || '').toLowerCase();
     if (!response.ok) {
       const body = contentType.includes('application/json') ? await response.json().catch(() => null) : null;
@@ -34,79 +31,54 @@ async function downloadFromServer(resumeId: string, fileName: string) {
     }
     if (!contentType.includes('application/pdf')) throw new Error('Server returned a non-PDF response.');
     const blob = await response.blob();
-    if (blob.size < 100) throw new Error('Server returned an empty PDF.');
+    if (blob.size < 100 || blob.type && !blob.type.toLowerCase().includes('pdf')) throw new Error('Server returned an invalid PDF.');
     triggerBlobDownload(blob, fileName);
   } finally { window.clearTimeout(timeout); }
 }
 
 const nextFrame = () => new Promise<void>((resolve) => {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => resolve());
-  });
+  requestAnimationFrame(() => { requestAnimationFrame(() => resolve()); });
 });
 
+/** Browser fallback. Uses the same live preview DOM and lets html2pdf create only the A4 pages the content actually needs. */
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root') as HTMLElement | null;
   if (!source) throw new Error('Resume preview is not available.');
-
   const html2pdfModule = await import('html2pdf.js');
   const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
   if (typeof html2pdf !== 'function') throw new Error('PDF renderer failed to load.');
 
   await document.fonts.ready;
-  const images = Array.from(source.querySelectorAll('img'));
-  await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise<void>((resolve) => {
+  await Promise.all(Array.from(source.querySelectorAll('img')).map((img) => img.complete ? Promise.resolve() : new Promise<void>((resolve) => {
     const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
-    img.addEventListener('load', done, { once: true });
-    img.addEventListener('error', done, { once: true });
+    img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true });
   })));
   await nextFrame();
 
   const capture = document.createElement('div');
-  Object.assign(capture.style, {
-    position: 'fixed', left: '0', top: '0', width: '794px', minHeight: '1123px',
-    margin: '0', padding: '0', overflow: 'visible', background: '#fff',
-    pointerEvents: 'none', zIndex: '2147483647', opacity: '0.001',
-  });
-
+  Object.assign(capture.style, { position: 'fixed', left: '0', top: '0', width: '794px', margin: '0', padding: '0', overflow: 'visible', background: '#fff', pointerEvents: 'none', zIndex: '2147483647', opacity: '0.001' });
   const clone = source.cloneNode(true) as HTMLElement;
   clone.removeAttribute('id');
-  Object.assign(clone.style, {
-    width: '794px', maxWidth: '794px', minWidth: '794px', height: 'auto',
-    minHeight: '1123px', margin: '0', transform: 'none', boxShadow: 'none',
-    border: '0', overflow: 'visible', background: '#fff', visibility: 'visible', opacity: '1',
-  });
+  Object.assign(clone.style, { width: '794px', maxWidth: '794px', minWidth: '794px', height: 'auto', minHeight: '1122px', margin: '0', transform: 'none', boxShadow: 'none', border: '0', overflow: 'visible', background: '#fff', visibility: 'visible', opacity: '1' });
   clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
-  capture.appendChild(clone);
-  document.body.appendChild(capture);
+  capture.appendChild(clone); document.body.appendChild(capture);
 
   try {
     await nextFrame();
     const rect = clone.getBoundingClientRect();
     if (rect.width < 700 || rect.height < 500) throw new Error('Resume preview is not ready for PDF export.');
-
+    const a4HeightPx = 1122.52;
+    const contentPages = Math.max(1, Math.ceil((rect.height - 1) / a4HeightPx));
     await html2pdf().set({
       margin: 0,
       filename: fileName || 'Orrica_Edge_Resume.pdf',
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: 794,
-        windowHeight: Math.max(Math.ceil(rect.height), 1123),
-        width: 794,
-      },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false, scrollX: 0, scrollY: 0, windowWidth: 794, windowHeight: Math.max(1123, Math.ceil(rect.height)), width: 794 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page', '.avoid-page-break'] },
+      pagebreak: { mode: ['css'], avoid: ['.break-inside-avoid-page', '.avoid-page-break'] },
     }).from(clone).save();
-  } finally {
-    capture.remove();
-  }
+    if (contentPages < 1) throw new Error('Could not determine PDF page count.');
+  } finally { capture.remove(); }
 }
 
 export function useDownloadPdf(resumeId: string, fileName: string) {
@@ -115,39 +87,31 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
 
   async function download() {
     if (downloading) return;
-    setDownloading(true);
-    setDownloaded(false);
+    setDownloading(true); setDownloaded(false);
     try {
-      await downloadExactPreview(fileName);
-      setDownloaded(true);
-      window.setTimeout(() => setDownloaded(false), 2200);
-      toast({ title: 'Resume downloaded', description: 'The PDF matches your current preview.' });
-    } catch (previewError) {
+      // Canonical export: server renders the exact ResumeDocument/print page.
+      // This avoids the common html2canvas one-page -> two-page rounding bug.
+      await downloadFromServer(resumeId, fileName);
+      setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
+      toast({ title: 'Resume downloaded', description: 'The PDF uses the same A4 layout as your preview.' });
+    } catch (serverError) {
       try {
-        await downloadFromServer(resumeId, fileName);
-        setDownloaded(true);
-        window.setTimeout(() => setDownloaded(false), 2200);
-        toast({ title: 'Resume downloaded', description: 'Your complete resume PDF is ready.' });
-      } catch (serverError) {
+        await downloadExactPreview(fileName);
+        setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
+        toast({ title: 'Resume downloaded', description: 'PDF exported from the live preview.' });
+      } catch (previewError) {
         const message = serverError instanceof Error ? serverError.message : previewError instanceof Error ? previewError.message : 'Could not generate the PDF.';
-        console.error('Resume PDF download failed', { previewError, serverError });
+        console.error('Resume PDF download failed', { serverError, previewError });
         toast({ title: 'Download failed', description: message, variant: 'error' });
       }
     } finally { setDownloading(false); }
   }
-
   return { download, downloading, downloaded };
 }
 
 export function DownloadButton({ resumeId, fileName, variant = 'default', className }: { resumeId: string; fileName: string; variant?: 'default' | 'outline'; className?: string }) {
   const { download, downloading, downloaded } = useDownloadPdf(resumeId, fileName);
-  return (
-    <Button onClick={download} disabled={downloading} variant={variant} className={[variant === 'default' ? 'group relative overflow-hidden border-0 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 text-white shadow-[0_8px_28px_-12px_rgba(249,115,22,.8)] transition-all duration-300 hover:-translate-y-0.5' : '', className || ''].join(' ')}>
-      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 animate-scale-in" /> : <Download className="h-4 w-4" />}
-      <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
-      {!downloading && !downloaded && variant === 'default' && <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />}
-    </Button>
-  );
+  return <Button onClick={download} disabled={downloading} variant={variant} className={[variant === 'default' ? 'oe-3d-button group relative overflow-hidden border-0 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 text-white shadow-[0_10px_32px_-14px_rgba(249,115,22,.8)]' : '', className || ''].join(' ')}>{downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 animate-scale-in" /> : <Download className="h-4 w-4" />}<span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>{!downloading && !downloaded && variant === 'default' && <Sparkles className="ml-0.5 h-3.5 w-3.5 opacity-70" />}</Button>;
 }
 
 export function PrintButton({ resumeId }: { resumeId: string }) {
