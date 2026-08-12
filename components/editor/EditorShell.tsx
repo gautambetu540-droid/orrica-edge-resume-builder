@@ -72,7 +72,7 @@ function SectionNav({ active, onSelect, data }: { active: string; onSelect: (key
   }).length;
 
   return (
-    <aside className="w-[236px] shrink-0 border-r border-neutral-200 bg-white">
+    <aside className="oe-editor-sidebar w-[236px] shrink-0 border-r border-neutral-200 bg-white">
       <div className="border-b border-neutral-200 px-4 py-4">
         <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Resume progress</div>
         <div className="mt-2 flex items-end justify-between">
@@ -174,10 +174,10 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
   const panel: Panel = activeSection === '__improve__' ? 'improve' : activeSection === '__design__' ? 'design' : 'content';
 
   return (
-    <div className="flex h-dvh flex-col bg-neutral-100 text-neutral-950">
+    <div className="oe-editor-shell flex h-dvh flex-col bg-neutral-100 text-neutral-950">
       <IdleLogout />
 
-      <header className="z-40 flex h-16 shrink-0 items-center gap-3 border-b border-neutral-200 bg-white px-3 sm:px-5 no-print">
+      <header className="oe-editor-header z-40 flex h-16 shrink-0 items-center gap-3 border-b border-neutral-200 bg-white px-3 sm:px-5 no-print">
         <Link href="/dashboard" className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900" aria-label="Back to dashboard">
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -195,7 +195,7 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
 
       <div className="hidden min-h-0 flex-1 md:flex">
         <SectionNav active={activeSection} onSelect={setActiveSection} data={store.data} />
-        <section className="w-[430px] shrink-0 overflow-y-auto border-r border-neutral-200 bg-white" aria-label="Resume editor">
+        <section className="oe-editor-panel w-[430px] shrink-0 overflow-y-auto border-r border-neutral-200 bg-white" aria-label="Resume editor">
           <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
             <span className="text-xs font-semibold text-neutral-700">{panel === 'content' ? 'Edit content' : panel === 'design' ? 'Design' : 'Improve'}</span>
             <span className="text-[10px] text-neutral-400">Changes save automatically</span>
@@ -215,7 +215,7 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
             <ContentPanel sectionKey="__design__" data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
           ) : (
             <>
-              <div className="flex gap-2 overflow-x-auto border-b border-neutral-200 bg-white px-3 py-2">
+              <div className="oe-mobile-tabs flex gap-2 overflow-x-auto border-b border-neutral-200 bg-white px-3 py-2">
                 {CONTENT_SECTIONS.map((section) => (
                   <button key={section.key} type="button" onClick={() => setActiveSection(section.key)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === section.key ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>{section.label}</button>
                 ))}
@@ -225,7 +225,7 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
           )}
         </div>
 
-        <div className="grid shrink-0 grid-cols-4 border-t border-neutral-200 bg-white no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="oe-mobile-dock grid shrink-0 grid-cols-4 border-t border-neutral-200 bg-white no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <MobileNavButton active={mobileView === 'edit'} onClick={() => setMobileView('edit')} icon={<Pencil className="h-5 w-5" />} label="Edit" />
           <MobileNavButton active={mobileView === 'preview'} onClick={() => setMobileView('preview')} icon={<FileText className="h-5 w-5" />} label="Preview" />
           <MobileNavButton active={mobileView === 'design'} onClick={() => setMobileView('design')} icon={<LayoutGrid className="h-5 w-5" />} label="Design" />
@@ -237,10 +237,10 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
 }
 
 function MobileNavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: ReactNode; label: string }) {
-  return <button type="button" onClick={onClick} className={`flex min-h-[58px] flex-col items-center justify-center gap-1 ${active ? 'text-orange-600' : 'text-neutral-400'}`}>{icon}<span className="text-[10px] font-semibold">{label}</span></button>;
+  return <button type="button" onClick={onClick} className={`oe-mobile-nav flex min-h-[58px] flex-col items-center justify-center gap-1 ${active ? 'text-orange-600' : 'text-neutral-400'}`}>{icon}<span className="text-[10px] font-semibold">{label}</span></button>;
 }
 
 function MobileDownloadButton({ resumeId, fileName }: { resumeId: string; fileName: string }) {
   const { download, downloading } = useDownloadPdf(resumeId, fileName);
-  return <button type="button" onClick={download} disabled={downloading} className="flex min-h-[58px] flex-col items-center justify-center gap-1 text-orange-600 disabled:opacity-60">{downloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <DownloadIcon className="h-5 w-5" />}<span className="text-[10px] font-semibold">Download</span></button>;
+  return <button type="button" onClick={download} disabled={downloading} className="oe-mobile-nav flex min-h-[58px] flex-col items-center justify-center gap-1 text-orange-600 disabled:opacity-60">{downloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <DownloadIcon className="h-5 w-5" />}<span className="text-[10px] font-semibold">Download</span></button>;
 }
