@@ -58,8 +58,42 @@
 
 @media (max-width: 768px) { button, a[role="button"], input, select, textarea { min-height: 44px; } }
 
-@media print { @page { size: A4; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
-.resume-page { width: 210mm; min-height: 297mm; background: white; }
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { width: 210mm; margin: 0; padding: 0; background: #fff !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+
+  /* Let Chromium fragment long resumes naturally across A4 pages. */
+  .resume-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .resume-page .break-inside-avoid-page {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .resume-page h1,
+  .resume-page h2,
+  .resume-page h3,
+  .resume-page p,
+  .resume-page ul,
+  .resume-page ol {
+    orphans: 3;
+    widows: 3;
+  }
+}
+
+.resume-page { width: 210mm; min-height: 297mm; background: white; box-sizing: border-box; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(220 16% 84%); border-radius: 999px; }
