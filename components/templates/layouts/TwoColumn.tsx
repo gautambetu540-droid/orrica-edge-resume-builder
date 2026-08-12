@@ -1,35 +1,16 @@
-import {
-  ResumeData,
-  ResumeSectionId,
-  ResumeSettings,
-} from '@/lib/types/resume';
+import { ResumeData, ResumeSectionId, ResumeSettings } from '@/lib/types/resume';
 import { TemplatePreset } from '@/lib/templates/presets';
-import {
-  SectionHeading,
-  SECTION_TITLES,
-  isSectionEmpty,
-  renderSectionBody,
-} from '../sections';
+import { SectionHeading, SECTION_TITLES, isSectionEmpty, renderSectionBody } from '../sections';
 
-const SIDEBAR_SECTIONS: ResumeSectionId[] = [
-  'skills',
-  'languages',
-  'certifications',
-];
-
+const SIDEBAR_SECTIONS: ResumeSectionId[] = ['skills', 'languages', 'certifications'];
 type SectionTitleKey = keyof typeof SECTION_TITLES;
 
 function getSectionTitle(id: ResumeSectionId): string {
-  if (id === 'header') {
-    return '';
-  }
-
-  return SECTION_TITLES[id as SectionTitleKey];
+  return id === 'header' ? '' : SECTION_TITLES[id as SectionTitleKey];
 }
 
 function ContactBlock({ data }: { data: ResumeData }) {
   const info = data.personalInfo;
-
   const rows = [
     info.email,
     info.phone,
@@ -38,85 +19,38 @@ function ContactBlock({ data }: { data: ResumeData }) {
     info.portfolio,
     info.github,
   ].filter(Boolean);
-
   if (!rows.length) return null;
-
-  return (
-    <div className="space-y-1 text-[0.88em] text-white/90 mb-6">
-      {rows.map((row, index) => (
-        <div key={index} className="break-all">
-          {row}
-        </div>
-      ))}
-    </div>
-  );
+  return <div className="mb-6 space-y-1 text-[0.84em] break-words">{rows.map((row, index) => <div key={index}>{row}</div>)}</div>;
 }
 
-export function TwoColumnLayout({
-  data,
-  settings,
-  preset,
-}: {
-  data: ResumeData;
-  settings: ResumeSettings;
-  preset: TemplatePreset;
-}) {
-  const ordered = [...settings.sections]
-    .filter(
-      (section) =>
-        section.visible && section.id !== 'header'
-    )
-    .sort((a, b) => a.order - b.order);
-
-  const sidebar = ordered.filter(
-    (section) =>
-      SIDEBAR_SECTIONS.includes(section.id) &&
-      !isSectionEmpty(section.id, data)
-  );
-
-  const main = ordered.filter(
-    (section) =>
-      !SIDEBAR_SECTIONS.includes(section.id) &&
-      !isSectionEmpty(section.id, data)
-  );
-
+export function TwoColumnLayout({ data, settings, preset }: { data: ResumeData; settings: ResumeSettings; preset: TemplatePreset }) {
+  const ordered = [...settings.sections].filter((section) => section.visible && section.id !== 'header').sort((a, b) => a.order - b.order);
+  const sidebar = ordered.filter((section) => SIDEBAR_SECTIONS.includes(section.id) && !isSectionEmpty(section.id, data));
+  const main = ordered.filter((section) => !SIDEBAR_SECTIONS.includes(section.id) && !isSectionEmpty(section.id, data));
   const info = data.personalInfo;
+  const solid = preset.sidebarVariant === 'solid';
+  const soft = preset.sidebarVariant === 'soft';
 
   return (
-    <div className="flex" style={{ minHeight: '100%' }}>
+    <div className="flex min-h-full">
       <aside
-        className="w-[34%] shrink-0 px-5 py-6 text-white"
-        style={{ backgroundColor: 'var(--accent)' }}
+        className={`w-[31%] shrink-0 px-5 py-7 ${solid ? 'text-white' : 'text-neutral-800'}`}
+        style={{ backgroundColor: solid ? 'var(--accent)' : soft ? '#f4f5f7' : '#fff', borderRight: solid ? 'none' : '1px solid #e5e7eb' }}
       >
         {preset.photoAllowed && info.photoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={info.photoUrl}
-            alt=""
-            className="w-24 h-24 rounded-full object-cover border-2 border-white/40 mb-4 mx-auto"
-          />
+          <img src={info.photoUrl} alt="" className={`mb-4 h-20 w-20 rounded-full object-cover border-2 ${solid ? 'border-white/40' : 'border-neutral-200'}`} />
         )}
 
-        <h1 className="text-[1.4em] font-bold leading-tight mb-0.5">
-          {info.fullName || 'Your Name'}
-        </h1>
-
-        {info.professionalTitle && (
-          <p className="text-[0.95em] text-white/85 mb-4">
-            {info.professionalTitle}
-          </p>
-        )}
-
+        <h1 className="mb-1 text-[1.55em] font-bold leading-tight tracking-[-0.025em]">{info.fullName || 'Your Name'}</h1>
+        {info.professionalTitle && <p className={`mb-4 text-[0.9em] ${solid ? 'text-white/80' : 'text-neutral-500'}`}>{info.professionalTitle}</p>}
         <ContactBlock data={data} />
 
         <div className="flex flex-col gap-5">
           {sidebar.map((section) => (
-            <div key={section.id}>
-              <h2 className="uppercase text-[0.85em] font-semibold tracking-wider mb-2 text-white/95">
-                {getSectionTitle(section.id)}
-              </h2>
-
-              <div className="text-white/90 [&_span]:text-white/90 [&_a]:text-white/90">
+            <div key={section.id} className="break-inside-avoid">
+              <h2 className="mb-2 text-[0.78em] font-bold uppercase tracking-[0.13em]" style={{ color: solid ? '#fff' : 'var(--accent)' }}>{getSectionTitle(section.id)}</h2>
+              <div className={solid ? 'text-white/90 [&_span]:text-white/90 [&_a]:text-white/90' : 'text-neutral-700'}>
                 {renderSectionBody(section.id, data, true)}
               </div>
             </div>
@@ -124,19 +58,10 @@ export function TwoColumnLayout({
         </div>
       </aside>
 
-      <main
-        className="flex-1 px-6 py-6 flex flex-col"
-        style={{ gap: 'var(--section-gap)' }}
-      >
+      <main className="flex-1 px-7 py-7" style={{ gap: 'var(--section-gap)' }}>
         {main.map((section) => (
-          <div
-            key={section.id}
-            className="break-inside-avoid-page"
-          >
-            <SectionHeading preset={preset}>
-              {getSectionTitle(section.id)}
-            </SectionHeading>
-
+          <div key={section.id} className="mb-[var(--section-gap)] break-inside-avoid-page last:mb-0">
+            <SectionHeading preset={preset}>{getSectionTitle(section.id)}</SectionHeading>
             {renderSectionBody(section.id, data)}
           </div>
         ))}
