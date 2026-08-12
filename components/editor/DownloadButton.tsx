@@ -39,7 +39,11 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   } finally { window.clearTimeout(timeout); }
 }
 
-/** The visible resume preview is the single source of truth for PDF export. */
+/**
+ * The visible ResumeDocument is the single source of truth.
+ * We clone that exact DOM, keep it fully renderable, and export the clone at
+ * A4 CSS width. No alternate resume template/data is used for the PDF.
+ */
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root');
   if (!source) throw new Error('Resume preview is not available.');
@@ -48,33 +52,38 @@ async function downloadExactPreview(fileName: string) {
   const html2pdf = (html2pdfModule as typeof html2pdfModule & { default?: typeof html2pdfModule }).default ?? html2pdfModule;
   if (typeof html2pdf !== 'function') throw new Error('PDF renderer failed to load.');
 
-  // Clone the exact visible preview, preserving its computed classes, inline
-  // styles, selected font, colours, spacing and all resume sections.
   const clone = source.cloneNode(true) as HTMLElement;
   clone.removeAttribute('id');
-  clone.style.width = '210mm';
-  clone.style.maxWidth = '210mm';
-  clone.style.minWidth = '210mm';
+  clone.style.width = '794px';
+  clone.style.maxWidth = '794px';
+  clone.style.minWidth = '794px';
   clone.style.height = 'auto';
-  clone.style.minHeight = '297mm';
+  clone.style.minHeight = '1123px';
   clone.style.margin = '0';
   clone.style.transform = 'none';
   clone.style.boxShadow = 'none';
   clone.style.border = '0';
   clone.style.overflow = 'visible';
   clone.style.background = '#fff';
+  clone.style.position = 'relative';
+  clone.style.visibility = 'visible';
+  clone.style.opacity = '1';
   clone.querySelectorAll('[data-pdf-ignore="true"]').forEach((node) => node.remove());
 
-  // Keep the clone in the normal viewport flow. Negative/off-screen capture
-  // causes blank PDFs on some mobile Chrome/WebView implementations.
+  // Put the fully visible clone below the current document rather than behind
+  // the page. z-index:-1/visibility:hidden can cause html2canvas to paint white
+  // pages on mobile Chrome. It is outside the user's viewport, but remains a
+  // normal renderable element for the browser's layout/paint engine.
   const capture = document.createElement('div');
   capture.style.position = 'absolute';
   capture.style.left = '0';
-  capture.style.top = '0';
-  capture.style.width = '210mm';
+  capture.style.top = `${Math.max(document.documentElement.scrollHeight, window.innerHeight) + 64}px`;
+  capture.style.width = '794px';
+  capture.style.height = 'auto';
+  capture.style.overflow = 'visible';
   capture.style.background = '#fff';
   capture.style.pointerEvents = 'none';
-  capture.style.zIndex = '-1';
+  capture.style.zIndex = '0';
   capture.appendChild(clone);
   document.body.appendChild(capture);
 
@@ -83,21 +92,42 @@ async function downloadExactPreview(fileName: string) {
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     const rect = clone.getBoundingClientRect();
-    if (rect.width < 500 || rect.height < 500) throw new Error('Preview could not be prepared for PDF export.');
+    if (rect.width < 700 || rect.height < 500) throw new Error('Preview could not be prepared for PDF export.');
 
     await html2pdf().set({
       margin: 0,
       filename: fileName || 'Orrica_Edge_Resume.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
-        scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
-        logging: false, scrollX: 0, scrollY: 0,
-        windowWidth: Math.round(rect.width), windowHeight: Math.max(Math.round(rect.height), 1123),
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 794,
+        windowHeight: Math.max(Math.ceil(rect.height), 1123),
+        width: 794,
+        onclone: (clonedDocument: Document) => {
+          const root = clonedDocument.querySelector('[data-resume-font]') as HTMLElement | null;
+          if (root) {
+            root.style.width = '794px';
+            root.style.maxWidth = '794px';
+            root.style.minWidth = '794px';
+            root.style.height = 'auto';
+            root.style.minHeight = '1123px';
+            root.style.overflow = 'visible';
+            root.style.transform = 'none';
+          }
+        },
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css', 'legacy'], avoid: ['.break-inside-avoid-page'] },
     }).from(clone).save();
-  } finally { capture.remove(); }
+  } finally {
+    capture.remove();
+  }
 }
 
 export function useDownloadPdf(resumeId: string, fileName: string) {
@@ -106,15 +136,18 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
 
   async function download() {
     if (downloading) return;
-    setDownloading(true); setDownloaded(false);
+    setDownloading(true);
+    setDownloaded(false);
     try {
       await downloadExactPreview(fileName);
-      setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
+      setDownloaded(true);
+      window.setTimeout(() => setDownloaded(false), 2200);
       toast({ title: 'Resume downloaded', description: 'The PDF matches your current preview.' });
     } catch (previewError) {
       try {
         await downloadFromServer(resumeId, fileName);
-        setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
+        setDownloaded(true);
+        window.setTimeout(() => setDownloaded(false), 2200);
         toast({ title: 'Resume downloaded', description: 'Your complete resume PDF is ready.' });
       } catch (serverError) {
         const message = serverError instanceof Error ? serverError.message : previewError instanceof Error ? previewError.message : 'Could not generate the PDF.';
@@ -123,6 +156,7 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
       }
     } finally { setDownloading(false); }
   }
+
   return { download, downloading, downloaded };
 }
 
