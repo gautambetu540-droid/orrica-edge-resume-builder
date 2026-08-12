@@ -39,12 +39,12 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   } finally { window.clearTimeout(timeout); }
 }
 
-/**
- * Export the same ResumeDocument as the live preview.
- * We copy only the DOM node, then render it in a real painted A4 capture
- * surface at the viewport origin. This avoids the blank-canvas problem caused
- * by capturing transformed/scrolling preview containers or off-screen nodes.
- */
+const nextFrame = () => new Promise<void>((resolve) => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => resolve());
+  });
+});
+
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root') as HTMLElement | null;
   if (!source) throw new Error('Resume preview is not available.');
@@ -60,7 +60,7 @@ async function downloadExactPreview(fileName: string) {
     img.addEventListener('load', done, { once: true });
     img.addEventListener('error', done, { once: true });
   })));
-  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  await nextFrame();
 
   const capture = document.createElement('div');
   Object.assign(capture.style, {
@@ -81,7 +81,7 @@ async function downloadExactPreview(fileName: string) {
   document.body.appendChild(capture);
 
   try {
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await nextFrame();
     const rect = clone.getBoundingClientRect();
     if (rect.width < 700 || rect.height < 500) throw new Error('Resume preview is not ready for PDF export.');
 
