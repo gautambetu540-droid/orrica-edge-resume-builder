@@ -19,175 +19,69 @@ const FONT_OPTIONS: { value: ResumeFont; label: string; hint: string }[] = [
 
 const ACCENT_PRESETS = ['#4338ca', '#0369a1', '#15803d', '#7c2d12', '#1f2937', '#be123c', '#0891b2', '#a16207'];
 
-export function DesignPanel({
-  settings,
-  updateSettings,
-  setTemplate,
-}: {
-  settings: ResumeSettings;
-  updateSettings: (updater: (s: ResumeSettings) => ResumeSettings) => void;
-  setTemplate: (t: ResumeSettings['template']) => void;
-}) {
+export function DesignPanel({ settings, updateSettings, setTemplate }: { settings: ResumeSettings; updateSettings: (updater: (s: ResumeSettings) => ResumeSettings) => void; setTemplate: (t: ResumeSettings['template']) => void }) {
+  const applyTemplate = (template: (typeof TEMPLATE_LIST)[number]) => {
+    updateSettings((s) => ({
+      ...s,
+      template: template.id,
+      font: template.recommendedFont,
+      fontSize: template.defaultFontSize,
+      headingScale: template.defaultHeadingScale,
+      lineSpacing: template.defaultLineSpacing,
+      sectionSpacing: template.defaultSectionSpacing,
+      margin: template.defaultMargin,
+      accentColor: template.defaultAccentColor,
+    }));
+    setTemplate(template.id);
+  };
+
   return (
     <div className="space-y-8 pb-10">
       <section>
-        <h3 className="font-semibold mb-3 text-sm">Template</h3>
+        <h3 className="mb-3 text-sm font-semibold">Template</h3>
         <div className="grid grid-cols-2 gap-3">
           {TEMPLATE_LIST.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTemplate(t.id)}
-              className={`relative rounded-lg border-2 p-3 text-left transition-colors ${
-                settings.template === t.id ? 'border-primary bg-accent' : 'border-border hover:border-neutral-300'
-              }`}
-            >
-              {settings.template === t.id && (
-                <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary text-white flex items-center justify-center">
-                  <Check className="h-3 w-3" />
-                </span>
-              )}
-              <div
-                className="aspect-[3/4] rounded mb-2 overflow-hidden border"
-                style={{ pointerEvents: 'none' }}
-              >
-                <SampleResumeCard accent={t.defaultAccentColor} layout={t.layout} compact />
-              </div>
-              <p className="text-xs font-medium">{t.name}</p>
+            <button key={t.id} type="button" onClick={() => applyTemplate(t)} className={`relative rounded-lg border-2 p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${settings.template === t.id ? 'border-primary bg-accent shadow-sm' : 'border-border hover:border-neutral-300'}`}>
+              {settings.template === t.id && <span className="absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white"><Check className="h-3 w-3" /></span>}
+              <div className="mb-2 aspect-[3/4] overflow-hidden rounded border bg-white" style={{ pointerEvents: 'none' }}><SampleResumeCard accent={t.defaultAccentColor} layout={t.layout} compact /></div>
+              <p className="text-xs font-semibold">{t.name}</p>
+              <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-muted-foreground">{t.description}</p>
             </button>
           ))}
         </div>
       </section>
 
       <section>
-        <h3 className="font-semibold mb-3 text-sm">Typography</h3>
+        <h3 className="mb-3 text-sm font-semibold">Typography</h3>
         <div className="space-y-4">
-          <div>
-            <Label>Font</Label>
-            <Select value={settings.font} onValueChange={(v) => updateSettings((s) => ({ ...s, font: v as ResumeFont }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((f) => (
-                  <SelectItem key={f.value} value={f.value}>
-                    {f.label} <span className="text-muted-foreground">— {f.hint}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <SliderField
-            label="Font Size"
-            value={settings.fontSize}
-            min={9}
-            max={12}
-            step={0.5}
-            unit="pt"
-            onChange={(v) => updateSettings((s) => ({ ...s, fontSize: v }))}
-          />
-          <SliderField
-            label="Heading Size"
-            value={settings.headingScale}
-            min={1}
-            max={1.4}
-            step={0.05}
-            unit="×"
-            onChange={(v) => updateSettings((s) => ({ ...s, headingScale: v }))}
-          />
-          <SliderField
-            label="Line Spacing"
-            value={settings.lineSpacing}
-            min={1}
-            max={1.6}
-            step={0.05}
-            unit="×"
-            onChange={(v) => updateSettings((s) => ({ ...s, lineSpacing: v }))}
-          />
+          <div><Label>Font</Label><Select value={settings.font} onValueChange={(v) => updateSettings((s) => ({ ...s, font: v as ResumeFont }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FONT_OPTIONS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label} <span className="text-muted-foreground">— {f.hint}</span></SelectItem>)}</SelectContent></Select></div>
+          <SliderField label="Font Size" value={settings.fontSize} min={9} max={12} step={0.5} unit="pt" onChange={(v) => updateSettings((s) => ({ ...s, fontSize: v }))} />
+          <SliderField label="Heading Size" value={settings.headingScale} min={1} max={1.4} step={0.05} unit="×" onChange={(v) => updateSettings((s) => ({ ...s, headingScale: v }))} />
+          <SliderField label="Line Spacing" value={settings.lineSpacing} min={1} max={1.6} step={0.05} unit="×" onChange={(v) => updateSettings((s) => ({ ...s, lineSpacing: v }))} />
         </div>
       </section>
 
       <section>
-        <h3 className="font-semibold mb-3 text-sm">Spacing</h3>
+        <h3 className="mb-3 text-sm font-semibold">Spacing</h3>
         <div className="space-y-4">
-          <SliderField
-            label="Section Spacing"
-            value={settings.sectionSpacing}
-            min={8}
-            max={32}
-            step={1}
-            unit="px"
-            onChange={(v) => updateSettings((s) => ({ ...s, sectionSpacing: v }))}
-          />
-          <SliderField
-            label="Margins"
-            value={settings.margin}
-            min={10}
-            max={25}
-            step={1}
-            unit="mm"
-            onChange={(v) => updateSettings((s) => ({ ...s, margin: v }))}
-          />
+          <SliderField label="Section Spacing" value={settings.sectionSpacing} min={8} max={32} step={1} unit="px" onChange={(v) => updateSettings((s) => ({ ...s, sectionSpacing: v }))} />
+          <SliderField label="Margins" value={settings.margin} min={10} max={25} step={1} unit="mm" onChange={(v) => updateSettings((s) => ({ ...s, margin: v }))} />
         </div>
       </section>
 
       <section>
-        <h3 className="font-semibold mb-3 text-sm">Accent Color</h3>
+        <h3 className="mb-3 text-sm font-semibold">Accent Color</h3>
         <div className="flex flex-wrap gap-2">
-          {ACCENT_PRESETS.map((c) => (
-            <button
-              key={c}
-              onClick={() => updateSettings((s) => ({ ...s, accentColor: c }))}
-              className="h-8 w-8 rounded-full border-2 flex items-center justify-center"
-              style={{ backgroundColor: c, borderColor: settings.accentColor === c ? '#111' : 'transparent' }}
-            >
-              {settings.accentColor === c && <Check className="h-3.5 w-3.5 text-white" />}
-            </button>
-          ))}
-          <input
-            type="color"
-            value={settings.accentColor}
-            onChange={(e) => updateSettings((s) => ({ ...s, accentColor: e.target.value }))}
-            className="h-8 w-8 rounded-full overflow-hidden border cursor-pointer"
-            aria-label="Custom accent color"
-          />
+          {ACCENT_PRESETS.map((c) => <button key={c} type="button" onClick={() => updateSettings((s) => ({ ...s, accentColor: c }))} className="flex h-8 w-8 items-center justify-center rounded-full border-2" style={{ backgroundColor: c, borderColor: settings.accentColor === c ? '#111' : 'transparent' }}>{settings.accentColor === c && <Check className="h-3.5 w-3.5 text-white" />}</button>)}
+          <input type="color" value={settings.accentColor} onChange={(e) => updateSettings((s) => ({ ...s, accentColor: e.target.value }))} className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border" aria-label="Custom accent color" />
         </div>
       </section>
 
-      <section>
-        <h3 className="font-semibold mb-3 text-sm">Sections</h3>
-        <SectionManager settings={settings} updateSettings={updateSettings} />
-      </section>
+      <section><h3 className="mb-3 text-sm font-semibold">Sections</h3><SectionManager settings={settings} updateSettings={updateSettings} /></section>
     </div>
   );
 }
 
-function SliderField({
-  label,
-  value,
-  min,
-  max,
-  step,
-  unit,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div>
-      <div className="flex justify-between mb-1.5">
-        <Label className="mb-0">{label}</Label>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {value}
-          {unit}
-        </span>
-      </div>
-      <Slider value={[value]} min={min} max={max} step={step} onValueChange={([v]) => onChange(v)} />
-    </div>
-  );
+function SliderField({ label, value, min, max, step, unit, onChange }: { label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void }) {
+  return <div><div className="mb-1.5 flex justify-between"><Label className="mb-0">{label}</Label><span className="text-xs tabular-nums text-muted-foreground">{value}{unit}</span></div><Slider value={[value]} min={min} max={max} step={step} onValueChange={([v]) => onChange(v)} /></div>;
 }
