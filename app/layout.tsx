@@ -16,10 +16,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'Orrica Edge | AI Resume Builder & ATS Resume Maker', template: '%s | Orrica Edge' },
   description: 'Build a professional ATS-friendly resume with AI writing, modern resume templates, live preview and PDF export. Create your resume free with Orrica Edge.',
-  applicationName: 'Orrica Edge',
-  keywords: ['AI resume builder', 'resume builder', 'ATS resume builder', 'ATS friendly resume', 'resume maker', 'professional resume templates', 'resume templates', 'AI resume maker', 'free resume builder', 'resume PDF maker'],
-  authors: [{ name: 'Orrica Edge' }], creator: 'Orrica Edge', publisher: 'Orrica Edge', alternates: { canonical: '/' },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
+  applicationName: 'Orrica Edge', keywords: ['AI resume builder', 'resume builder', 'ATS resume builder', 'ATS friendly resume', 'resume maker', 'professional resume templates', 'resume templates', 'AI resume maker', 'free resume builder', 'resume PDF maker'],
+  authors: [{ name: 'Orrica Edge' }], creator: 'Orrica Edge', publisher: 'Orrica Edge', alternates: { canonical: '/' }, robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   openGraph: { type: 'website', siteName: 'Orrica Edge', url: siteUrl, title: 'Orrica Edge | AI Resume Builder & ATS Resume Maker', description: 'Create a professional, ATS-friendly resume with AI writing tools, modern templates, live preview and PDF export.', images: [{ url: '/logo-orricaedge.png', width: 1200, height: 630, alt: 'Orrica Edge AI Resume Builder' }] },
   twitter: { card: 'summary_large_image', title: 'Orrica Edge | AI Resume Builder', description: 'Build a professional ATS-friendly resume with AI and modern templates.', images: ['/logo-orricaedge.png'] },
   icons: { icon: '/favicon.ico' },
@@ -36,10 +34,22 @@ const structuredData = {
   ],
 };
 
+const PRINT_RESUME_STYLES = `@media print {
+  .resume-page:has(.resume-print-header) .resume-print-header { position: fixed !important; top: 0 !important; left: var(--resume-margin, 15mm) !important; right: var(--resume-margin, 15mm) !important; width: auto !important; z-index: 50 !important; margin-top: 0 !important; }
+  .resume-page:has(.resume-print-header--banner) .resume-print-header { left: 0 !important; right: 0 !important; width: 210mm !important; }
+  .resume-page:has(.resume-print-header) > div > div:nth-child(2) { padding-top: 30mm !important; }
+  .resume-page:has(.resume-print-header--banner) > div > div:nth-child(2) { padding-top: 39mm !important; }
+  .resume-page:has(.resume-print-header) .break-inside-avoid-page { break-inside: auto; page-break-inside: auto; }
+  .resume-page:has(.resume-print-header) .break-inside-avoid-page h2, .resume-page:has(.resume-print-header) .break-inside-avoid-page h3 { break-after: avoid; page-break-after: avoid; }
+}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${inter.variable} ${sourceSans3.variable} ${ibmPlexSans.variable} ${merriweather.variable}`}>
-      <head><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></head>
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <style dangerouslySetInnerHTML={{ __html: PRINT_RESUME_STYLES }} />
+      </head>
       <body className="font-jakarta antialiased">{children}<Toaster /></body>
     </html>
   );
