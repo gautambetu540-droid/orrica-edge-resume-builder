@@ -20,15 +20,7 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
       ? `0 ${pageMargin}mm ${pageMargin}mm`
       : `${pageMargin}mm`;
 
-  const style: React.CSSProperties & {
-    '--accent'?: string;
-    '--section-gap'?: string;
-    '--entry-gap'?: string;
-    '--heading-scale'?: string;
-    '--resume-text'?: string;
-    '--resume-muted'?: string;
-    '--resume-margin'?: string;
-  } = {
+  const style: React.CSSProperties & { '--accent'?: string; '--section-gap'?: string; '--entry-gap'?: string; '--heading-scale'?: string; '--resume-text'?: string; '--resume-muted'?: string; '--resume-margin'?: string } = {
     '--accent': settings.accentColor || preset.defaultAccentColor,
     '--section-gap': `${Math.max(10, Math.min(28, settings.sectionSpacing))}px`,
     '--entry-gap': `${Math.max(8, settings.sectionSpacing * 0.55)}px`,
@@ -51,7 +43,7 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
       {preset.layout === 'two-column' ? (
         <TwoColumnLayout data={data} settings={settings} preset={preset} />
       ) : (
-        <SingleColumnLayout data={data} settings={settings} preset={preset} forPrint={forPrint} />
+        <SingleColumnLayout data={data} settings={settings} preset={preset} />
       )}
       <BrandFooter />
     </div>
