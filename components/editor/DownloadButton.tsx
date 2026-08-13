@@ -37,9 +37,7 @@ async function downloadFromServer(resumeId: string, fileName: string) {
   } finally { window.clearTimeout(timeout); }
 }
 
-const nextFrame = () => new Promise<void>((resolve) => {
-  requestAnimationFrame(() => { requestAnimationFrame(() => resolve()); });
-});
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
 async function downloadExactPreview(fileName: string) {
   const source = document.getElementById('resume-document-root') as HTMLElement | null;
@@ -72,8 +70,8 @@ async function downloadExactPreview(fileName: string) {
     await html2pdf().set({
       margin: 0,
       filename: fileName || 'Orrica_Edge_Resume.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false, scrollX: 0, scrollY: 0, windowWidth: 794, windowHeight: Math.max(1123, Math.ceil(rect.height)), width: 794 },
+      image: { type: 'png' },
+      html2canvas: { scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false, scrollX: 0, scrollY: 0, windowWidth: 794, windowHeight: Math.max(1123, Math.ceil(rect.height)), width: 794 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
       pagebreak: { mode: ['css'], avoid: ['.break-inside-avoid-page', '.avoid-page-break'] },
     }).from(clone).save();
@@ -100,7 +98,7 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
         await downloadExactPreview(fileName);
         success = true;
         setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
-        toast({ title: 'Resume downloaded', description: 'PDF exported from the live preview.' });
+        toast({ title: 'Resume downloaded', description: 'High-quality PDF exported from the live preview.' });
       } catch (previewError) {
         const message = serverError instanceof Error ? serverError.message : previewError instanceof Error ? previewError.message : 'Could not generate the PDF.';
         console.error('Resume PDF download failed', { serverError, previewError });
@@ -119,15 +117,7 @@ export function DownloadButton({ resumeId, fileName, variant = 'default', classN
   const { download, downloading, downloaded, feedbackOpen, setFeedbackOpen } = useDownloadPdf(resumeId, fileName);
   return (
     <>
-      <Button
-        onClick={download}
-        disabled={downloading}
-        variant={variant === 'default' ? 'outline' : variant}
-        className={[
-          'h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950',
-          className || '',
-        ].join(' ')}
-      >
+      <Button onClick={download} disabled={downloading} variant={variant === 'default' ? 'outline' : variant} className={['h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950', className || ''].join(' ')}>
         {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 text-emerald-600" /> : <Download className="h-4 w-4" />}
         <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
       </Button>
