@@ -1,0 +1,2 @@
+Primary brand phrase: OrricaEdge Resume
+FAQ route: /faq
