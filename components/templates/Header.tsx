@@ -23,14 +23,15 @@ function ContactLine({ info, inverse = false }: { info: PersonalInfo; inverse?: 
   );
 }
 
-export function ResumeHeader({ info, preset }: { info: PersonalInfo; preset: TemplatePreset }) {
+export function ResumeHeader({ info, preset, forPrint = false }: { info: PersonalInfo; preset: TemplatePreset; forPrint?: boolean }) {
   const showPhoto = preset.photoAllowed && info.photoUrl;
   const centered = preset.headerAlign === 'center';
   const title = info.professionalTitle || '';
+  const printClass = forPrint ? `resume-print-header resume-print-header--${preset.headerVariant}` : '';
 
   if (preset.headerVariant === 'banner') {
     return (
-      <div className="mb-6 -mx-[0px] bg-[var(--accent)] px-[10mm] py-6 text-center text-white">
+      <div className={`${printClass} mb-6 -mx-[0px] bg-[var(--accent)] px-[10mm] py-6 text-center text-white`}>
         <h1 className="font-serif font-bold leading-none tracking-[0.09em]" style={{ fontSize: 'calc(2.25em * var(--heading-scale))' }}>
           {info.fullName || 'Your Name'}
         </h1>
@@ -42,7 +43,7 @@ export function ResumeHeader({ info, preset }: { info: PersonalInfo; preset: Tem
 
   if (preset.headerVariant === 'editorial') {
     return (
-      <div className="mb-6 border-b-2 pb-4" style={{ borderColor: 'var(--accent)' }}>
+      <div className={`${printClass} mb-6 border-b-2 pb-4`} style={{ borderColor: 'var(--accent)' }}>
         <div className={`${centered ? 'text-center' : ''}`}>
           <h1 className="font-bold leading-[0.98] tracking-[-0.04em]" style={{ fontSize: 'calc(2.05em * var(--heading-scale))', color: '#111827' }}>
             {info.fullName || 'Your Name'}
@@ -56,7 +57,7 @@ export function ResumeHeader({ info, preset }: { info: PersonalInfo; preset: Tem
 
   if (preset.headerVariant === 'compact') {
     return (
-      <div className="mb-4 border-t-[5px] pt-4" style={{ borderColor: 'var(--accent)' }}>
+      <div className={`${printClass} mb-4 border-t-[5px] pt-4`} style={{ borderColor: 'var(--accent)' }}>
         <div className="flex items-end justify-between gap-5">
           <div className="min-w-0">
             <h1 className="font-bold leading-none tracking-[-0.04em]" style={{ fontSize: 'calc(2em * var(--heading-scale))', color: '#111827' }}>
@@ -71,7 +72,7 @@ export function ResumeHeader({ info, preset }: { info: PersonalInfo; preset: Tem
   }
 
   return (
-    <div className={`flex gap-4 mb-5 ${centered ? 'flex-col items-center text-center' : 'items-center justify-between flex-wrap'}`}>
+    <div className={`${printClass} flex gap-4 mb-5 ${centered ? 'flex-col items-center text-center' : 'items-center justify-between flex-wrap'}`}>
       <div className={centered ? '' : 'flex items-center gap-4'}>
         {showPhoto && !centered && (
           // eslint-disable-next-line @next/next/no-img-element
