@@ -13,11 +13,12 @@ export interface ResumeDocumentProps {
 
 export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocumentProps) {
   const preset = TEMPLATE_PRESETS[settings.template];
+  const pageMargin = Math.max(10, Math.min(25, settings.margin));
   const pagePadding = preset.layout === 'two-column'
     ? 0
     : preset.headerVariant === 'banner'
-      ? `0 ${Math.max(10, Math.min(25, settings.margin))}mm ${Math.max(10, Math.min(25, settings.margin))}mm`
-      : `${Math.max(10, Math.min(25, settings.margin))}mm`;
+      ? `0 ${pageMargin}mm ${pageMargin}mm`
+      : `${pageMargin}mm`;
 
   const style: React.CSSProperties & {
     '--accent'?: string;
@@ -26,6 +27,7 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
     '--heading-scale'?: string;
     '--resume-text'?: string;
     '--resume-muted'?: string;
+    '--resume-margin'?: string;
   } = {
     '--accent': settings.accentColor || preset.defaultAccentColor,
     '--section-gap': `${Math.max(10, Math.min(28, settings.sectionSpacing))}px`,
@@ -33,6 +35,7 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
     '--heading-scale': String(Math.max(1, Math.min(1.35, settings.headingScale || 1.15))),
     '--resume-text': '#20242a',
     '--resume-muted': '#5f6873',
+    '--resume-margin': `${pageMargin}mm`,
     fontFamily: FONT_STACKS[settings.font],
     fontSize: `${Math.max(9, Math.min(12, settings.fontSize))}pt`,
     lineHeight: Math.max(1.15, Math.min(1.55, settings.lineSpacing)),
@@ -44,16 +47,11 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
   };
 
   return (
-    <div
-      className={`resume-page bg-white ${forPrint ? '' : 'shadow-lg border border-neutral-200'}`}
-      style={style}
-      id="resume-document-root"
-      data-resume-font={settings.font}
-    >
+    <div className={`resume-page bg-white ${forPrint ? '' : 'shadow-lg border border-neutral-200'}`} style={style} id="resume-document-root" data-resume-font={settings.font}>
       {preset.layout === 'two-column' ? (
         <TwoColumnLayout data={data} settings={settings} preset={preset} />
       ) : (
-        <SingleColumnLayout data={data} settings={settings} preset={preset} />
+        <SingleColumnLayout data={data} settings={settings} preset={preset} forPrint={forPrint} />
       )}
       <BrandFooter />
     </div>
