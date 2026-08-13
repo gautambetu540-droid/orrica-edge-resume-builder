@@ -8,7 +8,6 @@ export async function GET() {
   const { data, error } = await supabase
     .from('feedback')
     .select('id, rating, feedback, created_at')
-    .eq('is_featured', true)
     .neq('feedback', '')
     .order('created_at', { ascending: false })
     .limit(6);
