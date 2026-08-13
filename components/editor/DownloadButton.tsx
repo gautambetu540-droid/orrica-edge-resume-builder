@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Download, Loader2, Printer, Sparkles } from 'lucide-react';
+import { Check, Download, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
+import { DownloadFeedback } from './DownloadFeedback';
 
 function triggerBlobDownload(blob: Blob, fileName: string) {
   if (!blob.size) throw new Error('Generated PDF is empty.');
@@ -83,17 +84,21 @@ async function downloadExactPreview(fileName: string) {
 export function useDownloadPdf(resumeId: string, fileName: string) {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   async function download() {
     if (downloading) return;
     setDownloading(true); setDownloaded(false);
+    let success = false;
     try {
       await downloadFromServer(resumeId, fileName);
+      success = true;
       setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
       toast({ title: 'Resume downloaded', description: 'The PDF uses the same A4 layout as your preview.' });
     } catch (serverError) {
       try {
         await downloadExactPreview(fileName);
+        success = true;
         setDownloaded(true); window.setTimeout(() => setDownloaded(false), 2200);
         toast({ title: 'Resume downloaded', description: 'PDF exported from the live preview.' });
       } catch (previewError) {
@@ -101,29 +106,36 @@ export function useDownloadPdf(resumeId: string, fileName: string) {
         console.error('Resume PDF download failed', { serverError, previewError });
         toast({ title: 'Download failed', description: message, variant: 'error' });
       }
-    } finally { setDownloading(false); }
+    } finally {
+      setDownloading(false);
+      if (success) window.setTimeout(() => setFeedbackOpen(true), 700);
+    }
   }
-  return { download, downloading, downloaded };
+
+  return { download, downloading, downloaded, feedbackOpen, setFeedbackOpen };
 }
 
 export function DownloadButton({ resumeId, fileName, variant = 'default', className }: { resumeId: string; fileName: string; variant?: 'default' | 'outline'; className?: string }) {
-  const { download, downloading, downloaded } = useDownloadPdf(resumeId, fileName);
+  const { download, downloading, downloaded, feedbackOpen, setFeedbackOpen } = useDownloadPdf(resumeId, fileName);
   return (
-    <Button
-      onClick={download}
-      disabled={downloading}
-      variant={variant === 'default' ? 'outline' : variant}
-      className={[
-        'h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950',
-        className || '',
-      ].join(' ')}
-    >
-      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 text-emerald-600" /> : <Download className="h-4 w-4" />}
-      <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
-    </Button>
+    <>
+      <Button
+        onClick={download}
+        disabled={downloading}
+        variant={variant === 'default' ? 'outline' : variant}
+        className={[
+          'h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950',
+          className || '',
+        ].join(' ')}
+      >
+        {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : downloaded ? <Check className="h-4 w-4 text-emerald-600" /> : <Download className="h-4 w-4" />}
+        <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
+      </Button>
+      <DownloadFeedback resumeId={resumeId} open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+    </>
   );
 }
 
 export function PrintButton({ resumeId }: { resumeId: string }) {
-  return <Button variant="outline" onClick={() => window.open(`/resume/${resumeId}/print`, '_blank', 'noopener,noreferrer')} className="h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none transition-colors hover:bg-neutral-50 hover:text-neutral-950"><Printer className="h-4 w-4" />Print Resume</Button>;
+  return <Button variant="outline" onClick={() => window.open(`/resume/${resumeId}/print`, '_blank', 'noopener,noreferrer')} className="h-10 rounded-lg border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 shadow-none hover:bg-neutral-50 hover:text-neutral-950"><Printer className="h-4 w-4" />Print Resume</Button>;
 }
