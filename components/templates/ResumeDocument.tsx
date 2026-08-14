@@ -59,6 +59,7 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
       <BrandFooter />
       {!forPrint && activeSection && (
         <style jsx global>{`
+          /* Editor-only active-section treatment: soft glass highlight, never black. */
           #resume-document-root[data-active-section="personal"] [data-resume-section="personal"],
           #resume-document-root[data-active-section="experience"] [data-resume-section="experience"],
           #resume-document-root[data-active-section="education"] [data-resume-section="education"],
@@ -66,13 +67,20 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
           #resume-document-root[data-active-section="projects"] [data-resume-section="projects"],
           #resume-document-root[data-active-section="more"] [data-resume-section="more"],
           #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] {
-            background: #111827 !important;
-            color: #ffffff !important;
-            border-radius: 6px;
+            background: rgba(241, 245, 249, 0.72) !important;
+            color: #111827 !important;
+            border: 1px solid rgba(14, 165, 233, 0.22) !important;
+            border-radius: 8px;
             padding: 8px 10px;
             margin-left: -10px;
             margin-right: -10px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+            box-shadow:
+              0 8px 24px rgba(15, 23, 42, 0.06),
+              0 0 0 3px rgba(14, 165, 233, 0.055),
+              inset 0 1px 0 rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
           }
           #resume-document-root[data-active-section="personal"] [data-resume-section="personal"] *,
           #resume-document-root[data-active-section="experience"] [data-resume-section="experience"] *,
@@ -81,7 +89,7 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
           #resume-document-root[data-active-section="projects"] [data-resume-section="projects"] *,
           #resume-document-root[data-active-section="more"] [data-resume-section="more"] *,
           #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] * {
-            color: #ffffff !important;
+            color: #111827 !important;
           }
           #resume-document-root[data-active-section="personal"] [data-resume-section="personal"] a,
           #resume-document-root[data-active-section="experience"] [data-resume-section="experience"] a,
@@ -89,7 +97,9 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
           #resume-document-root[data-active-section="skills"] [data-resume-section="skills"] a,
           #resume-document-root[data-active-section="projects"] [data-resume-section="projects"] a,
           #resume-document-root[data-active-section="more"] [data-resume-section="more"] a,
-          #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] a { color: #e0f2fe !important; }
+          #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] a {
+            color: #0369A1 !important;
+          }
         `}</style>
       )}
     </div>
