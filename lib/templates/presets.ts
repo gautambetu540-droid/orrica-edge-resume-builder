@@ -18,6 +18,7 @@ export type SidebarVariant = 'solid' | 'soft' | 'plain';
 export interface TemplatePreset {
   id: TemplateId;
   name: string;
+  category?: string;
   layout: TemplateLayout;
   headerAlign: 'left' | 'center';
   headerVariant: HeaderVariant;
@@ -39,7 +40,13 @@ const preset = (
   id: TemplateId,
   name: string,
   options: Omit<TemplatePreset, 'id' | 'name' | 'description'> & { description: string },
-): TemplatePreset => ({ id, name, ...options });
+): TemplatePreset => presetWithCategory(id, name, options);
+
+const presetWithCategory = (
+  id: TemplateId,
+  name: string,
+  options: Omit<TemplatePreset, 'id' | 'name' | 'description'> & { description: string },
+): TemplatePreset => ({ id, name, category: '', ...options });
 
 export const TEMPLATE_PRESETS: Record<TemplateId, TemplatePreset> = {
   'modern-ats': preset('modern-ats', 'Modern ATS', { layout: 'single-column', headerAlign: 'left', headerVariant: 'clean', sidebarVariant: 'plain', sectionHeadingStyle: 'uppercase-accent', dividers: true, photoAllowed: false, defaultAccentColor: '#F97316', recommendedFont: 'arial', defaultFontSize: 10.2, defaultHeadingScale: 1.08, defaultLineSpacing: 1.28, defaultSectionSpacing: 13, defaultMargin: 15, description: 'Clean, recruiter-friendly single-column layout with strong ATS readability.' }),
