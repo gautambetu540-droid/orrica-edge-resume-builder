@@ -1,7 +1,7 @@
 'use client';
 
 import { DragEvent, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FilePlus2, FileUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, FilePlus2, FileUp, Loader2, LockKeyhole, ShieldCheck, Sparkles, Upload, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { OrricaResumeWizard } from '@/components/wizard/OrricaResumeWizard';
 import { ResumeDocument } from '@/components/templates/ResumeDocument';
@@ -43,9 +43,91 @@ function TemplateSelection({ current, onBack, onContinue }: { current: TemplateI
 }
 
 function Choice({ onBack, onContinue }: { onBack: () => void; onContinue: (mode: 'upload' | 'scratch') => void }) {
-  const [selected, setSelected] = useState<'upload' | 'scratch' | null>(null);
-  const cards=[{id:'upload' as const,title:'Upload an existing resume',desc:'Already have a resume? Upload it and we’ll use your information to help create a polished resume.',meta:'PDF import • Max 8 MB',Icon:FileUp,badge:'RECOMMENDED'},{id:'scratch' as const,title:'Start from scratch',desc:'Don’t have a resume yet? Start with a blank resume and build it step by step.',meta:'Guided resume builder',Icon:FilePlus2}];
-  return <div className="oe-choice min-h-dvh bg-white text-[#000]"><header className="flex h-[68px] items-center justify-center border-b border-[#f0f0f0]"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px] w-auto" /></header><main className="mx-auto max-w-5xl px-4 py-10 sm:px-8 sm:py-14"><div className="mx-auto max-w-3xl text-center"><span className="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#f47c3c]">Step 2</span><h1 className="mt-2 text-[30px] font-extrabold tracking-[-.035em] sm:text-[44px]">How would you like to create your resume?</h1><p className="mt-3 text-[13px] leading-6 text-[#667085] sm:text-[15px]">Select whether you want to upload an existing resume or start from scratch.</p></div><div className="mx-auto mt-9 grid gap-5 md:grid-cols-2">{cards.map(card=>{const active=selected===card.id;const Icon=card.Icon;return <button key={card.id} type="button" onClick={()=>setSelected(card.id)} className={`relative rounded-[24px] border-2 bg-white p-6 text-left transition-all hover:-translate-y-1 hover:border-[#f47c3c] ${active?'border-[#f47c3c] bg-[#fffaf7] shadow-[0_16px_35px_-22px_rgba(244,124,60,.9)]':'border-[#e7e9ee]'}`}>{card.badge&&<span className="absolute left-6 top-6 rounded-full bg-[#f47c3c] px-3 py-1.5 text-[9px] font-extrabold tracking-[.08em] text-white">{card.badge}</span>}{active&&<span className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-[#f47c3c] text-white"><Check className="h-4 w-4"/></span>}<div className="flex h-48 items-center justify-center rounded-2xl bg-[#fafafa]"><div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[#fff1e8] text-[#f47c3c]"><Icon className="h-10 w-10"/></div></div><h2 className="mt-5 text-[20px] font-extrabold text-[#230939]">{card.title}</h2><p className="mt-2 text-[13px] leading-6 text-[#667085]">{card.desc}</p><p className="mt-4 text-[11px] font-bold text-[#8a919d]">{card.meta}</p></button>})}</div><div className="mx-auto mt-7 flex items-center justify-between border-t border-[#f0f0f0] pt-5"><button type="button" onClick={onBack} className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#e5e7eb] px-4 text-[13px] font-bold text-[#230939]"><ArrowLeft className="h-4 w-4"/> Back</button><button type="button" disabled={!selected} onClick={()=>selected&&onContinue(selected)} className="inline-flex h-11 min-w-[160px] items-center justify-center gap-2 rounded-xl bg-[#f47c3c] px-5 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#e6e7eb] disabled:text-[#98a2b3]">Continue <ArrowRight className="h-4 w-4" /></button></div></main><style jsx global>{`.oe-choice,.oe-choice *{font-family:"Proxima Nova",Arial,sans-serif}`}</style></div>;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  return <div className="oe-choice min-h-dvh overflow-x-hidden bg-white text-[#230939]">
+    <input ref={inputRef} type="file" accept=".pdf,.doc,.docx,.rtf,.txt" className="hidden" onChange={async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setBusy(true);
+      try {
+        if (!/\.pdf$/i.test(file.name)) {
+          toast({ title: 'PDF import is currently supported', description: 'Please export your resume as PDF and try again.', variant: 'error' });
+          return;
+        }
+        if (file.size > 8 * 1024 * 1024) {
+          toast({ title: 'File is too large', description: 'Please upload a file smaller than 8 MB.', variant: 'error' });
+          return;
+        }
+        const form = new FormData();
+        form.append('file', file);
+        const response = await fetch('/api/resume/scan', { method: 'POST', body: form });
+        const payload = await response.json();
+        if (response.status === 401) { window.location.href = '/login?returnTo=/resume/new&reason=import'; return; }
+        if (!response.ok) throw new Error(payload?.error || 'Could not import this resume.');
+        onContinue('upload');
+      } catch (error) {
+        toast({ title: 'Could not import resume', description: error instanceof Error ? error.message : 'Please try again.', variant: 'error' });
+      } finally { setBusy(false); }
+    }} />
+    <header className="flex h-[74px] items-center justify-center border-b border-[#f0f0f0] bg-white px-4 sm:h-[86px]">
+      <img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[31px] w-auto sm:h-[39px]" />
+    </header>
+    <main className="mx-auto flex min-h-[calc(100dvh-74px)] w-full max-w-[1120px] flex-col px-5 pb-6 pt-10 sm:min-h-[calc(100dvh-86px)] sm:px-8 sm:pt-14 lg:px-0 lg:pt-12">
+      <section className="text-center">
+        <h1 className="mx-auto max-w-[1000px] text-[39px] font-extrabold leading-[1.08] tracking-[-.045em] text-[#142451] sm:text-[48px] lg:text-[58px]">Create your resume your way</h1>
+        <p className="mx-auto mt-4 max-w-[720px] text-[17px] leading-[1.5] text-[#4d607f] sm:text-[20px] lg:text-[22px]">Upload an existing resume and let us build from it,<br className="hidden sm:block" /> or start fresh with a guided experience.</p>
+      </section>
+
+      <section className="mx-auto mt-9 grid w-full max-w-[1010px] gap-5 md:grid-cols-2 md:gap-9 lg:mt-10">
+        <article className="relative flex min-h-[500px] flex-col items-center rounded-[17px] border border-[#ff6420] bg-white px-7 pb-5 pt-16 text-center shadow-[0_8px_28px_-24px_rgba(255,100,32,.35)] sm:min-h-[535px] sm:px-10 sm:pt-[66px]">
+          <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-[#ff6420] px-3.5 py-2 text-[11px] font-extrabold text-white sm:left-6 sm:top-5 sm:text-[12px]"><Sparkles className="h-4 w-4 fill-white" /> RECOMMENDED</div>
+          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]">
+            <div className="absolute left-[37px] top-[23px] h-[116px] w-[116px] rounded-full bg-[#fff1e8]" />
+            <div className="absolute left-[77px] top-[5px] h-[145px] w-[120px] rounded-[8px] border-[2.5px] border-[#7a879a] bg-white" />
+            <div className="absolute left-[150px] top-[5px] h-[43px] w-[44px] border-b-[2.5px] border-l-[2.5px] border-[#7a879a] bg-white [clip-path:polygon(0_0,100%_100%,0_100%)]" />
+            <div className="absolute left-[99px] top-[41px] h-[7px] w-[58px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[66px] h-[7px] w-[112px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[89px] h-[7px] w-[78px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[112px] h-[7px] w-[116px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[31px] bottom-[18px] flex h-[66px] w-[66px] items-center justify-center rounded-full border-[4px] border-[#ff6420] bg-white text-[#ff6420]"><Upload className="h-8 w-8" strokeWidth={3} /></div>
+            <div className="absolute right-[39px] bottom-[18px] flex h-[51px] w-[51px] items-center justify-center rounded-full bg-[#ff6420] text-white shadow-sm"><Upload className="h-7 w-7" strokeWidth={3} /></div>
+          </div>
+          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#142451] sm:text-[27px]">Upload an existing resume</h2>
+          <p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Upload your resume (PDF or DOCX) and we’ll<br className="hidden sm:block" /> automatically extract your information to<br className="hidden sm:block" /> help you create a polished resume faster.</p>
+          <button type="button" disabled={busy} onClick={() => inputRef.current?.click()} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] bg-[#ff6420] text-[17px] font-bold text-white shadow-[0_8px_18px_-13px_rgba(255,100,32,.9)] transition hover:bg-[#f45a16] disabled:opacity-60"><Upload className="h-6 w-6" strokeWidth={2.6} />{busy ? 'Uploading…' : 'Upload Resume'}</button>
+          <p className="mt-2 text-[12px] text-[#4d607f]">Supports PDF, DOCX (Max 10MB)</p>
+        </article>
+
+        <article className="relative flex min-h-[500px] flex-col items-center rounded-[17px] border border-[#b7cdf8] bg-white px-7 pb-5 pt-16 text-center sm:min-h-[535px] sm:px-10 sm:pt-[66px]">
+          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]">
+            <div className="absolute left-[35px] top-[22px] h-[120px] w-[120px] rounded-full bg-[#edf3ff]" />
+            <div className="absolute left-[77px] top-[31px] h-[145px] w-[170px] rounded-[15px] border-[7px] border-[#142451] bg-white shadow-[0_0_0_1px_rgba(20,36,81,.05)]" />
+            <div className="absolute left-[99px] top-[70px] h-[7px] w-[58px] rounded-full bg-[#3774e8]" />
+            <div className="absolute left-[99px] top-[94px] h-[7px] w-[121px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[117px] h-[7px] w-[86px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[140px] h-[7px] w-[120px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute left-[99px] top-[163px] h-[7px] w-[63px] rounded-full bg-[#dfe4eb]" />
+            <div className="absolute right-[23px] bottom-[18px] flex h-[55px] w-[55px] items-center justify-center rounded-full bg-[#2f6fe4] text-white"><span className="text-[43px] font-light leading-none">+</span></div>
+          </div>
+          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#142451] sm:text-[27px]">Start from scratch</h2>
+          <p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Build your resume step by step with our<br className="hidden sm:block" /> guided builder. Perfect if you don’t have<br className="hidden sm:block" /> a resume ready.</p>
+          <button type="button" onClick={() => onContinue('scratch')} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] border-2 border-[#2f6fe4] bg-white text-[17px] font-bold text-[#2058c6] transition hover:bg-[#f7faff]"><span className="text-[30px] font-light leading-none">+</span> Start New Resume</button>
+        </article>
+      </section>
+
+      <section className="mx-auto mt-5 grid w-full max-w-[1010px] grid-cols-1 divide-y divide-[#dce4f1] rounded-[11px] border border-[#dce4f1] bg-white px-5 py-3 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-4 sm:py-3">
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><ShieldCheck className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#142451]">Your data is secure</strong><span className="block text-[13px] text-[#4d607f]">We never share your data</span></div></div>
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Zap className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#142451]">Fast &amp; easy</strong><span className="block text-[13px] text-[#4d607f]">Create in just a few minutes</span></div></div>
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Check className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={2}/><div><strong className="block text-[15px] font-bold text-[#142451]">AI-Powered Suggestions</strong><span className="block text-[13px] text-[#4d607f]">Get smart recommendations</span></div></div>
+      </section>
+
+      <div className="mt-auto flex items-center justify-center gap-2 pt-5 text-center text-[13px] text-[#7d8ca7] sm:pt-6"><LockKeyhole className="h-4 w-4" /> Your information is safe with us and will never be shared.</div>
+      <button type="button" onClick={onBack} className="sr-only">Back</button>
+    </main>
+    <style jsx global>{`.oe-choice,.oe-choice *{font-family:"Proxima Nova",Arial,sans-serif}.oe-choice button{touch-action:manipulation}@media(max-width:767px){.oe-choice header{height:70px}.oe-choice main{min-height:calc(100dvh - 70px);padding-top:32px}.oe-choice h1{font-size:34px;line-height:1.08}.oe-choice section:nth-of-type(2){margin-top:28px;grid-template-columns:1fr}.oe-choice article{min-height:auto;padding:48px 22px 24px}.oe-choice article h2{font-size:23px}.oe-choice article p{font-size:14px}.oe-choice article .relative.h-\[205px\]{transform:scale(.88);transform-origin:top center;margin-bottom:-22px}.oe-choice section:nth-of-type(3){margin-top:18px}.oe-choice section:nth-of-type(3)>div{justify-content:flex-start;padding:9px 5px}.oe-choice section:nth-of-type(3) strong{font-size:14px}.oe-choice section:nth-of-type(3) span{font-size:12px}.oe-choice main>div:last-child{padding-bottom:8px;font-size:11px}.oe-choice .max-w-\[1000px\]{max-width:100%}}@media(max-width:390px){.oe-choice h1{font-size:30px}.oe-choice article{padding-left:16px;padding-right:16px}.oe-choice article .relative.h-\[205px\]{transform:scale(.78);margin-bottom:-42px}.oe-choice article h2{font-size:21px}.oe-choice article p br{display:none}.oe-choice article button{font-size:15px}.oe-choice section:nth-of-type(3) strong{font-size:13px}.oe-choice section:nth-of-type(3) span{font-size:11px}}`}</style>
+  </div>;
 }
 
 function Upload({ onBack, onImported }: { onBack: () => void; onImported: (data: any) => void }) {
