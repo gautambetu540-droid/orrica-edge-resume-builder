@@ -19,11 +19,11 @@ export interface ExperienceEntry {
   company: string;
   jobTitle: string;
   location?: string;
-  startDate: string; // YYYY-MM
-  endDate?: string; // YYYY-MM, empty if current
+  startDate: string;
+  endDate?: string;
   currentlyWorking: boolean;
-  responsibilities: string; // raw/manual text
-  achievements: string[]; // bullet points (AI or manual)
+  responsibilities: string;
+  achievements: string[];
 }
 
 export interface EducationEntry {
@@ -60,12 +60,7 @@ export interface CertificationEntry {
   credentialUrl?: string;
 }
 
-export type LanguageProficiency =
-  | 'basic'
-  | 'conversational'
-  | 'professional'
-  | 'fluent'
-  | 'native';
+export type LanguageProficiency = 'basic' | 'conversational' | 'professional' | 'fluent' | 'native';
 
 export interface LanguageEntry {
   id: string;
@@ -93,15 +88,7 @@ export type ResumeSectionId =
   | 'achievements';
 
 export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
-  'header',
-  'summary',
-  'experience',
-  'education',
-  'skills',
-  'projects',
-  'certifications',
-  'languages',
-  'achievements',
+  'header', 'summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'languages', 'achievements',
 ];
 
 export type TemplateId =
@@ -114,7 +101,17 @@ export type TemplateId =
   | 'bold-header'
   | 'elegant-serif'
   | 'compact-ats'
-  | 'creative-sidebar';
+  | 'creative-sidebar'
+  | 'clean-corporate'
+  | 'tech-modern'
+  | 'simple-chronological'
+  | 'classic-two-column'
+  | 'creative-modern'
+  | 'dark-executive'
+  | 'blue-accent'
+  | 'orange-accent'
+  | 'editorial-clean'
+  | 'timeline-pro';
 
 export type ResumeFont =
   | 'proxima-nova'
@@ -129,12 +126,12 @@ export type ResumeFont =
 export interface ResumeSettings {
   template: TemplateId;
   font: ResumeFont;
-  fontSize: number; // base body pt, 9-12
-  headingScale: number; // multiplier, 1.0-1.4
-  lineSpacing: number; // 1.0-1.6
-  sectionSpacing: number; // px, 8-32
-  margin: number; // mm, 10-25
-  accentColor: string; // hex
+  fontSize: number;
+  headingScale: number;
+  lineSpacing: number;
+  sectionSpacing: number;
+  margin: number;
+  accentColor: string;
   sections: SectionConfig[];
 }
 
@@ -152,7 +149,7 @@ export const DEFAULT_SETTINGS: ResumeSettings = {
   lineSpacing: 1.35,
   sectionSpacing: 16,
   margin: 16,
-  accentColor: '#0EA5E9',
+  accentColor: '#F97316',
   sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })),
 };
 
@@ -170,14 +167,7 @@ export interface ResumeData {
 }
 
 export const EMPTY_RESUME_DATA: ResumeData = {
-  personalInfo: {
-    fullName: '',
-    professionalTitle: '',
-    email: '',
-    phone: '',
-    city: '',
-    country: '',
-  },
+  personalInfo: { fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' },
   summary: '',
   experience: [],
   education: [],
