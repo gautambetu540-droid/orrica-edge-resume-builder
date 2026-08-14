@@ -57,9 +57,9 @@ export function PreviewPane({ data, settings, activeSection = '' }: { data: Resu
     <div className="preview-pane flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#f5f6f8]">
       <div className="relative flex shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 no-print">
         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-500"><Sparkles className="h-4 w-4" /></span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600"><Sparkles className="h-4 w-4" /></span>
           <span>Live resume preview</span>
-          <span className="hidden rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:inline-flex">Live</span>
+          <span className="hidden rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700 sm:inline-flex">Live</span>
         </div>
         <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-sm">
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.max(0.35, (z ?? autoScale) - 0.1))} aria-label="Zoom out"><ZoomOut className="h-3.5 w-3.5" /></Button>
@@ -70,7 +70,7 @@ export function PreviewPane({ data, settings, activeSection = '' }: { data: Resu
       </div>
 
       <div ref={containerRef} className="preview-canvas relative min-h-0 flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(56,189,248,.07),transparent_28%),radial-gradient(circle_at_82%_25%,rgba(251,146,60,.07),transparent_30%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(249,115,22,.07),transparent_28%),radial-gradient(circle_at_82%_25%,rgba(234,88,12,.06),transparent_30%)]" />
         <div className="relative flex min-h-full min-w-full items-start justify-center">
           <div className="relative shrink-0" style={{ width: canvasWidth, height: canvasHeight }}>
             <div
@@ -160,6 +160,19 @@ export function PreviewPane({ data, settings, activeSection = '' }: { data: Resu
           .oe-editor-shell .preview-pane {
             height: 100% !important;
             min-height: 0 !important;
+          }
+        }
+
+        /* Orrica Edge preview chrome: keep builder accents orange. */
+        .preview-pane .text-sky-500,
+        .preview-pane .text-sky-600 { color: #f97316 !important; }
+        .preview-pane .bg-sky-50 { background-color: #fff7ed !important; }
+        .preview-pane .border-sky-200 { border-color: #fed7aa !important; }
+
+        @media print {
+          .preview-pane .no-print,
+          .preview-canvas {
+            overflow: visible !important;
           }
         }
       `}</style>
