@@ -11,6 +11,7 @@ function ContactBlock({ data }: { data: ResumeData }) {
   if (!rows.length) return null;
   return <div className="mb-6 space-y-1 text-[0.84em] break-words">{rows.map((row, index) => <div key={index}>{row}</div>)}</div>;
 }
+
 export function TwoColumnLayout({ data, settings, preset, activeSection }: { data: ResumeData; settings: ResumeSettings; preset: TemplatePreset; activeSection?: string }) {
   const ordered = [...settings.sections].filter((section) => section.visible && section.id !== 'header').sort((a, b) => a.order - b.order);
   const sidebar = ordered.filter((section) => SIDEBAR_SECTIONS.includes(section.id) && !isSectionEmpty(section.id, data));
@@ -18,6 +19,9 @@ export function TwoColumnLayout({ data, settings, preset, activeSection }: { dat
   const info = data.personalInfo;
   const solid = preset.sidebarVariant === 'solid';
   const soft = preset.sidebarVariant === 'soft';
+  // activeSection is intentionally accepted here so ResumeDocument can pass the editor selection consistently across layouts.
+  void activeSection;
+
   return <div className="flex min-h-full">
     <aside className={`w-[31%] shrink-0 px-5 py-7 ${solid ? 'text-white' : 'text-neutral-800'}`} style={{ backgroundColor: solid ? 'var(--accent)' : soft ? '#f4f5f7' : '#fff', borderRight: solid ? 'none' : '1px solid #e5e7eb' }}>
       <div data-resume-section="personal" className="resume-preview-section">{preset.photoAllowed && info.photoUrl && <img src={info.photoUrl} alt="" className={`mb-4 h-20 w-20 rounded-full object-cover border-2 ${solid ? 'border-white/40' : 'border-neutral-200'}`} />}<h1 className="mb-1 text-[1.55em] font-bold leading-tight tracking-[-0.025em]">{info.fullName || 'Your Name'}</h1>{info.professionalTitle && <p className={`mb-4 text-[0.9em] ${solid ? 'text-white/80' : 'text-neutral-500'}`}>{info.professionalTitle}</p>}<ContactBlock data={data} /></div>
