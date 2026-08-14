@@ -83,6 +83,53 @@ export function PreviewPane({ data, settings }: { data: ResumeData; settings: Re
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        /* Desktop editor workspace: the sidebar stays pinned while everything on
+           the right (editor + live preview) uses the single page scroll. */
+        @media (min-width: 768px) {
+          .oe-editor-shell > .hidden.md\\:flex {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            align-items: flex-start !important;
+            min-height: 0 !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > .oe-editor-sidebar {
+            position: sticky !important;
+            top: 0 !important;
+            align-self: flex-start !important;
+            height: calc(100vh - 64px) !important;
+            max-height: calc(100vh - 64px) !important;
+            overflow: hidden !important;
+            z-index: 20;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Resume editor"] {
+            overflow: visible !important;
+            height: auto !important;
+            min-height: calc(100vh - 64px) !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] {
+            overflow: visible !important;
+            height: auto !important;
+            min-height: calc(100vh - 64px) !important;
+            align-self: stretch !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] > div {
+            height: auto !important;
+            min-height: calc(100vh - 64px) !important;
+            overflow: visible !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] .hero-grid {
+            overflow: visible !important;
+            min-height: calc(100vh - 120px) !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
