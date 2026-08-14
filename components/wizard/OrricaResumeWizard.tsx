@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, FileText, Palette, Plus, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
@@ -45,29 +45,71 @@ function StepContent({ index, props }: { index: number; props: StepProps }) {
 function PagePreview({ data, settings, activeSection }: { data: ResumeData; settings: ResumeSettings; activeSection: string }) {
   const documentRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.42);
-  const [documentHeight, setDocumentHeight] = useState(1123);
+  const [scale, setScale] = useState(0.38);
 
   useEffect(() => {
     const recompute = () => {
       const viewport = viewportRef.current;
-      const document = documentRef.current;
-      if (!viewport || !document) return;
-      const height = Math.max(1123, document.scrollHeight);
-      setDocumentHeight(height);
-      const widthScale = (viewport.clientWidth - 24) / 794;
-      const heightScale = (viewport.clientHeight - 24) / height;
-      setScale(Math.max(0.28, Math.min(0.62, widthScale, heightScale)));
+      if (!viewport) return;
+      const availableWidth = Math.max(280, viewport.clientWidth - 72);
+      const availableHeight = Math.max(420, viewport.clientHeight - 42);
+      const widthScale = availableWidth / 794;
+      const heightScale = availableHeight / 1123;
+      setScale(Math.max(0.30, Math.min(0.44, widthScale, heightScale)));
     };
     recompute();
     const observer = new ResizeObserver(recompute);
     if (viewportRef.current) observer.observe(viewportRef.current);
-    if (documentRef.current) observer.observe(documentRef.current);
     window.addEventListener('resize', recompute);
     return () => { observer.disconnect(); window.removeEventListener('resize', recompute); };
   }, [data, settings]);
 
-  return <div className="w-full min-w-0"><div className="mb-3 flex items-center justify-between gap-3"><div><strong className="text-sm text-slate-900">Live Resume Preview</strong><div className="text-[11px] text-slate-500">Updates as you type</div></div><span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-semibold text-sky-600">Live</span></div><div ref={viewportRef} className="relative flex h-[520px] w-full items-start justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-3 shadow-inner sm:h-[590px] lg:h-[650px]"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_15%,rgba(14,165,233,.10),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(249,115,22,.08),transparent_32%)]" /><div className="relative shrink-0" style={{ width: 794 * scale, height: Math.min(1123, documentHeight) * scale }}><div ref={documentRef} className="absolute left-0 top-0 origin-top-left" style={{ width: 794, transform: `scale(${scale})`, transformOrigin: 'top left' }}><ResumeDocument data={data} settings={settings} activeSection={activeSection} /></div></div></div></div>;
+  const resumeWidth = 794 * scale;
+  const resumeHeight = 1123 * scale;
+
+  return <div className="w-full min-w-0">
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <div><strong className="text-sm text-slate-900">Live Resume Preview</strong><div className="text-[11px] text-slate-500">Updates as you type</div></div>
+      <span className="flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-semibold text-sky-600"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> Live</span>
+    </div>
+
+    <div ref={viewportRef} className="relative flex h-[520px] w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-inner sm:h-[590px] lg:h-[650px]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,.12),transparent_31%),radial-gradient(circle_at_78%_72%,rgba(56,189,248,.10),transparent_30%)]" />
+      <div className="pointer-events-none absolute left-[18%] top-[7%] h-40 w-40 rounded-full border-[28px] border-sky-100 sm:h-48 sm:w-48" />
+      <div className="pointer-events-none absolute right-[12%] top-[12%] h-24 w-24 rounded-full bg-sky-50" />
+
+      <div className="relative z-10 flex items-center justify-center" style={{ width: Math.max(320, resumeWidth + 82), height: resumeHeight + 28 }}>
+        <div className="absolute left-0 top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_40px_-24px_rgba(15,23,42,.45)]">
+          <div className="flex w-[58px] flex-col items-center divide-y divide-slate-100">
+            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 bg-sky-50 text-sky-600"><FileText className="h-4 w-4" /><span className="text-[8px] font-bold">Templates</span></div>
+            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 text-slate-500"><Palette className="h-4 w-4" /><span className="text-center text-[8px] font-bold leading-3">Design &amp;<br />Formatting</span></div>
+            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 text-slate-500"><Plus className="h-4 w-4" /><span className="text-center text-[8px] font-bold leading-3">Add<br />Section</span></div>
+          </div>
+        </div>
+
+        <div className="relative z-20 shrink-0" style={{ width: resumeWidth, height: resumeHeight }}>
+          <div className="absolute -bottom-3 left-1/2 h-3 w-[92%] -translate-x-1/2 rounded-b-xl bg-sky-500/20" />
+          <div ref={documentRef} className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[3px] bg-white shadow-[0_24px_55px_-24px_rgba(15,23,42,.50)]" style={{ width: 794, minHeight: 1123, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+            <ResumeDocument data={data} settings={settings} activeSection={activeSection} />
+          </div>
+        </div>
+
+        <div className="absolute right-[-2px] top-[7%] z-40 w-[142px] rounded-xl border border-slate-300 bg-white p-3 shadow-[0_18px_38px_-24px_rgba(15,23,42,.55)]">
+          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold text-slate-700"><FileText className="h-3.5 w-3.5 text-sky-500" /> Choose your format</div>
+          <div className="space-y-1.5 text-[8px] text-slate-600">
+            <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border-2 border-sky-500 bg-white p-[2px]"><span className="block h-full w-full rounded-full bg-sky-500" /></span> PDF Resume</div>
+            <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border border-slate-300 bg-white" /> Word Document</div>
+            <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border border-slate-300 bg-white" /> Plain Text</div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-[7%] left-[18px] z-40 w-[188px] rounded-xl border border-slate-300 bg-white p-3 shadow-[0_20px_42px_-24px_rgba(15,23,42,.55)] sm:left-[34px]">
+          <div className="flex items-center gap-2"><div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600"><CheckCircle2 className="h-4 w-4" /></div><div><div className="text-[10px] font-bold text-slate-900">Live updates</div><div className="text-[8px] text-slate-500">Your changes appear instantly</div></div></div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[82%] rounded-full bg-sky-500" /></div>
+        </div>
+      </div>
+    </div>
+  </div>;
 }
 
 export function OrricaResumeWizard({ data, settings, updateData, updateSettings, onFinish, finishing }: StepProps & { onFinish: () => void; finishing?: boolean }) {
