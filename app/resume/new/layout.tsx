@@ -26,10 +26,19 @@ export default function ResumeNewLayout({ children }: { children: React.ReactNod
         .oe-builder-polished .oe-glass { border-color:#E4E7EC !important; background:rgba(255,255,255,.96) !important; }
         .oe-builder-polished .oe-preview-frame { background:#F2F4F7; border:1px solid #E4E7EC; }
         .oe-builder-polished h1 { color:#101828 !important; }
+
         @media(max-width:767px){
           .oe-builder-polished main { padding-bottom:76px !important; }
           .oe-builder-polished .oe-wizard-panel { border-radius:18px !important; padding:18px !important; }
           .oe-builder-polished .oe-quick-start { border:1px solid #E4E7EC; background:#fff; box-shadow:0 12px 35px -28px rgba(16,24,40,.35); }
+
+          /* Preview is its own viewport on mobile: no editor controls can cover it. */
+          .oe-builder-polished .preview-pane { position:relative !important; z-index:1 !important; }
+          .oe-builder-polished .preview-canvas { position:relative !important; z-index:1 !important; }
+          .oe-builder-polished .preview-pane .no-print { position:relative !important; z-index:3 !important; }
+
+          /* Keep floating editor decorations out of the resume canvas. */
+          .oe-builder-polished .preview-canvas [class*="absolute"]:not([style*="scale"]){ pointer-events:none; }
         }
       ` }} />
     </>
