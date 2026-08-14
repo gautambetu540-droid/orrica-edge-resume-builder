@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileUp, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, FileText, FileUp, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { OrricaResumeWizard } from '@/components/wizard/OrricaResumeWizard';
 import { ResumeImportCard } from '@/components/wizard/ResumeImportCard';
@@ -78,7 +78,7 @@ function Intro({ onNext }: { onNext: () => void }) {
         <p className="mt-4 max-w-[310px] text-[10px] leading-5 text-[#777]">By clicking “Next”, you agree to our <a href="/terms" className="font-bold underline">Terms of Use</a> and <a href="/privacy" className="font-bold underline">Privacy Policy</a>.</p>
       </div>
       <div className="hidden md:block"><div className="relative mx-auto h-[340px] max-w-[420px]"><div className="absolute right-4 top-5 h-44 w-44 rounded-full bg-[#f47c3c]"/><div className="absolute right-16 top-16 h-24 w-24 rounded-full bg-white"/><div className="absolute right-2 top-14 z-10 w-[270px] rounded-lg border border-[#cfd4da] bg-white p-4 shadow-[10px_12px_0_0_#10b8b5]"><div className="flex items-center gap-2 border-b border-[#e6e7eb] pb-3"><div className="h-9 w-9 border border-[#cfd4da]"/><div><div className="text-[12px] font-extrabold">ALEX MORGAN</div><div className="text-[7px] text-[#777]">MARKETING SPECIALIST</div></div></div><div className="mt-4 space-y-3"><div className="h-2 w-40 rounded bg-[#eceef1]"/><div className="h-2 w-32 rounded bg-[#eceef1]"/><div className="h-2 w-44 rounded bg-[#eceef1]"/><div className="h-2 w-28 rounded bg-[#eceef1]"/></div></div></div></div></section></main>
-    <style jsx global>{`.oe-flow,.oe-flow *{font-family:"Proxima Nova",Arial,sans-serif}@media(max-width:767px){.oe-flow main{align-items:flex-start;padding-top:54px}.oe-flow h1{font-size:2.35rem}}`}</style>
+    <style jsx global>{`.oe-flow,.oe-flow *{font-family:"Inter",Arial,sans-serif}@media(max-width:767px){.oe-flow main{align-items:flex-start;padding-top:54px}.oe-flow h1{font-size:2.35rem}}`}</style>
   </div>;
 }
 
@@ -86,22 +86,80 @@ function TemplateSelection({ current, onBack, onContinue }: { current: TemplateI
   const [selected, setSelected] = useState(current);
   return <div className="oe-template min-h-dvh bg-[#f8f9fb] text-[#111827]">
     <header className="sticky top-0 z-30 flex h-[68px] items-center justify-center border-b border-[#e7e9ee] bg-white/95"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px] w-auto" /></header>
-    <main className="mx-auto max-w-[1320px] px-4 py-7 sm:px-7 lg:px-10"><div className="mx-auto max-w-3xl text-center"><div className="inline-flex rounded-full border border-[#f8d8c6] bg-[#fff8f3] px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#f47c3c]">Step 1</div><h1 className="mt-3 text-[30px] font-extrabold tracking-[-.04em] text-[#230939] sm:text-[42px]">Select a template</h1><p className="mx-auto mt-3 max-w-2xl text-[13px] leading-6 text-[#667085] sm:text-[15px]">Choose a professional design from our library. You can change the template later.</p></div>
-      <div className="mx-auto mt-7 grid max-w-[1180px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{TEMPLATES.map((template) => { const active = selected === template.id; const settings = { ...DEFAULT_SETTINGS, template: template.id, font: TEMPLATE_FONTS[template.id] }; return <button key={template.id} type="button" aria-pressed={active} onClick={() => setSelected(template.id)} className={`group relative overflow-hidden rounded-[16px] border-2 bg-white p-2 text-left ${active ? 'border-[#f47c3c] shadow-lg' : 'border-[#e4e7ec]'}`}>{template.tag && <span className="absolute left-5 top-5 z-20 rounded-full bg-[#f47c3c] px-2.5 py-1 text-[9px] font-extrabold text-white">{template.tag}</span>}{active && <span className="absolute right-5 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#f47c3c] text-white"><Check className="h-4 w-4" /></span>}<MiniTemplate settings={settings}/><div className="px-3 pb-3 pt-3"><h2 className="text-[15px] font-extrabold text-[#230939]">{template.name}</h2><p className="mt-1 text-[11px] leading-5 text-[#667085]">{template.description}</p></div></button>; })}</div>
-      <div className="mx-auto mt-7 flex max-w-[1180px] justify-between border-t border-[#e3e6eb] pt-5"><button type="button" onClick={onBack} className="inline-flex h-11 items-center gap-1.5 rounded-xl border bg-white px-4 text-[13px] font-bold"><ArrowLeft className="h-4 w-4"/> Back</button><button type="button" onClick={() => onContinue(selected)} className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#f47c3c] px-5 text-[13px] font-bold text-white">Continue <ArrowRight className="h-4 w-4"/></button></div>
+    <main className="mx-auto max-w-[1320px] px-4 py-7 sm:px-7 lg:px-10"><div className="mx-auto max-w-3xl text-center"><div className="inline-flex rounded-full border border-[#d8e8ff] bg-[#f1f7ff] px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#0b63ce]">Step 1</div><h1 className="mt-3 text-[30px] font-extrabold tracking-[-.04em] text-[#102a43] sm:text-[42px]">Select a template</h1><p className="mx-auto mt-3 max-w-2xl text-[13px] leading-6 text-[#667085] sm:text-[15px]">Choose a professional design from our library. You can change the template later.</p></div>
+      <div className="mx-auto mt-7 grid max-w-[1180px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{TEMPLATES.map((template) => { const active = selected === template.id; const settings = { ...DEFAULT_SETTINGS, template: template.id, font: TEMPLATE_FONTS[template.id] }; return <button key={template.id} type="button" aria-pressed={active} onClick={() => setSelected(template.id)} className={`group relative overflow-hidden rounded-[16px] border-2 bg-white p-2 text-left ${active ? 'border-[#0b63ce] shadow-lg' : 'border-[#e4e7ec]'}`}>{template.tag && <span className="absolute left-5 top-5 z-20 rounded-full bg-[#0b63ce] px-2.5 py-1 text-[9px] font-extrabold text-white">{template.tag}</span>}{active && <span className="absolute right-5 top-5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#0b63ce] text-white"><Check className="h-4 w-4" /></span>}<MiniTemplate settings={settings}/><div className="px-3 pb-3 pt-3"><h2 className="text-[15px] font-extrabold text-[#102a43]">{template.name}</h2><p className="mt-1 text-[11px] leading-5 text-[#667085]">{template.description}</p></div></button>; })}</div>
+      <div className="mx-auto mt-7 flex max-w-[1180px] justify-between border-t border-[#e3e6eb] pt-5"><button type="button" onClick={onBack} className="inline-flex h-11 items-center gap-1.5 rounded-xl border bg-white px-4 text-[13px] font-bold"><ArrowLeft className="h-4 w-4"/> Back</button><button type="button" onClick={() => onContinue(selected)} className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#0b63ce] px-5 text-[13px] font-bold text-white">Continue <ArrowRight className="h-4 w-4"/></button></div>
     </main>
-    <style jsx global>{`.oe-template,.oe-template *{font-family:"Proxima Nova",Arial,sans-serif}.oe-template .resume-page{transform-origin:top left}`}</style>
+    <style jsx global>{`.oe-template,.oe-template *{font-family:"Inter",Arial,sans-serif}.oe-template .resume-page{transform-origin:top left}`}</style>
   </div>;
 }
 
 function CreationChoice({ data, updateData, onBack, onStart }: { data: ResumeData; updateData: (u: (d: ResumeData) => ResumeData) => void; onBack: () => void; onStart: () => void }) {
-  return <div className="min-h-dvh bg-white text-[#230939]">
-    <header className="flex h-[68px] items-center justify-center border-b border-[#f0f0f0]"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px]" /></header>
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14"><div className="text-center"><h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Create your resume your way</h1><p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#667085]">Upload an existing resume and let us build from it, or start fresh with a guided experience.</p></div>
-      <div className="mt-10 grid gap-6 md:grid-cols-2"><section className="rounded-2xl border-2 border-[#f47c3c] bg-[#fffaf7] p-6"><div className="mb-5 inline-flex rounded-full bg-[#f47c3c] px-3 py-1 text-xs font-extrabold text-white">RECOMMENDED</div><div className="flex h-40 items-center justify-center rounded-xl bg-white text-[#f47c3c]"><FileUp className="h-20 w-20" /></div><h2 className="mt-6 text-2xl font-extrabold">Upload an existing resume</h2><p className="mt-2 text-sm leading-6 text-[#667085]">Upload your PDF and we’ll extract your information into the builder.</p><div className="mt-5"><ResumeImportCard updateData={updateData}/></div></section>
-        <section className="rounded-2xl border-2 border-[#cfe0ff] bg-[#f8fbff] p-6"><div className="mb-5 h-6"/><div className="flex h-40 items-center justify-center rounded-xl bg-white text-[#007EFF]"><Sparkles className="h-20 w-20" /></div><h2 className="mt-6 text-2xl font-extrabold">Start from scratch</h2><p className="mt-2 text-sm leading-6 text-[#667085]">Build your resume step by step with our guided builder.</p><button type="button" onClick={onStart} className="mt-5 flex h-12 w-full items-center justify-center rounded-xl bg-[#007EFF] text-sm font-extrabold text-white">Start New Resume</button></section></div>
-      <div className="mt-8 flex justify-between"><button type="button" onClick={onBack} className="inline-flex h-11 items-center gap-1.5 rounded-xl border bg-white px-4 text-sm font-bold"><ArrowLeft className="h-4 w-4"/> Back</button><button type="button" onClick={onStart} className="text-sm font-bold text-[#f47c3c]">Continue to builder <ArrowRight className="inline h-4 w-4"/></button></div></main>
-    <style jsx global>{`body{overflow-x:hidden}.oe-choice,.oe-choice *{font-family:"Proxima Nova",Arial,sans-serif}`}</style>
+  const [selected, setSelected] = useState<'upload' | 'scratch'>('scratch');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [scanning, setScanning] = useState(false);
+
+  async function importResume(file: File) {
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast({ title: 'PDF required', description: 'Please upload your existing resume as a PDF.', variant: 'error' });
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: 'PDF is too large', description: 'Please use a PDF smaller than 8 MB.', variant: 'error' });
+      return;
+    }
+    setScanning(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/resume/scan', { method: 'POST', body: formData, cache: 'no-store', credentials: 'include' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || 'Could not scan your resume.');
+      updateData(() => json.data as ResumeData);
+      toast({ title: 'Resume imported', description: 'Your resume information has been extracted successfully.', variant: 'success' });
+      onStart();
+    } catch (error) {
+      toast({ title: 'Scan failed', description: error instanceof Error ? error.message : 'Could not scan this resume.', variant: 'error' });
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  function handleNext() {
+    if (selected === 'scratch') onStart();
+    else inputRef.current?.click();
+  }
+
+  return <div className="oe-choice min-h-dvh bg-white text-[#151b26]">
+    <header className="flex h-[68px] items-center border-b border-[#eceff3] bg-[#102a43] px-5 sm:px-8"><a href="/" aria-label="Orrica Edge home"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px] w-auto brightness-0 invert" /></a></header>
+    <main className="mx-auto flex min-h-[calc(100dvh-68px)] max-w-[1120px] flex-col px-5 py-9 sm:px-8 sm:py-10">
+      <div className="text-center">
+        <h1 className="text-[28px] font-extrabold leading-tight tracking-[-.025em] text-[#151b26] sm:text-[32px]">Are you uploading an existing resume?</h1>
+        <p className="mt-3 text-[16px] leading-6 text-[#333b48] sm:text-[17px]">Just review, edit, and update it with new information</p>
+      </div>
+
+      <div className="relative mx-auto mt-9 grid w-full max-w-[1040px] gap-7 md:grid-cols-2 md:gap-7 lg:mt-10">
+        <button type="button" aria-pressed={selected === 'upload'} onClick={() => setSelected('upload')} className={`relative flex min-h-[274px] flex-col items-center justify-center rounded-[15px] border bg-white px-8 py-9 text-center transition-colors ${selected === 'upload' ? 'border-[#2d8cff] ring-2 ring-[#b9dcff]' : 'border-[#262b33] hover:border-[#2d8cff]'}`}>
+          <span className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#8ec5ff] px-3 py-1 text-[12px] font-extrabold uppercase tracking-[-.01em] text-[#102a43]">RECOMMENDED OPTION TO SAVE YOU TIME</span>
+          <span className="mb-6 flex h-[62px] w-[62px] items-center justify-center text-[#2d8cff]"><FileUp className="h-[58px] w-[58px] stroke-[1.35]" /></span>
+          <h2 className="text-[20px] font-extrabold text-[#151b26]">Yes, upload my resume</h2>
+          <p className="mt-3 max-w-[390px] text-[15px] leading-6 text-[#303844]">We'll give you expert guidance to fill out your info and enhance your resume, from start to finish</p>
+        </button>
+
+        <button type="button" aria-pressed={selected === 'scratch'} onClick={() => setSelected('scratch')} className={`relative flex min-h-[274px] flex-col items-center justify-center rounded-[15px] border bg-white px-8 py-9 text-center transition-colors ${selected === 'scratch' ? 'border-[#007eff] ring-2 ring-[#b9dcff]' : 'border-[#262b33] hover:border-[#007eff]'}`}>
+          <span className="mb-6 flex h-[62px] w-[62px] items-center justify-center text-[#2d8cff]"><FileText className="h-[58px] w-[58px] stroke-[1.35]" /></span>
+          <h2 className="text-[20px] font-extrabold text-[#151b26]">No, start from scratch</h2>
+          <p className="mt-3 max-w-[390px] text-[15px] leading-6 text-[#303844]">We'll guide you through the whole process so your skills can shine</p>
+        </button>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between pt-10 sm:pt-12">
+        <button type="button" onClick={onBack} className="inline-flex h-[48px] min-w-[160px] items-center justify-center gap-2 rounded-[3px] border-2 border-[#2d8cff] bg-white px-6 text-[15px] font-extrabold text-[#2d68ad] transition-colors hover:bg-[#f5f9ff]"><ArrowLeft className="h-5 w-5" /> Back</button>
+        <button type="button" onClick={handleNext} disabled={scanning} className="inline-flex h-[48px] min-w-[160px] items-center justify-center gap-2 rounded-[3px] bg-[#007eff] px-6 text-[15px] font-extrabold text-white transition-colors hover:bg-[#006fdc] disabled:cursor-wait disabled:opacity-70">{scanning ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing</> : 'Next'}</button>
+      </div>
+      <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importResume(file); event.currentTarget.value = ''; }} />
+    </main>
+    <style jsx global>{`body{overflow-x:hidden}.oe-choice,.oe-choice *{font-family:"Inter",Arial,sans-serif}.oe-choice button{touch-action:manipulation}@media(max-width:767px){.oe-choice main{min-height:calc(100dvh - 68px);padding-top:42px;padding-bottom:28px}.oe-choice h1{font-size:27px}.oe-choice .grid{grid-template-columns:1fr;gap:18px}.oe-choice .grid button{min-height:235px;padding:30px 22px}.oe-choice .grid button span.absolute{font-size:9px;max-width:90%;text-align:center}.oe-choice .grid button h2{font-size:18px}.oe-choice .grid button p{font-size:14px;line-height:1.45}.oe-choice .flex.items-center.justify-between{padding-top:26px}.oe-choice .flex.items-center.justify-between button{min-width:132px}}`}</style>
   </div>;
 }
 
