@@ -12,6 +12,7 @@ export interface ResumeDocumentProps {
   data: ResumeData;
   settings: ResumeSettings;
   forPrint?: boolean;
+  activeSection?: string;
 }
 
 function isEmptyResume(data: ResumeData) {
@@ -31,12 +32,9 @@ function isEmptyResume(data: ResumeData) {
   );
 }
 
-export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocumentProps) {
+export function ResumeDocument({ data, settings, forPrint = false, activeSection }: ResumeDocumentProps) {
   const [previewData, setPreviewData] = useState<ResumeData | null>(null);
 
-  // Template cards intentionally use the existing ResumeDocument renderer so every
-  // template preview stays faithful to the real PDF/print template. Only the empty
-  // data used by the library cards is replaced with a fictional, complete sample.
   useEffect(() => {
     if (forPrint || !isEmptyResume(data)) {
       setPreviewData(null);
@@ -83,11 +81,18 @@ export function ResumeDocument({ data, settings, forPrint = false }: ResumeDocum
   };
 
   return (
-    <div className={`resume-page bg-white ${forPrint ? '' : 'shadow-lg border border-neutral-200'}`} style={style} id="resume-document-root" data-resume-font={settings.font}>
+    <div
+      className="resume-page bg-white"
+      style={style}
+      id="resume-document-root"
+      data-resume-font={settings.font}
+      data-active-section={activeSection || ''}
+    >
+      <div className="resume-preview-highlight-layer" aria-hidden="true" />
       {preset.layout === 'two-column' ? (
-        <TwoColumnLayout data={renderData} settings={settings} preset={preset} />
+        <TwoColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />
       ) : (
-        <SingleColumnLayout data={renderData} settings={settings} preset={preset} />
+        <SingleColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />
       )}
       <BrandFooter />
     </div>
