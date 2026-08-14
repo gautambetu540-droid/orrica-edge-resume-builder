@@ -8,6 +8,7 @@ import { ResumeData, ResumeSettings } from '@/lib/types/resume';
 
 const A4_WIDTH_PX = 794;
 const A4_HEIGHT_PX = 1123;
+const PREVIEW_GUTTER = 24;
 
 export function PreviewPane({ data, settings, activeSection = '' }: { data: ResumeData; settings: ResumeSettings; activeSection?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,15 +21,22 @@ export function PreviewPane({ data, settings, activeSection = '' }: { data: Resu
     const recompute = () => {
       const el = containerRef.current;
       if (!el) return;
-      const widthScale = Math.min(1, Math.max(0.34, (el.clientWidth - 44) / A4_WIDTH_PX));
-      const heightScale = Math.min(1, Math.max(0.34, (el.clientHeight - 44) / Math.max(A4_HEIGHT_PX, documentHeight)));
-      setAutoScale(Math.min(widthScale, heightScale));
+      const availableWidth = Math.max(0, el.clientWidth - PREVIEW_GUTTER * 2);
+      const availableHeight = Math.max(0, el.clientHeight - PREVIEW_GUTTER * 2);
+      const widthScale = availableWidth / A4_WIDTH_PX;
+      const heightScale = availableHeight / Math.max(A4_HEIGHT_PX, documentHeight);
+      const fitScale = Math.min(1, widthScale, heightScale);
+      setAutoScale(Math.max(0.28, fitScale));
     };
+
     recompute();
     const ro = new ResizeObserver(recompute);
     if (containerRef.current) ro.observe(containerRef.current);
     window.addEventListener('resize', recompute);
-    return () => { ro.disconnect(); window.removeEventListener('resize', recompute); };
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', recompute);
+    };
   }, [documentHeight]);
 
   useEffect(() => {
@@ -42,44 +50,117 @@ export function PreviewPane({ data, settings, activeSection = '' }: { data: Resu
   }, [data, settings]);
 
   const effectiveScale = zoom ?? autoScale;
+  const canvasWidth = Math.round(A4_WIDTH_PX * effectiveScale);
+  const canvasHeight = Math.round(Math.max(A4_HEIGHT_PX, documentHeight) * effectiveScale);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#f5f6f8]">
-      <div className="relative flex shrink-0 items-center justify-between border-b border-white/70 bg-white/80 px-4 py-2.5 shadow-[0_1px_0_rgba(15,23,42,.04)] backdrop-blur-xl no-print">
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-500">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-500"><Sparkles className="h-3.5 w-3.5" /></span>
-          <span>Live preview</span>
+    <div className="preview-pane flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[#f5f6f8]">
+      <div className="relative flex shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 no-print">
+        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-500"><Sparkles className="h-4 w-4" /></span>
+          <span>Live resume preview</span>
+          <span className="hidden rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:inline-flex">Live</span>
         </div>
-        <div className="flex items-center gap-1 rounded-xl border border-neutral-200/80 bg-white/90 p-1 shadow-sm">
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.max(0.4, (z ?? autoScale) - 0.1))} aria-label="Zoom out"><ZoomOut className="h-3.5 w-3.5" /></Button>
+        <div className="flex items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1 shadow-sm">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.max(0.35, (z ?? autoScale) - 0.1))} aria-label="Zoom out"><ZoomOut className="h-3.5 w-3.5" /></Button>
           <span className="w-11 text-center text-[11px] font-semibold tabular-nums text-neutral-500">{Math.round(effectiveScale * 100)}%</span>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom((z) => Math.min(1.25, (z ?? autoScale) + 0.1))} aria-label="Zoom in"><ZoomIn className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setZoom(null)} aria-label="Fit to screen"><Maximize2 className="h-3.5 w-3.5" /></Button>
         </div>
       </div>
 
-      <div ref={containerRef} className="hero-grid relative flex min-h-0 flex-1 items-start justify-center overflow-hidden px-4 py-5 sm:px-7 sm:py-6">
-        <div className="pointer-events-none absolute left-[12%] top-8 h-28 w-28 rounded-full bg-sky-300/10 blur-3xl" />
-        <div className="pointer-events-none absolute right-[10%] top-[18%] h-36 w-36 rounded-full bg-orange-300/10 blur-3xl" />
-        <div className="relative w-fit shrink-0" style={{ height: A4_HEIGHT_PX * effectiveScale, width: A4_WIDTH_PX * effectiveScale }}>
-          <div ref={documentRef} className="absolute left-0 top-0 origin-top-left shadow-[0_22px_55px_-24px_rgba(15,23,42,.5)]" style={{ width: A4_WIDTH_PX, transform: `scale(${effectiveScale})`, transformOrigin: 'top left' }}>
-            <ResumeDocument data={data} settings={settings} activeSection={activeSection} />
+      <div ref={containerRef} className="preview-canvas relative min-h-0 flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(56,189,248,.07),transparent_28%),radial-gradient(circle_at_82%_25%,rgba(251,146,60,.07),transparent_30%)]" />
+        <div className="relative flex min-h-full min-w-full items-start justify-center">
+          <div className="relative shrink-0" style={{ width: canvasWidth, height: canvasHeight }}>
+            <div
+              ref={documentRef}
+              className="absolute left-0 top-0 origin-top-left shadow-[0_22px_55px_-24px_rgba(15,23,42,.5)]"
+              style={{ width: A4_WIDTH_PX, minHeight: A4_HEIGHT_PX, transform: `scale(${effectiveScale})`, transformOrigin: 'top left' }}
+            >
+              <ResumeDocument data={data} settings={settings} activeSection={activeSection} />
+            </div>
           </div>
         </div>
       </div>
 
       <style jsx global>{`
-        @media (min-width: 768px) {
-          .oe-editor-shell > .hidden.md\\:flex { overflow-y: auto !important; overflow-x: hidden !important; align-items: flex-start !important; min-height: 0 !important; }
-          .oe-editor-shell > .hidden.md\\:flex > .oe-editor-sidebar { position: sticky !important; top: 0 !important; align-self: flex-start !important; height: calc(100vh - 64px) !important; max-height: calc(100vh - 64px) !important; overflow: hidden !important; z-index: 20; }
-          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Resume editor"] { overflow: visible !important; height: auto !important; min-height: calc(100vh - 64px) !important; }
-          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] { overflow: visible !important; height: auto !important; min-height: calc(100vh - 64px) !important; align-self: stretch !important; }
-          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] > div { height: auto !important; min-height: calc(100vh - 64px) !important; overflow: visible !important; }
-          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] .hero-grid { overflow: visible !important; min-height: calc(100vh - 120px) !important; }
+        .preview-pane,
+        .preview-pane * { box-sizing: border-box; }
+
+        .preview-canvas {
+          overscroll-behavior: contain;
+          scrollbar-gutter: stable;
+          -webkit-overflow-scrolling: touch;
         }
+
+        @media (min-width: 768px) {
+          .oe-editor-shell > .hidden.md\\:flex {
+            overflow: hidden !important;
+            align-items: stretch !important;
+            min-height: 0 !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > .oe-editor-sidebar {
+            position: sticky !important;
+            top: 0 !important;
+            align-self: stretch !important;
+            height: 100% !important;
+            max-height: none !important;
+            overflow-y: auto !important;
+            z-index: 20 !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Resume editor"] {
+            height: 100% !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Resume editor"] > div {
+            min-height: 0 !important;
+            height: 100% !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Resume editor"] > div > div:last-child {
+            min-height: 0 !important;
+            overflow-y: auto !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] {
+            min-width: 0 !important;
+            min-height: 0 !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            align-self: stretch !important;
+          }
+
+          .oe-editor-shell > .hidden.md\\:flex > [aria-label="Live resume preview"] > .preview-pane {
+            height: 100% !important;
+            min-height: 0 !important;
+          }
+        }
+
         @media (max-width: 767px) {
-          .oe-editor-shell { min-height: 100dvh !important; height: 100dvh !important; overflow: hidden !important; }
-          .oe-editor-shell > .flex.min-h-0.flex-1.flex-col.md\\:hidden { min-height: 0 !important; overflow: hidden !important; }
+          .oe-editor-shell {
+            min-height: 100dvh !important;
+            height: 100dvh !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell > .flex.min-h-0.flex-1.flex-col.md\\:hidden {
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell > .flex.min-h-0.flex-1.flex-col.md\\:hidden > .flex-1.min-h-0 {
+            min-height: 0 !important;
+          }
+
+          .oe-editor-shell .preview-pane {
+            height: 100% !important;
+            min-height: 0 !important;
+          }
         }
       `}</style>
     </div>
