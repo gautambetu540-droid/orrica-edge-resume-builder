@@ -103,12 +103,69 @@
   html, body { width: 210mm; margin: 0; padding: 0; background: #fff !important; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .no-print { display: none !important; }
-  .resume-page { width: 210mm !important; min-height: 297mm !important; height: auto !important; margin: 0 !important; padding: inherit; overflow: visible !important; box-shadow: none !important; border: 0 !important; break-before: auto !important; break-after: auto !important; break-inside: auto !important; page-break-before: auto !important; page-break-after: auto !important; page-break-inside: auto !important; }
-  .resume-page .break-inside-avoid-page, .resume-page .avoid-page-break { break-inside: avoid; page-break-inside: avoid; }
-  .resume-page h1, .resume-page h2, .resume-page h3, .resume-page p, .resume-page ul, .resume-page ol { orphans: 3; widows: 3; }
+
+  /* The root is one continuous document. Chromium creates the next A4 page
+     only when the actual content crosses the page boundary. */
+  #resume-document-root {
+    width: 210mm !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: inherit;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    break-before: auto !important;
+    break-after: auto !important;
+    break-inside: auto !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Keep individual resume entries together whenever possible, but never
+     force an entire section onto a new page just because it is long. */
+  #resume-document-root [data-resume-entry],
+  #resume-document-root .break-inside-avoid-page,
+  #resume-document-root .avoid-page-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Section headings stay attached to their first piece of content. */
+  #resume-document-root [data-resume-section] > h1,
+  #resume-document-root [data-resume-section] > h2,
+  #resume-document-root [data-resume-section] > h3,
+  #resume-document-root [data-resume-section] .section-heading {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  #resume-document-root h1,
+  #resume-document-root h2,
+  #resume-document-root h3,
+  #resume-document-root p,
+  #resume-document-root ul,
+  #resume-document-root ol {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Do not let editor-only wrappers or accidental min-heights manufacture
+     blank pages in the downloaded PDF. */
+  #resume-document-root * {
+    max-height: none;
+  }
 }
 
-.resume-page { width: 210mm; min-height: 297mm; height: auto; background: white; box-sizing: border-box; }
+.resume-page {
+  width: 210mm;
+  min-height: 0;
+  height: auto;
+  background: white;
+  box-sizing: border-box;
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(199 20% 82%); border-radius: 999px; }
