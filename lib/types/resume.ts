@@ -92,6 +92,24 @@ export type ResumeSectionId =
   | 'languages'
   | 'achievements';
 
+export interface SectionConfig {
+  id: ResumeSectionId;
+  visible: boolean;
+  order: number;
+}
+
+export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
+  'header',
+  'summary',
+  'experience',
+  'education',
+  'skills',
+  'projects',
+  'certifications',
+  'languages',
+  'achievements',
+];
+
 export type TemplateId =
   | 'modern-ats'
   | 'classic-professional'
