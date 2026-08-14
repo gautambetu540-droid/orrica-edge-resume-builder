@@ -124,6 +124,52 @@ function CandidateFeedbackSection() {
   );
 }
 
+function TemplateShowcase() {
+  const templates = TEMPLATE_LIST.slice(0, 7);
+
+  const scroll = (direction: number) => {
+    const element = document.getElementById('oe-template-carousel');
+    element?.scrollBy({ left: direction * 360, behavior: 'smooth' });
+  };
+
+  return (
+    <section className="relative overflow-hidden bg-[#0b2a52] py-14 text-white sm:py-20 lg:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,.06),transparent_42%)]" />
+      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-[780px] text-center">
+          <h2 className="font-serif text-3xl font-bold tracking-[-0.025em] sm:text-5xl lg:text-[54px]">Professional Resume Templates</h2>
+          <p className="mx-auto mt-5 max-w-[760px] text-sm font-semibold leading-7 text-white/95 sm:text-base">Choose from our library of customizable <Link href="/templates" className="text-white underline decoration-2 underline-offset-2 hover:text-white/80">resume templates</Link>—professionally designed to help you create a polished resume for every job you apply for.</p>
+        </div>
+
+        <div className="relative mt-12 sm:mt-14">
+          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:left-2">←</button>
+          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:right-2">→</button>
+
+          <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-8 overflow-x-auto px-8 pb-5 [scrollbar-width:none] sm:px-20 [&::-webkit-scrollbar]:hidden">
+            {templates.map((template) => (
+              <Link key={template.id} href={`/templates?template=${template.id}`} className="group w-[260px] shrink-0 snap-center sm:w-[290px] lg:w-[310px]">
+                <div className="relative overflow-hidden rounded-[2px] bg-white shadow-[0_22px_50px_-24px_rgba(0,0,0,.65)] transition duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_32px_65px_-25px_rgba(0,0,0,.8)]">
+                  <div className="origin-top scale-[0.82] sm:scale-[0.9] lg:scale-[0.96]">
+                    <SampleResumeCard template={template} />
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <div className="text-sm font-bold text-white">{template.name}</div>
+                  <div className="mt-1 text-[11px] font-medium text-white/55">{template.category}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <Link href="/templates" className="inline-flex h-11 items-center justify-center rounded-md bg-white px-6 text-sm font-bold text-[#0b2a52] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/95">View all templates <ArrowRight className="ml-2 h-4 w-4" /></Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-dvh overflow-x-hidden bg-white">
@@ -135,7 +181,7 @@ export default function LandingPage() {
 
         <section className="border-y border-black/[0.06] bg-neutral-50 py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Why Orrica Edge</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">A resume builder that respects your time.</h2></div><p className="max-w-2xl text-sm leading-7 text-neutral-500 lg:justify-self-end">No endless formatting battles. No pressure to accept AI output. Just a focused workspace that helps you turn your real experience into a polished application.</p></div><div className="mt-12 grid gap-4 lg:grid-cols-12"><div className="hover-lift relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-7 lg:col-span-7"><div className="absolute right-[-20px] top-[-20px] h-36 w-36 rounded-full bg-orange-500/10 blur-3xl"/><div className="relative"><div className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Built around real work</div><h3 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950">One focused workspace from first draft to PDF.</h3><div className="mt-7 space-y-4">{[['01','Start with your story'],['02','Make every line stronger'],['03','Shape the design'],['04','Export and apply']].map(([n,t])=><div key={n} className="flex gap-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[10px] font-bold text-orange-700">{n}</div><div><div className="text-sm font-bold text-neutral-900">{t}</div><div className="mt-1 text-sm leading-6 text-neutral-500">A guided step that keeps the process simple and focused.</div></div></div>)}</div></div></div><div className="hover-lift rounded-3xl bg-neutral-950 p-7 text-white lg:col-span-5"><div className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">Designed for confidence</div><h3 className="mt-3 text-2xl font-semibold tracking-tight">Your story stays yours.</h3><p className="mt-3 text-sm leading-6 text-white/60">Every AI feature works from the information you provide. You stay in control of the final wording, layout and application.</p><div className="mt-8 grid grid-cols-2 gap-3">{[['AI','Optional'],['A4','Live preview'],['PDF','Ready to send'],['ATS','Text-first']].map(([a,b])=><div key={a} className="rounded-2xl border border-white/10 bg-white/5 p-4"><div className="text-lg font-bold text-white">{a}</div><div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">{b}</div></div>)}</div></div></div></div></section>
 
-        <section className="py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:items-start"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Popular templates</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Choose a visual style that fits the role.</h2><p className="mt-4 text-sm leading-7 text-neutral-500">Start from a clean structure, then make it yours with typography, spacing and color controls.</p><Link href="/templates" className="mt-6 inline-flex items-center text-sm font-bold text-orange-600 hover:text-orange-700">View all templates <ArrowRight className="ml-1 h-4 w-4"/></Link></div><div className="grid gap-4 sm:grid-cols-2">{TEMPLATE_LIST.slice(0,4).map(template=><SampleResumeCard key={template.id} template={template}/>)}</div></div></div></section>
+        <TemplateShowcase />
 
         <CandidateFeedbackSection />
 
