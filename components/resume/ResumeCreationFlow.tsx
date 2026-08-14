@@ -28,12 +28,7 @@ function MiniTemplate({ settings }: { settings: ResumeSettings }) {
 }
 
 function Intro({ onNext }: { onNext: () => void }) {
-  const items = [
-    ['1', 'Select', 'a template from our library of professional designs.'],
-    ['2', 'Select', 'whether you’re uploading an existing resume or starting from scratch.'],
-    ['3', 'Build', 'your resume with our industry-specific bullet points.'],
-    ['', 'Customize', 'the details and wrap it up. You’re ready to send!'],
-  ];
+  const items = [['1', 'Select', 'a template from our library of professional designs.'], ['2', 'Select', 'whether you’re uploading an existing resume or starting from scratch.'], ['3', 'Build', 'your resume with our industry-specific bullet points.'], ['', 'Customize', 'the details and wrap it up. You’re ready to send!']];
   return <div className="oe-flow min-h-dvh bg-white text-[#171717]"><header className="flex h-[68px] items-center justify-center border-b border-[#f0f0f0]"><a href="/" aria-label="Orrica Edge home"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px] w-auto sm:h-[34px]" /></a></header><main className="mx-auto flex min-h-[calc(100dvh-68px)] max-w-6xl items-center px-5 py-8 sm:px-10 sm:py-12"><section className="grid w-full items-center gap-8 md:grid-cols-[1fr_1fr] md:gap-12 lg:px-10"><div className="text-center md:text-left"><div className="mb-5 inline-flex rounded-full border border-[#f8d8c6] bg-[#fff8f3] px-4 py-2 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#f47c3c]">Orrica Edge Resume Builder</div><h1 className="text-[40px] font-extrabold leading-[1.06] tracking-[-.045em] sm:text-[46px] md:text-[57px]">Just three<br className="md:hidden" /> simple steps</h1><div className="mt-8 space-y-5 sm:mt-10 sm:space-y-6">{items.map(([n,bold,text],i)=><div key={`${n}-${bold}`} className="flex items-start gap-4 text-left"><span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-extrabold text-white ${i===3?'bg-[#f47c3c]':'bg-[#17b9b7]'}`}>{n||'✓'}</span><p className="max-w-[500px] text-[14px] leading-6 text-[#444] sm:text-[15px]"><strong>{bold}</strong> {text}</p></div>)}</div><button type="button" onClick={onNext} className="mt-8 h-14 w-full max-w-[310px] rounded-md bg-[#f47c3c] text-[17px] font-extrabold text-white shadow-[0_10px_24px_-16px_rgba(244,124,60,.8)] hover:bg-[#e5682e]">Next</button><p className="mt-4 max-w-[310px] text-[10px] leading-5 text-[#777]">By clicking “Next”, you agree to our <a href="/terms" className="font-bold underline">Terms of Use</a> and <a href="/privacy" className="font-bold underline">Privacy Policy</a>.</p></div><div className="hidden md:block"><div className="relative mx-auto h-[340px] max-w-[420px]"><div className="absolute right-4 top-5 h-44 w-44 rounded-full bg-[#f47c3c]" /><div className="absolute right-16 top-16 h-24 w-24 rounded-full bg-white" /><div className="absolute right-2 top-14 z-10 w-[270px] rounded-lg border border-[#cfd4da] bg-white p-4 shadow-[10px_12px_0_0_#10b8b5]"><div className="flex items-center gap-2 border-b border-[#e6e7eb] pb-3"><div className="h-9 w-9 border border-[#cfd4da]"/><div><div className="text-[12px] font-extrabold">ALEX MORGAN</div><div className="text-[7px] text-[#777]">MARKETING SPECIALIST</div></div></div><div className="mt-4 space-y-3"><div className="h-2 w-40 rounded bg-[#eceef1]"/><div className="h-2 w-32 rounded bg-[#eceef1]"/><div className="h-2 w-44 rounded bg-[#eceef1]"/><div className="h-2 w-28 rounded bg-[#eceef1]"/></div></div><div className="absolute left-2 top-44 z-20 w-[175px] rounded-lg border border-[#cfd4da] bg-white p-4 shadow-lg"><div className="text-[9px] font-extrabold">Template selected</div><div className="mt-2 h-2 w-24 rounded bg-[#f47c3c]"/><div className="mt-2 text-[7px] text-[#777]">Upload, build and customize.</div></div></div></div></section></main><style jsx global>{`.oe-flow,.oe-flow *{font-family:"Proxima Nova",Arial,sans-serif}.oe-flow button{touch-action:manipulation}@media(max-width:767px){.oe-flow main{align-items:flex-start;padding-top:54px}.oe-flow h1{font-size:2.35rem}.oe-flow .max-w-\[310px\]{max-width:none}}`}</style></div>;
 }
 
@@ -43,87 +38,27 @@ function TemplateSelection({ current, onBack, onContinue }: { current: TemplateI
 }
 
 function Choice({ onBack, onContinue }: { onBack: () => void; onContinue: (mode: 'upload' | 'scratch') => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-
   return <div className="oe-choice min-h-dvh overflow-x-hidden bg-white text-[#230939]">
-    <input ref={inputRef} type="file" accept=".pdf,.doc,.docx,.rtf,.txt" className="hidden" onChange={async e => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      setBusy(true);
-      try {
-        if (!/\.pdf$/i.test(file.name)) {
-          toast({ title: 'PDF import is currently supported', description: 'Please export your resume as PDF and try again.', variant: 'error' });
-          return;
-        }
-        if (file.size > 8 * 1024 * 1024) {
-          toast({ title: 'File is too large', description: 'Please upload a file smaller than 8 MB.', variant: 'error' });
-          return;
-        }
-        const form = new FormData();
-        form.append('file', file);
-        const response = await fetch('/api/resume/scan', { method: 'POST', body: form });
-        const payload = await response.json();
-        if (response.status === 401) { window.location.href = '/login?returnTo=/resume/new&reason=import'; return; }
-        if (!response.ok) throw new Error(payload?.error || 'Could not import this resume.');
-        onContinue('upload');
-      } catch (error) {
-        toast({ title: 'Could not import resume', description: error instanceof Error ? error.message : 'Please try again.', variant: 'error' });
-      } finally { setBusy(false); }
-    }} />
-    <header className="flex h-[74px] items-center justify-center border-b border-[#f0f0f0] bg-white px-4 sm:h-[86px]">
-      <img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[31px] w-auto sm:h-[39px]" />
-    </header>
+    <header className="flex h-[74px] items-center justify-center border-b border-[#f0f0f0] bg-white px-4 sm:h-[86px]"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[31px] w-auto sm:h-[39px]" /></header>
     <main className="mx-auto flex min-h-[calc(100dvh-74px)] w-full max-w-[1120px] flex-col px-5 pb-6 pt-10 sm:min-h-[calc(100dvh-86px)] sm:px-8 sm:pt-14 lg:px-0 lg:pt-12">
-      <section className="text-center">
-        <h1 className="mx-auto max-w-[1000px] text-[39px] font-extrabold leading-[1.08] tracking-[-.045em] text-[#142451] sm:text-[48px] lg:text-[58px]">Create your resume your way</h1>
-        <p className="mx-auto mt-4 max-w-[720px] text-[17px] leading-[1.5] text-[#4d607f] sm:text-[20px] lg:text-[22px]">Upload an existing resume and let us build from it,<br className="hidden sm:block" /> or start fresh with a guided experience.</p>
-      </section>
-
+      <section className="text-center"><h1 className="mx-auto max-w-[1000px] text-[39px] font-extrabold leading-[1.08] tracking-[-.045em] text-[#230939] sm:text-[48px] lg:text-[58px]">Create your resume your way</h1><p className="mx-auto mt-4 max-w-[720px] text-[17px] leading-[1.5] text-[#4d607f] sm:text-[20px] lg:text-[22px]">Upload an existing resume and let us build from it,<br className="hidden sm:block" /> or start fresh with a guided experience.</p></section>
       <section className="mx-auto mt-9 grid w-full max-w-[1010px] gap-5 md:grid-cols-2 md:gap-9 lg:mt-10">
         <article className="relative flex min-h-[500px] flex-col items-center rounded-[17px] border border-[#ff6420] bg-white px-7 pb-5 pt-16 text-center shadow-[0_8px_28px_-24px_rgba(255,100,32,.35)] sm:min-h-[535px] sm:px-10 sm:pt-[66px]">
           <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-[#ff6420] px-3.5 py-2 text-[11px] font-extrabold text-white sm:left-6 sm:top-5 sm:text-[12px]"><Sparkles className="h-4 w-4 fill-white" /> RECOMMENDED</div>
-          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]">
-            <div className="absolute left-[37px] top-[23px] h-[116px] w-[116px] rounded-full bg-[#fff1e8]" />
-            <div className="absolute left-[77px] top-[5px] h-[145px] w-[120px] rounded-[8px] border-[2.5px] border-[#7a879a] bg-white" />
-            <div className="absolute left-[150px] top-[5px] h-[43px] w-[44px] border-b-[2.5px] border-l-[2.5px] border-[#7a879a] bg-white [clip-path:polygon(0_0,100%_100%,0_100%)]" />
-            <div className="absolute left-[99px] top-[41px] h-[7px] w-[58px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[66px] h-[7px] w-[112px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[89px] h-[7px] w-[78px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[112px] h-[7px] w-[116px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[31px] bottom-[18px] flex h-[66px] w-[66px] items-center justify-center rounded-full border-[4px] border-[#ff6420] bg-white text-[#ff6420]"><Upload className="h-8 w-8" strokeWidth={3} /></div>
-            <div className="absolute right-[39px] bottom-[18px] flex h-[51px] w-[51px] items-center justify-center rounded-full bg-[#ff6420] text-white shadow-sm"><Upload className="h-7 w-7" strokeWidth={3} /></div>
-          </div>
-          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#142451] sm:text-[27px]">Upload an existing resume</h2>
-          <p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Upload your resume (PDF or DOCX) and we’ll<br className="hidden sm:block" /> automatically extract your information to<br className="hidden sm:block" /> help you create a polished resume faster.</p>
-          <button type="button" disabled={busy} onClick={() => inputRef.current?.click()} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] bg-[#ff6420] text-[17px] font-bold text-white shadow-[0_8px_18px_-13px_rgba(255,100,32,.9)] transition hover:bg-[#f45a16] disabled:opacity-60"><Upload className="h-6 w-6" strokeWidth={2.6} />{busy ? 'Uploading…' : 'Upload Resume'}</button>
-          <p className="mt-2 text-[12px] text-[#4d607f]">Supports PDF, DOCX (Max 10MB)</p>
+          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]"><div className="absolute left-[37px] top-[23px] h-[116px] w-[116px] rounded-full bg-[#fff1e8]"/><div className="absolute left-[77px] top-[5px] h-[145px] w-[120px] rounded-[8px] border-[2.5px] border-[#7a879a] bg-white"/><div className="absolute left-[150px] top-[5px] h-[43px] w-[44px] border-b-[2.5px] border-l-[2.5px] border-[#7a879a] bg-white [clip-path:polygon(0_0,100%_100%,0_100%)]"/><div className="absolute left-[99px] top-[41px] h-[7px] w-[58px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[66px] h-[7px] w-[112px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[89px] h-[7px] w-[78px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[112px] h-[7px] w-[116px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[31px] bottom-[18px] flex h-[66px] w-[66px] items-center justify-center rounded-full border-[4px] border-[#ff6420] bg-white text-[#ff6420]"><Upload className="h-8 w-8" strokeWidth={3}/></div><div className="absolute right-[39px] bottom-[18px] flex h-[51px] w-[51px] items-center justify-center rounded-full bg-[#ff6420] text-white shadow-sm"><Upload className="h-7 w-7" strokeWidth={3}/></div></div>
+          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#230939] sm:text-[27px]">Upload an existing resume</h2><p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Upload your resume (PDF or DOCX) and we’ll<br className="hidden sm:block"/> automatically extract your information to<br className="hidden sm:block"/> help you create a polished resume faster.</p><button type="button" onClick={()=>onContinue('upload')} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] bg-[#ff6420] text-[17px] font-bold text-white shadow-[0_8px_18px_-13px_rgba(255,100,32,.9)] transition hover:bg-[#f45a16]"><Upload className="h-6 w-6" strokeWidth={2.6}/> Upload Resume</button><p className="mt-2 text-[12px] text-[#4d607f]">Supports PDF, DOCX (Max 10MB)</p>
         </article>
-
         <article className="relative flex min-h-[500px] flex-col items-center rounded-[17px] border border-[#b7cdf8] bg-white px-7 pb-5 pt-16 text-center sm:min-h-[535px] sm:px-10 sm:pt-[66px]">
-          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]">
-            <div className="absolute left-[35px] top-[22px] h-[120px] w-[120px] rounded-full bg-[#edf3ff]" />
-            <div className="absolute left-[77px] top-[31px] h-[145px] w-[170px] rounded-[15px] border-[7px] border-[#142451] bg-white shadow-[0_0_0_1px_rgba(20,36,81,.05)]" />
-            <div className="absolute left-[99px] top-[70px] h-[7px] w-[58px] rounded-full bg-[#3774e8]" />
-            <div className="absolute left-[99px] top-[94px] h-[7px] w-[121px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[117px] h-[7px] w-[86px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[140px] h-[7px] w-[120px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute left-[99px] top-[163px] h-[7px] w-[63px] rounded-full bg-[#dfe4eb]" />
-            <div className="absolute right-[23px] bottom-[18px] flex h-[55px] w-[55px] items-center justify-center rounded-full bg-[#2f6fe4] text-white"><span className="text-[43px] font-light leading-none">+</span></div>
-          </div>
-          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#142451] sm:text-[27px]">Start from scratch</h2>
-          <p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Build your resume step by step with our<br className="hidden sm:block" /> guided builder. Perfect if you don’t have<br className="hidden sm:block" /> a resume ready.</p>
-          <button type="button" onClick={() => onContinue('scratch')} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] border-2 border-[#2f6fe4] bg-white text-[17px] font-bold text-[#2058c6] transition hover:bg-[#f7faff]"><span className="text-[30px] font-light leading-none">+</span> Start New Resume</button>
+          <div className="relative flex h-[205px] w-[270px] items-center justify-center sm:h-[225px] sm:w-[300px]"><div className="absolute left-[35px] top-[22px] h-[120px] w-[120px] rounded-full bg-[#E9E7F7]"/><div className="absolute left-[77px] top-[31px] h-[145px] w-[170px] rounded-[15px] border-[7px] border-[#230939] bg-white"/><div className="absolute left-[99px] top-[70px] h-[7px] w-[58px] rounded-full bg-[#007EFF]"/><div className="absolute left-[99px] top-[94px] h-[7px] w-[121px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[117px] h-[7px] w-[86px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[140px] h-[7px] w-[120px] rounded-full bg-[#dfe4eb]"/><div className="absolute left-[99px] top-[163px] h-[7px] w-[63px] rounded-full bg-[#dfe4eb]"/><div className="absolute right-[23px] bottom-[18px] flex h-[55px] w-[55px] items-center justify-center rounded-full bg-[#007EFF] text-white"><span className="text-[43px] font-light leading-none">+</span></div></div>
+          <h2 className="mt-0 text-[25px] font-extrabold tracking-[-.025em] text-[#230939] sm:text-[27px]">Start from scratch</h2><p className="mt-2 max-w-[430px] text-[15px] leading-[1.6] text-[#4d607f] sm:text-[16px]">Build your resume step by step with our<br className="hidden sm:block"/> guided builder. Perfect if you don’t have<br className="hidden sm:block"/> a resume ready.</p><button type="button" onClick={()=>onContinue('scratch')} className="mt-5 inline-flex h-[56px] w-full max-w-[330px] items-center justify-center gap-3 rounded-[8px] border-2 border-[#007EFF] bg-white text-[17px] font-bold text-[#007EFF] transition hover:bg-[#E9E7F7]"><span className="text-[30px] font-light leading-none">+</span> Start New Resume</button>
         </article>
       </section>
-
       <section className="mx-auto mt-5 grid w-full max-w-[1010px] grid-cols-1 divide-y divide-[#dce4f1] rounded-[11px] border border-[#dce4f1] bg-white px-5 py-3 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-4 sm:py-3">
-        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><ShieldCheck className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#142451]">Your data is secure</strong><span className="block text-[13px] text-[#4d607f]">We never share your data</span></div></div>
-        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Zap className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#142451]">Fast &amp; easy</strong><span className="block text-[13px] text-[#4d607f]">Create in just a few minutes</span></div></div>
-        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Check className="h-8 w-8 shrink-0 text-[#142451]" strokeWidth={2}/><div><strong className="block text-[15px] font-bold text-[#142451]">AI-Powered Suggestions</strong><span className="block text-[13px] text-[#4d607f]">Get smart recommendations</span></div></div>
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><ShieldCheck className="h-8 w-8 shrink-0 text-[#230939]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#230939]">Your data is secure</strong><span className="block text-[13px] text-[#4d607f]">We never share your data</span></div></div>
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Zap className="h-8 w-8 shrink-0 text-[#230939]" strokeWidth={1.8}/><div><strong className="block text-[15px] font-bold text-[#230939]">Fast &amp; easy</strong><span className="block text-[13px] text-[#4d607f]">Create in just a few minutes</span></div></div>
+        <div className="flex items-center justify-center gap-3 px-3 py-2 text-left"><Check className="h-8 w-8 shrink-0 text-[#230939]" strokeWidth={2}/><div><strong className="block text-[15px] font-bold text-[#230939]">AI-Powered Suggestions</strong><span className="block text-[13px] text-[#4d607f]">Get smart recommendations</span></div></div>
       </section>
-
-      <div className="mt-auto flex items-center justify-center gap-2 pt-5 text-center text-[13px] text-[#7d8ca7] sm:pt-6"><LockKeyhole className="h-4 w-4" /> Your information is safe with us and will never be shared.</div>
+      <div className="mt-auto flex items-center justify-center gap-2 pt-5 text-center text-[13px] text-[#7d8ca7] sm:pt-6"><LockKeyhole className="h-4 w-4"/> Your information is safe with us and will never be shared.</div>
       <button type="button" onClick={onBack} className="sr-only">Back</button>
     </main>
     <style jsx global>{`.oe-choice,.oe-choice *{font-family:"Proxima Nova",Arial,sans-serif}.oe-choice button{touch-action:manipulation}@media(max-width:767px){.oe-choice header{height:70px}.oe-choice main{min-height:calc(100dvh - 70px);padding-top:32px}.oe-choice h1{font-size:34px;line-height:1.08}.oe-choice section:nth-of-type(2){margin-top:28px;grid-template-columns:1fr}.oe-choice article{min-height:auto;padding:48px 22px 24px}.oe-choice article h2{font-size:23px}.oe-choice article p{font-size:14px}.oe-choice article .relative.h-\[205px\]{transform:scale(.88);transform-origin:top center;margin-bottom:-22px}.oe-choice section:nth-of-type(3){margin-top:18px}.oe-choice section:nth-of-type(3)>div{justify-content:flex-start;padding:9px 5px}.oe-choice section:nth-of-type(3) strong{font-size:14px}.oe-choice section:nth-of-type(3) span{font-size:12px}.oe-choice main>div:last-child{padding-bottom:8px;font-size:11px}.oe-choice .max-w-\[1000px\]{max-width:100%}}@media(max-width:390px){.oe-choice h1{font-size:30px}.oe-choice article{padding-left:16px;padding-right:16px}.oe-choice article .relative.h-\[205px\]{transform:scale(.78);margin-bottom:-42px}.oe-choice article h2{font-size:21px}.oe-choice article p br{display:none}.oe-choice article button{font-size:15px}.oe-choice section:nth-of-type(3) strong{font-size:13px}.oe-choice section:nth-of-type(3) span{font-size:11px}}`}</style>
