@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
 import { TEMPLATE_PRESETS, FONT_STACKS } from '@/lib/templates/presets';
