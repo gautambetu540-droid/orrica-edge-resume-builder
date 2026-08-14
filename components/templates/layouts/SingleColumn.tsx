@@ -12,59 +12,38 @@ export function SingleColumnLayout({
   data,
   settings,
   preset,
+  activeSection,
 }: {
   data: ResumeData;
   settings: ResumeSettings;
   preset: TemplatePreset;
+  activeSection?: string;
 }) {
   const visibleSections = [...settings.sections]
-    .filter(
-      (section) =>
-        section.visible &&
-        section.id !== 'header' &&
-        !isSectionEmpty(section.id, data)
-    )
+    .filter((section) => section.visible && section.id !== 'header' && !isSectionEmpty(section.id, data))
     .sort((a, b) => a.order - b.order);
 
   return (
     <div>
-      <ResumeHeader
-        info={data.personalInfo}
-        preset={preset}
-      />
+      <div data-resume-section="personal">
+        <ResumeHeader info={data.personalInfo} preset={preset} />
+      </div>
 
-      <div
-        className="flex flex-col"
-        style={{ gap: 'var(--section-gap)' }}
-      >
+      <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
         {visibleSections.map((section) => {
-          // The header is rendered separately above,
-          // so only titled resume sections reach this block.
-          if (section.id === 'header') {
-            return null;
-          }
-
-          // SectionConfig.id can come from persisted JSON settings and is
-          // therefore not narrow enough for indexing SECTION_TITLES. The
-          // header was removed above, so the remaining ids are valid titled
-          // resume sections.
+          if (section.id === 'header') return null;
           const sectionId = section.id as Exclude<ResumeSectionId, 'header'>;
           const title = SECTION_TITLES[sectionId];
 
           return (
             <div
               key={section.id}
-              className="break-inside-avoid-page"
+              data-resume-section={section.id}
+              className="resume-preview-section break-inside-avoid-page rounded-[3px] transition-[background-color,box-shadow] duration-200"
             >
-              <SectionHeading preset={preset}>
-                {title}
-              </SectionHeading>
-
+              <SectionHeading preset={preset}>{title}</SectionHeading>
               {renderSectionBody(sectionId, data)}
-
-              {preset.dividers && (
-                <div className="mt-3 h-px bg-neutral-200" />
-              )}
+              {preset.dividers && <div className="mt-3 h-px bg-neutral-200" />}
             </div>
           );
         })}
