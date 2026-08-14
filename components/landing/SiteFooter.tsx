@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { ArrowUpRight, Check, FileText, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Check, FileText, Linkedin, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 
 const JOB_CHANNEL = 'https://whatsapp.com/channel/0029VbAsVFr4Y9lwo6JDRA2t';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/sudhanshu-g-512937375/';
 
 const COLUMNS = [
   { title: 'Product', links: [{ href: '/resume/new', label: 'Create Resume' }, { href: '/templates', label: 'Resume Templates' }, { href: '/pricing', label: 'Pricing' }, { href: '/#features', label: 'Features' }] },
@@ -22,7 +23,17 @@ export function SiteFooter() {
           {COLUMNS.map((col) => <div key={col.title}><h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-neutral-500">{col.title}</h3><ul className="mt-5 space-y-3">{col.links.map((link) => <li key={link.href}><Link href={link.href} className="group inline-flex items-center text-sm font-medium text-neutral-300 transition-colors hover:text-white">{link.label}<ArrowUpRight className="ml-1 h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" /></Link></li>)}</ul></div>)}
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-3xl border border-emerald-400/15 bg-emerald-400/[0.06] p-5 sm:p-6">
+        <div className="mt-10 overflow-hidden rounded-3xl border border-orange-400/15 bg-orange-400/[0.06] p-5 sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-400/10 text-orange-400"><UserRound className="h-5 w-5" /></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-400">Meet the developer</p><h3 className="mt-1 text-xl font-semibold tracking-tight">Sudhanshu Gautam</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-400">Building Orrica Edge with a focus on a clean resume workflow, useful AI assistance and a polished application experience.</p></div>
+            </div>
+            <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-black text-neutral-950 transition-all hover:-translate-y-0.5 hover:bg-orange-50"><Linkedin className="h-4 w-4" /> Meet on LinkedIn <ArrowUpRight className="h-3.5 w-3.5" /></a>
+          </div>
+        </div>
+
+        <div className="mt-8 overflow-hidden rounded-3xl border border-emerald-400/15 bg-emerald-400/[0.06] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">Free career updates</p><h3 className="mt-1 text-xl font-semibold tracking-tight">Get free job updates on WhatsApp.</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-400">Follow the free job-update channel for fresh opportunities and career updates without paying for access.</p></div>
             <a href={JOB_CHANNEL} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-white transition-all hover:-translate-y-0.5 hover:bg-emerald-400">Follow free job updates <ArrowUpRight className="ml-1 h-3.5 w-3.5" /></a>
