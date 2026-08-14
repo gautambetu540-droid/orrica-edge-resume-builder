@@ -175,3 +175,93 @@ function CreationChoice({ data, updateData, onBack, onStart }: { data: ResumeDat
       toast({ title: 'PDF is too large', description: 'Please use a PDF smaller than 8 MB.', variant: 'error' });
       return;
     }
+    setScanning(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/resume/scan', { method: 'POST', body: formData, cache: 'no-store', credentials: 'include' });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || 'Could not scan your resume.');
+      updateData(() => json.data as ResumeData);
+      toast({ title: 'Resume imported', description: 'Your resume information has been extracted successfully.', variant: 'success' });
+      onStart();
+    } catch (error) {
+      toast({ title: 'Scan failed', description: error instanceof Error ? error.message : 'Could not scan this resume.', variant: 'error' });
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  function handleNext() {
+    if (selected === 'scratch') onStart();
+    else inputRef.current?.click();
+  }
+
+  return <div className="oe-choice min-h-dvh bg-white text-[#151b26]">
+    <header className="flex h-[68px] items-center border-b border-[#eceff3] bg-[#102a43] px-5 sm:px-8"><a href="/" aria-label="Orrica Edge home"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-[30px] w-auto brightness-0 invert" /></a></header>
+    <main className="mx-auto flex min-h-[calc(100dvh-68px)] max-w-[1120px] flex-col px-5 py-9 sm:px-8 sm:py-10">
+      <div className="text-center">
+        <h1 className="text-[28px] font-extrabold leading-tight tracking-[-.025em] text-[#151b26] sm:text-[32px]">Are you uploading an existing resume?</h1>
+        <p className="mt-3 text-[16px] leading-6 text-[#333b48] sm:text-[17px]">Just review, edit, and update it with new information</p>
+      </div>
+
+      <div className="relative mx-auto mt-9 grid w-full max-w-[1040px] gap-7 md:grid-cols-2 md:gap-7 lg:mt-10">
+        <button type="button" aria-pressed={selected === 'upload'} onClick={() => setSelected('upload')} className={`relative flex min-h-[274px] flex-col items-center justify-center rounded-[15px] border bg-white px-8 py-9 text-center transition-colors ${selected === 'upload' ? 'border-[#2d8cff] ring-2 ring-[#b9dcff]' : 'border-[#262b33] hover:border-[#2d8cff]'}`}>
+          <span className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#8ec5ff] px-3 py-1 text-[12px] font-extrabold uppercase tracking-[-.01em] text-[#102a43]">RECOMMENDED OPTION TO SAVE YOU TIME</span>
+          <span className="mb-6 flex h-[62px] w-[62px] items-center justify-center text-[#2d8cff]"><FileUp className="h-[58px] w-[58px] stroke-[1.35]" /></span>
+          <h2 className="text-[20px] font-extrabold text-[#151b26]">Yes, upload my resume</h2>
+          <p className="mt-3 max-w-[390px] text-[15px] leading-6 text-[#303844]">We'll give you expert guidance to fill out your info and enhance your resume, from start to finish</p>
+        </button>
+
+        <button type="button" aria-pressed={selected === 'scratch'} onClick={() => setSelected('scratch')} className={`relative flex min-h-[274px] flex-col items-center justify-center rounded-[15px] border bg-white px-8 py-9 text-center transition-colors ${selected === 'scratch' ? 'border-[#007eff] ring-2 ring-[#b9dcff]' : 'border-[#262b33] hover:border-[#007eff]'}`}>
+          <span className="mb-6 flex h-[62px] w-[62px] items-center justify-center text-[#2d8cff]"><FileText className="h-[58px] w-[58px] stroke-[1.35]" /></span>
+          <h2 className="text-[20px] font-extrabold text-[#151b26]">No, start from scratch</h2>
+          <p className="mt-3 max-w-[390px] text-[15px] leading-6 text-[#303844]">We'll guide you through the whole process so your skills can shine</p>
+        </button>
+      </div>
+
+      <div className="mt-auto flex items-center justify-between pt-10 sm:pt-12">
+        <button type="button" onClick={onBack} className="inline-flex h-[48px] min-w-[160px] items-center justify-center gap-2 rounded-[3px] border-2 border-[#2d8cff] bg-white px-6 text-[15px] font-extrabold text-[#2d68ad] transition-colors hover:bg-[#f5f9ff]"><ArrowLeft className="h-5 w-5" /> Back</button>
+        <button type="button" onClick={handleNext} disabled={scanning} className="inline-flex h-[48px] min-w-[160px] items-center justify-center gap-2 rounded-[3px] bg-[#007eff] px-6 text-[15px] font-extrabold text-white transition-colors hover:bg-[#006fdc] disabled:cursor-wait disabled:opacity-70">{scanning ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing</> : 'Next'}</button>
+      </div>
+      <input ref={inputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importResume(file); event.currentTarget.value = ''; }} />
+    </main>
+    <style jsx global>{`body{overflow-x:hidden}.oe-choice,.oe-choice *{font-family:"Inter",Arial,sans-serif}.oe-choice button{touch-action:manipulation}@media(max-width:767px){.oe-choice main{min-height:calc(100dvh - 68px);padding-top:42px;padding-bottom:28px}.oe-choice h1{font-size:27px}.oe-choice .grid{grid-template-columns:1fr;gap:18px}.oe-choice .grid button{min-height:235px;padding:30px 22px}.oe-choice .grid button span.absolute{font-size:9px;max-width:90%;text-align:center}.oe-choice .grid button h2{font-size:18px}.oe-choice .grid button p{font-size:14px;line-height:1.45}.oe-choice .flex.items-center.justify-between{padding-top:26px}.oe-choice .flex.items-center.justify-between button{min-width:132px}}`}</style>
+  </div>;
+}
+
+export default function ResumeCreationFlow() {
+  const router = useRouter();
+  const { data, settings, updateData, updateSettings } = useDraftResume();
+  const [screen, setScreen] = useState<'intro' | 'templates' | 'choice' | 'builder'>('intro');
+  const [saving, setSaving] = useState(false);
+
+  const continueFromTemplate = (template: TemplateId) => {
+    updateSettings((current) => ({ ...current, template }));
+    setScreen('choice');
+  };
+
+  const finish = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const createResponse = await fetch('/api/resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ title: data.personalInfo.fullName ? `${data.personalInfo.fullName} Resume` : 'Untitled Resume' }) });
+      const createJson = await createResponse.json().catch(() => ({}));
+      if (createResponse.status === 401) { router.push('/login?redirect=/resume/new'); return; }
+      if (!createResponse.ok || !createJson.resume?.id) throw new Error(createJson.error || 'Could not create your resume.');
+      const id = createJson.resume.id as string;
+      const patchResponse = await fetch(`/api/resume/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ resume_data: data, template: settings.template, settings }) });
+      const patchJson = await patchResponse.json().catch(() => ({}));
+      if (!patchResponse.ok) throw new Error(patchJson.error || 'Could not save your resume.');
+      router.push(`/resume/${id}`);
+    } catch (error) {
+      toast({ title: 'Could not save resume', description: error instanceof Error ? error.message : 'Please try again.', variant: 'error' });
+    } finally { setSaving(false); }
+  };
+
+  if (screen === 'intro') return <Intro onNext={() => setScreen('templates')} />;
+  if (screen === 'templates') return <TemplateSelection current={settings.template} onBack={() => setScreen('intro')} onContinue={continueFromTemplate} />;
+  if (screen === 'choice') return <CreationChoice data={data} updateData={updateData} onBack={() => setScreen('templates')} onStart={() => setScreen('builder')} />;
+
+  return <OrricaResumeWizard data={data} settings={settings} updateData={updateData} updateSettings={updateSettings} onFinish={finish} finishing={saving} />;
+}
