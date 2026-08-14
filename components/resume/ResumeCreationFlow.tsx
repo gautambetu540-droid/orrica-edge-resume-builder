@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileText, FileUp, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Download, FileText, FileUp, Loader2, Mail, Printer, ShieldCheck, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { OrricaResumeWizard } from '@/components/wizard/OrricaResumeWizard';
 import { ResumeImportCard } from '@/components/wizard/ResumeImportCard';
@@ -77,8 +77,50 @@ function Intro({ onNext }: { onNext: () => void }) {
         <button type="button" onClick={onNext} className="mt-8 h-14 w-full max-w-[310px] rounded-md bg-[#f47c3c] text-[17px] font-extrabold text-white hover:bg-[#e5682e]">Next</button>
         <p className="mt-4 max-w-[310px] text-[10px] leading-5 text-[#777]">By clicking “Next”, you agree to our <a href="/terms" className="font-bold underline">Terms of Use</a> and <a href="/privacy" className="font-bold underline">Privacy Policy</a>.</p>
       </div>
-      <div className="hidden md:block"><div className="relative mx-auto h-[340px] max-w-[420px]"><div className="absolute right-4 top-5 h-44 w-44 rounded-full bg-[#f47c3c]"/><div className="absolute right-16 top-16 h-24 w-24 rounded-full bg-white"/><div className="absolute right-2 top-14 z-10 w-[270px] rounded-lg border border-[#cfd4da] bg-white p-4 shadow-[10px_12px_0_0_#10b8b5]"><div className="flex items-center gap-2 border-b border-[#e6e7eb] pb-3"><div className="h-9 w-9 border border-[#cfd4da]"/><div><div className="text-[12px] font-extrabold">ALEX MORGAN</div><div className="text-[7px] text-[#777]">MARKETING SPECIALIST</div></div></div><div className="mt-4 space-y-3"><div className="h-2 w-40 rounded bg-[#eceef1]"/><div className="h-2 w-32 rounded bg-[#eceef1]"/><div className="h-2 w-44 rounded bg-[#eceef1]"/><div className="h-2 w-28 rounded bg-[#eceef1]"/></div></div></div></div></section></main>
-    <style jsx global>{`.oe-flow,.oe-flow *{font-family:"Inter",Arial,sans-serif}@media(max-width:767px){.oe-flow main{align-items:flex-start;padding-top:54px}.oe-flow h1{font-size:2.35rem}}`}</style>
+
+      <div className="oe-intro-visual hidden md:block" aria-label="Animated resume preview">
+        <div className="oe-intro-scene">
+          <div className="oe-intro-orbit" />
+          <div className="oe-intro-orbit-hole" />
+          <div className="oe-intro-teal-backplate" />
+          <div className="oe-intro-resume-card">
+            <div className="oe-intro-resume-page">
+              <ResumeDocument data={SAMPLE_RESUME_DATA} settings={DEFAULT_SETTINGS} />
+            </div>
+          </div>
+          <div className="oe-intro-actions" aria-hidden="true">
+            <div className="oe-intro-action oe-intro-download"><Download className="h-4 w-4" /><span>Download</span></div>
+            <div className="oe-intro-action oe-intro-print"><Printer className="h-4 w-4" /><span>Print</span></div>
+            <div className="oe-intro-action oe-intro-email"><Mail className="h-4 w-4" /><span>Email</span></div>
+          </div>
+        </div>
+      </div>
+    </section></main>
+    <style jsx global>{`
+      .oe-flow,.oe-flow *{font-family:"Inter",Arial,sans-serif}
+      .oe-intro-visual{min-height:390px;display:flex;align-items:center;justify-content:center}
+      .oe-intro-scene{position:relative;width:470px;height:390px;max-width:100%;overflow:visible}
+      .oe-intro-orbit{position:absolute;right:70px;top:28px;width:210px;height:210px;border-radius:999px;background:#f47c3c;animation:oeIntroFloat 6s ease-in-out infinite}
+      .oe-intro-orbit-hole{position:absolute;right:120px;top:78px;width:110px;height:110px;border-radius:999px;background:#fff;z-index:1}
+      .oe-intro-teal-backplate{position:absolute;right:42px;top:82px;width:342px;height:310px;border-radius:8px;background:#10b8b5;transform:translate(10px,10px);z-index:1;box-shadow:0 16px 28px -20px rgba(16,184,181,.65)}
+      .oe-intro-resume-card{position:absolute;right:52px;top:64px;width:342px;height:310px;border:1px solid #cbd2da;border-radius:9px;background:#fff;overflow:hidden;z-index:3;box-shadow:0 20px 45px -26px rgba(15,23,42,.48);animation:oeIntroCard 6s ease-in-out infinite}
+      .oe-intro-resume-page{position:absolute;left:50%;top:9px;width:794px;transform:translateX(-50%) scale(.385);transform-origin:top center}
+      .oe-intro-actions{position:absolute;right:0;top:112px;z-index:5;width:132px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+      .oe-intro-action{height:42px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #161616;border-radius:999px;background:#fff;color:#202020;font-size:13px;font-weight:800;box-shadow:0 5px 14px -9px rgba(0,0,0,.5);animation:oeIntroAction 6s ease-in-out infinite}
+      .oe-intro-download{background:#202020;color:#fff;border-color:#202020;animation-delay:0s}
+      .oe-intro-print{animation-delay:.15s}
+      .oe-intro-email{animation-delay:.3s}
+      @keyframes oeIntroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+      @keyframes oeIntroCard{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-7px) rotate(-.35deg)}}
+      @keyframes oeIntroAction{0%,8%{opacity:0;transform:translateX(16px)}15%,82%{opacity:1;transform:translateX(0)}90%,100%{opacity:0;transform:translateX(16px)}}
+      @media(max-width:767px){
+        .oe-flow main{align-items:flex-start;padding-top:54px}
+        .oe-flow h1{font-size:2.35rem}
+      }
+      @media(prefers-reduced-motion:reduce){
+        .oe-intro-orbit,.oe-intro-resume-card,.oe-intro-action{animation:none!important}
+      }
+    `}</style>
   </div>;
 }
 
