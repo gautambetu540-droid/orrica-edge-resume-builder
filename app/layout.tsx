@@ -52,10 +52,13 @@ const GLOBAL_DESIGN_STYLES = `
     --oe-font-weight-bold: 700;
     --oe-color-black: #000000;
     --oe-color-gray: #F0F0F0;
-    --oe-color-dark: #230939;
-    --oe-color-purple: #6E46AE;
-    --oe-color-blue: #007EFF;
-    --oe-color-light: #E9E7F7;
+    --oe-color-dark: #111827;
+    --oe-color-sky: #0EA5E9;
+    --oe-color-sky-hover: #0284C7;
+    --oe-color-sky-dark: #0369A1;
+    --oe-color-sky-light: #E0F2FE;
+    --oe-color-sky-pale: #F0F9FF;
+    --oe-color-light: #E0F2FE;
   }
 
   html, body, button, input, textarea, select, option, a, label, table, th, td {
