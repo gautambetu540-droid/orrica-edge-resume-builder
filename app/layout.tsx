@@ -67,6 +67,76 @@ const GLOBAL_DESIGN_STYLES = `
 
   body { color: var(--oe-color-black); }
   .font-display, .font-ui, .font-reading { font-family: var(--oe-font-family) !important; }
+
+  /* Orrica Edge desktop resume-builder intro visual: a restrained laptop/product scene.
+     It intentionally stays desktop-only; phones get the clean text-first experience. */
+  @media (min-width: 768px) {
+    .oe-intro-visual { min-height: 440px !important; align-items: center !important; }
+    .oe-intro-scene { width: 520px !important; height: 430px !important; max-width: 520px !important; }
+    .oe-intro-orbit {
+      right: 62px !important; top: 35px !important; width: 270px !important; height: 270px !important;
+      background: radial-gradient(circle, rgba(255,106,33,.20) 0%, rgba(255,106,33,.08) 45%, rgba(255,106,33,0) 72%) !important;
+      filter: blur(2px); animation: oeDesktopGlow 7s ease-in-out infinite !important;
+    }
+    .oe-intro-orbit-hole { display:none !important; }
+    .oe-intro-teal-backplate {
+      right: 49px !important; top: 351px !important; width: 388px !important; height: 31px !important;
+      border-radius: 0 0 18px 18px !important; background: linear-gradient(180deg,#30343a,#15181c) !important;
+      transform: perspective(900px) rotateX(56deg) !important; z-index: 2 !important;
+      box-shadow: 0 18px 28px -18px rgba(15,18,22,.48) !important;
+    }
+    .oe-intro-teal-backplate::after {
+      content:""; position:absolute; left:50%; top:5px; width:72px; height:12px; transform:translateX(-50%);
+      border-radius:0 0 8px 8px; background:#24282d; box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .oe-intro-resume-card {
+      right: 66px !important; top: 48px !important; width: 354px !important; height: 300px !important;
+      border: 1px solid #22282e !important; border-radius: 15px !important; background:#11151a !important;
+      box-shadow: 0 32px 65px -34px rgba(15,18,22,.55), 0 0 0 5px rgba(255,255,255,.38) !important;
+      animation: oeDesktopLaptop 7s cubic-bezier(.2,.7,.2,1) infinite !important;
+    }
+    .oe-intro-resume-card::before {
+      content:""; position:absolute; left:50%; top:7px; z-index:8; width:5px; height:5px; transform:translateX(-50%);
+      border-radius:999px; background:#5e646c; box-shadow:0 0 0 2px #1d2227;
+    }
+    .oe-intro-resume-card::after {
+      content:""; position:absolute; left:0; right:0; top:0; z-index:7; height:19px;
+      background:linear-gradient(180deg,#2a3036,#171b20); border-radius:14px 14px 0 0;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .oe-intro-resume-page {
+      left:50% !important; top:24px !important; width:794px !important;
+      transform:translateX(-50%) scale(.345) !important; transform-origin:top center !important;
+      z-index:3;
+    }
+    .oe-intro-actions {
+      right: 9px !important; top: 73px !important; width: 120px !important; gap: 8px !important; z-index: 12 !important;
+    }
+    .oe-intro-action {
+      height: 38px !important; border-radius: 12px !important; border: 1px solid rgba(20,20,20,.10) !important;
+      background:rgba(255,255,255,.94) !important; color:#171717 !important; font-size:11px !important;
+      box-shadow:0 14px 26px -18px rgba(15,18,22,.55) !important; backdrop-filter:blur(10px);
+      animation:oeDesktopAction 7s ease-in-out infinite !important;
+    }
+    .oe-intro-download { background:#ff6a21 !important; color:#fff !important; border-color:#ff6a21 !important; }
+    .oe-intro-print { animation-delay:.15s !important; }
+    .oe-intro-email { animation-delay:.3s !important; }
+    .oe-intro-visual::after {
+      content:"ATS-ready  •  Live preview  •  PDF export"; position:absolute; margin-top:425px;
+      font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#8a8f95;
+    }
+  }
+  @keyframes oeDesktopGlow { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-8px) scale(1.035)} }
+  @keyframes oeDesktopLaptop { 0%,100%{transform:translateY(0) rotateX(0deg) rotateY(0deg)} 50%{transform:translateY(-6px) rotateX(.4deg) rotateY(-.6deg)} }
+  @keyframes oeDesktopAction { 0%,10%{opacity:.35;transform:translateX(9px)} 18%,82%{opacity:1;transform:translateX(0)} 91%,100%{opacity:.35;transform:translateX(9px)} }
+
+  @media (max-width: 767px) {
+    .oe-intro-visual { display:none !important; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .oe-intro-orbit,.oe-intro-resume-card,.oe-intro-action { animation:none !important; }
+  }
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
