@@ -1,4 +1,4 @@
-import { ResumeData, ResumeSettings } from '@/lib/types/resume';
+import { ResumeData, ResumeSectionId, ResumeSettings } from '@/lib/types/resume';
 import { TemplatePreset } from '@/lib/templates/presets';
 import { ResumeHeader } from '../Header';
 import {
@@ -44,7 +44,12 @@ export function SingleColumnLayout({
             return null;
           }
 
-          const title = SECTION_TITLES[section.id];
+          // SectionConfig.id can come from persisted JSON settings and is
+          // therefore not narrow enough for indexing SECTION_TITLES. The
+          // header was removed above, so the remaining ids are valid titled
+          // resume sections.
+          const sectionId = section.id as Exclude<ResumeSectionId, 'header'>;
+          const title = SECTION_TITLES[sectionId];
 
           return (
             <div
@@ -55,7 +60,7 @@ export function SingleColumnLayout({
                 {title}
               </SectionHeading>
 
-              {renderSectionBody(section.id, data)}
+              {renderSectionBody(sectionId, data)}
 
               {preset.dividers && (
                 <div className="mt-3 h-px bg-neutral-200" />
