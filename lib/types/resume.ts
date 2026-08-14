@@ -92,24 +92,6 @@ export type ResumeSectionId =
   | 'languages'
   | 'achievements';
 
-export interface SectionConfig {
-  id: ResumeSectionId;
-  visible: boolean;
-  order: number;
-}
-
-export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
-  'header',
-  'summary',
-  'experience',
-  'education',
-  'skills',
-  'projects',
-  'certifications',
-  'languages',
-  'achievements',
-];
-
 export type TemplateId =
   | 'modern-ats'
   | 'classic-professional'
@@ -123,6 +105,9 @@ export type TemplateId =
   | 'creative-sidebar';
 
 export type ResumeFont =
+  | 'proxima-nova'
+  | 'arial'
+  | 'times-new-roman'
   | 'inter'
   | 'source-sans-3'
   | 'ibm-plex-sans'
@@ -143,13 +128,13 @@ export interface ResumeSettings {
 
 export const DEFAULT_SETTINGS: ResumeSettings = {
   template: 'modern-ats',
-  font: 'inter',
+  font: 'arial',
   fontSize: 10.5,
   headingScale: 1.15,
   lineSpacing: 1.35,
   sectionSpacing: 16,
   margin: 16,
-  accentColor: '#4338ca',
+  accentColor: '#6E46AE',
   sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })),
 };
 
