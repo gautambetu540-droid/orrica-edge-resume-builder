@@ -92,12 +92,6 @@ export type ResumeSectionId =
   | 'languages'
   | 'achievements';
 
-export interface SectionConfig {
-  id: ResumeSectionId;
-  visible: boolean;
-  order: number;
-}
-
 export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
   'header',
   'summary',
@@ -144,6 +138,12 @@ export interface ResumeSettings {
   sections: SectionConfig[];
 }
 
+export interface SectionConfig {
+  id: ResumeSectionId;
+  visible: boolean;
+  order: number;
+}
+
 export const DEFAULT_SETTINGS: ResumeSettings = {
   template: 'modern-ats',
   font: 'arial',
@@ -152,7 +152,7 @@ export const DEFAULT_SETTINGS: ResumeSettings = {
   lineSpacing: 1.35,
   sectionSpacing: 16,
   margin: 16,
-  accentColor: '#6E46AE',
+  accentColor: '#0EA5E9',
   sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })),
 };
 
