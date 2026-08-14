@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useResumeStore } from '@/lib/hooks/useResumeStore';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
+import { BUILDER_FEATURES, BUILDER_STEPS, readBuilderStep, saveBuilderStep, type BuilderStepKey } from '@/lib/config/builder';
 import { PreviewPane } from './PreviewPane';
 import { DesignPanel } from './DesignPanel';
 import { DownloadButton, PrintButton, useDownloadPdf } from './DownloadButton';
@@ -38,7 +39,7 @@ const CONTENT_SECTIONS = [
   { key: 'more', label: 'More', hint: 'Additional sections', Component: MoreStep },
 ] as const;
 
-type Panel = 'content' | 'design' | 'improve';
+type Panel = 'content' | 'design' | 'improve' | 'finalize';
 
 type EditorProps = {
   data: ResumeData;
@@ -71,21 +72,23 @@ function SectionNav({ active, onSelect, data }: { active: string; onSelect: (key
     return data.certifications.length > 0 || data.languages.length > 0 || data.achievements.length > 0;
   }).length;
 
+  const percent = Math.round((completion / CONTENT_SECTIONS.length) * 100);
+
   return (
     <aside className="oe-editor-sidebar w-[236px] shrink-0 border-r border-neutral-200 bg-white">
       <div className="border-b border-neutral-200 px-4 py-4">
-        <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Resume progress</div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Resume completeness</div>
         <div className="mt-2 flex items-end justify-between">
-          <span className="text-2xl font-semibold tracking-tight text-neutral-950">{Math.round((completion / CONTENT_SECTIONS.length) * 100)}%</span>
+          <span className="text-2xl font-semibold tracking-tight text-neutral-950">{percent}%</span>
           <span className="mb-1 text-[11px] text-neutral-400">{completion}/{CONTENT_SECTIONS.length} sections</span>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-          <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${(completion / CONTENT_SECTIONS.length) * 100}%` }} />
+          <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${percent}%` }} />
         </div>
       </div>
 
       <div className="p-3">
-        <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Content</div>
+        <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Build your resume</div>
         <div className="space-y-0.5">
           {CONTENT_SECTIONS.map((section, index) => {
             const selected = active === section.key;
@@ -100,25 +103,88 @@ function SectionNav({ active, onSelect, data }: { active: string; onSelect: (key
               </button>
             );
           })}
+
+          {BUILDER_FEATURES.finalize && (
+            <button type="button" onClick={() => onSelect('finalize')} className={`group mt-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === 'finalize' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${active === 'finalize' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-400'}`}>✓</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12px] font-semibold">Finalize</span>
+                <span className={`mt-0.5 block truncate text-[10px] ${active === 'finalize' ? 'text-orange-600/70' : 'text-neutral-400'}`}>Review & download</span>
+              </span>
+              <ChevronRight className={`h-3.5 w-3.5 ${active === 'finalize' ? 'text-orange-500' : 'text-neutral-300'}`} />
+            </button>
+          )}
         </div>
 
-        <div className="mt-5 border-t border-neutral-100 pt-4">
-          <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Tools</div>
-          <button type="button" className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__improve__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__improve__')}>
-            <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__improve__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><Sparkles className="h-3.5 w-3.5" /></span>
-            <span className="text-[12px] font-semibold">Improve with AI</span>
-          </button>
-          <button type="button" className={`mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__design__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__design__')}>
-            <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__design__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><LayoutGrid className="h-3.5 w-3.5" /></span>
-            <span className="text-[12px] font-semibold">Design & template</span>
-          </button>
-        </div>
+        {(BUILDER_FEATURES.aiTools || BUILDER_FEATURES.templates) && (
+          <div className="mt-5 border-t border-neutral-100 pt-4">
+            <div className="px-2 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Tools</div>
+            {BUILDER_FEATURES.aiTools && (
+              <button type="button" className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__improve__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__improve__')}>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__improve__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><Sparkles className="h-3.5 w-3.5" /></span>
+                <span className="text-[12px] font-semibold">Improve with AI</span>
+              </button>
+            )}
+            {BUILDER_FEATURES.templates && (
+              <button type="button" className={`mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left transition-colors ${active === '__design__' ? 'bg-orange-50 text-orange-700' : 'text-neutral-600 hover:bg-neutral-50'}`} onClick={() => onSelect('__design__')}>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-md ${active === '__design__' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-700'}`}><LayoutGrid className="h-3.5 w-3.5" /></span>
+                <span className="text-[12px] font-semibold">Design & template</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );
 }
 
-function ContentPanel({ sectionKey, ...props }: EditorProps & { sectionKey: string }) {
+function FinalizePanel({ data, resumeId, fileName }: { data: ResumeData; resumeId: string; fileName: string }) {
+  const { download, downloading } = useDownloadPdf(resumeId, fileName);
+  const checks = [
+    ['Personal information', Boolean(data.personalInfo.fullName && data.personalInfo.email)],
+    ['Professional summary', Boolean(data.summary?.trim())],
+    ['Work experience', data.experience.length > 0],
+    ['Education', data.education.length > 0],
+    ['Skills', data.skills.some((category) => category.items.length > 0)],
+  ] as const;
+  const complete = checks.filter(([, ok]) => ok).length;
+
+  return (
+    <div className="p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><Check className="h-5 w-5" /></div>
+      <h2 className="mt-4 text-xl font-semibold tracking-tight text-neutral-950">Your resume is almost ready</h2>
+      <p className="mt-1 text-sm leading-6 text-neutral-500">Do a final review, then export the latest version as a PDF.</p>
+
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-neutral-700">Readiness</span>
+          <span className="text-xs font-semibold text-neutral-900">{complete}/{checks.length}</span>
+        </div>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-200">
+          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(complete / checks.length) * 100}%` }} />
+        </div>
+        <div className="mt-4 space-y-2">
+          {checks.map(([label, ok]) => (
+            <div key={label} className="flex items-center gap-2 text-xs">
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-neutral-300 border border-neutral-200'}`}>
+                {ok ? <Check className="h-3 w-3" /> : null}
+              </span>
+              <span className={ok ? 'text-neutral-700' : 'text-neutral-400'}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button type="button" onClick={download} disabled={downloading} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:opacity-60">
+        {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <DownloadIcon className="h-4 w-4" />}
+        {downloading ? 'Preparing PDF…' : 'Download resume PDF'}
+      </button>
+      <p className="mt-3 text-center text-[10px] leading-5 text-neutral-400">You can return to any section and update the resume at any time.</p>
+    </div>
+  );
+}
+
+function ContentPanel({ sectionKey, resumeId, fileName, ...props }: EditorProps & { sectionKey: string; resumeId: string; fileName: string }) {
   if (sectionKey === '__improve__') {
     return (
       <div className="p-5">
@@ -141,6 +207,10 @@ function ContentPanel({ sectionKey, ...props }: EditorProps & { sectionKey: stri
     );
   }
 
+  if (sectionKey === 'finalize') {
+    return <FinalizePanel data={props.data} resumeId={resumeId} fileName={fileName} />;
+  }
+
   const section = CONTENT_SECTIONS.find((item) => item.key === sectionKey) ?? CONTENT_SECTIONS[0];
   const Component = section.Component;
 
@@ -158,20 +228,28 @@ function ContentPanel({ sectionKey, ...props }: EditorProps & { sectionKey: stri
 
 export function EditorShell({ resumeId, title, data, settings }: { resumeId: string; title: string; data: ResumeData; settings: ResumeSettings }) {
   const store = useResumeStore();
-  const [activeSection, setActiveSection] = useState('personal');
+  const [activeSection, setActiveSection] = useState<string>('personal');
   const [mobileView, setMobileView] = useState<'edit' | 'preview' | 'design'>('edit');
 
   useEffect(() => {
     store.init({ id: resumeId, title, data, settings });
+    setActiveSection(readBuilderStep(resumeId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeId]);
+
+  const selectSection = (key: string) => {
+    setActiveSection(key);
+    if (BUILDER_STEPS.some((step) => step.key === key)) {
+      saveBuilderStep(resumeId, key as BuilderStepKey);
+    }
+  };
 
   if (!store.resumeId) {
     return <div className="flex h-dvh items-center justify-center bg-neutral-50 text-sm text-neutral-400">Loading your resume…</div>;
   }
 
   const fileName = `${(store.data.personalInfo.fullName || 'Resume').replace(/\s+/g, '_')}_Resume.pdf`;
-  const panel: Panel = activeSection === '__improve__' ? 'improve' : activeSection === '__design__' ? 'design' : 'content';
+  const panel: Panel = activeSection === '__improve__' ? 'improve' : activeSection === '__design__' ? 'design' : activeSection === 'finalize' ? 'finalize' : 'content';
 
   return (
     <div className="oe-editor-shell flex h-dvh flex-col bg-neutral-100 text-neutral-950">
@@ -188,19 +266,19 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
         </div>
         <SaveIndicator status={store.saveStatus} />
         <div className="hidden items-center gap-2 sm:flex">
-          <PrintButton resumeId={resumeId} />
-          <DownloadButton resumeId={resumeId} fileName={fileName} />
+          {BUILDER_FEATURES.print && <PrintButton resumeId={resumeId} />}
+          {BUILDER_FEATURES.pdfExport && <DownloadButton resumeId={resumeId} fileName={fileName} />}
         </div>
       </header>
 
       <div className="hidden min-h-0 flex-1 md:flex">
-        <SectionNav active={activeSection} onSelect={setActiveSection} data={store.data} />
+        <SectionNav active={activeSection} onSelect={selectSection} data={store.data} />
         <section className="oe-editor-panel w-[430px] shrink-0 overflow-y-auto border-r border-neutral-200 bg-white" aria-label="Resume editor">
           <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
-            <span className="text-xs font-semibold text-neutral-700">{panel === 'content' ? 'Edit content' : panel === 'design' ? 'Design' : 'Improve'}</span>
+            <span className="text-xs font-semibold text-neutral-700">{panel === 'content' ? 'Edit content' : panel === 'design' ? 'Design' : panel === 'improve' ? 'Improve' : 'Finalize'}</span>
             <span className="text-[10px] text-neutral-400">Changes save automatically</span>
           </div>
-          <ContentPanel sectionKey={activeSection} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
+          <ContentPanel sectionKey={activeSection} resumeId={resumeId} fileName={fileName} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
         </section>
         <section className="min-w-0 flex-1" aria-label="Live resume preview">
           <PreviewPane data={store.data} settings={store.settings} />
@@ -212,15 +290,16 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
           {mobileView === 'preview' ? (
             <PreviewPane data={store.data} settings={store.settings} />
           ) : mobileView === 'design' ? (
-            <ContentPanel sectionKey="__design__" data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
+            <ContentPanel sectionKey="__design__" resumeId={resumeId} fileName={fileName} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
           ) : (
             <>
               <div className="oe-mobile-tabs flex gap-2 overflow-x-auto border-b border-neutral-200 bg-white px-3 py-2">
                 {CONTENT_SECTIONS.map((section) => (
-                  <button key={section.key} type="button" onClick={() => setActiveSection(section.key)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === section.key ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>{section.label}</button>
+                  <button key={section.key} type="button" onClick={() => selectSection(section.key)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === section.key ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>{section.label}</button>
                 ))}
+                {BUILDER_FEATURES.finalize && <button type="button" onClick={() => selectSection('finalize')} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${activeSection === 'finalize' ? 'bg-orange-500 text-white' : 'bg-neutral-100 text-neutral-600'}`}>Finalize</button>}
               </div>
-              <ContentPanel sectionKey={activeSection} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
+              <ContentPanel sectionKey={activeSection} resumeId={resumeId} fileName={fileName} data={store.data} settings={store.settings} updateData={store.updateData} updateSettings={store.updateSettings} />
             </>
           )}
         </div>
@@ -228,8 +307,8 @@ export function EditorShell({ resumeId, title, data, settings }: { resumeId: str
         <div className="oe-mobile-dock grid shrink-0 grid-cols-4 border-t border-neutral-200 bg-white no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <MobileNavButton active={mobileView === 'edit'} onClick={() => setMobileView('edit')} icon={<Pencil className="h-5 w-5" />} label="Edit" />
           <MobileNavButton active={mobileView === 'preview'} onClick={() => setMobileView('preview')} icon={<FileText className="h-5 w-5" />} label="Preview" />
-          <MobileNavButton active={mobileView === 'design'} onClick={() => setMobileView('design')} icon={<LayoutGrid className="h-5 w-5" />} label="Design" />
-          <MobileDownloadButton resumeId={resumeId} fileName={fileName} />
+          {BUILDER_FEATURES.templates ? <MobileNavButton active={mobileView === 'design'} onClick={() => setMobileView('design')} icon={<LayoutGrid className="h-5 w-5" />} label="Design" /> : <span />}
+          {BUILDER_FEATURES.pdfExport ? <MobileDownloadButton resumeId={resumeId} fileName={fileName} /> : <span />}
         </div>
       </div>
     </div>
