@@ -43,14 +43,38 @@ const PRINT_RESUME_STYLES = `@media print {
   .resume-page:has(.resume-print-header) .break-inside-avoid-page h2, .resume-page:has(.resume-print-header) .break-inside-avoid-page h3 { break-after: avoid; page-break-after: avoid; }
 }`;
 
+const GLOBAL_DESIGN_STYLES = `
+  :root {
+    --oe-font-family: "Times New Roman", "Proxima Nova", Nunito, Arial, Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --oe-color-black: #000000;
+    --oe-color-gray: #F0F0F0;
+    --oe-color-dark: #230939;
+    --oe-color-purple: #6E46AE;
+    --oe-color-blue: #007EFF;
+    --oe-color-light: #E9E7F7;
+  }
+
+  html, body, button, input, textarea, select, option, a, label, table, th, td {
+    font-family: var(--oe-font-family) !important;
+  }
+
+  body {
+    color: var(--oe-color-black);
+  }
+
+  .font-display, .font-ui, .font-reading {
+    font-family: var(--oe-font-family) !important;
+  }
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${inter.variable} ${sourceSans3.variable} ${ibmPlexSans.variable} ${merriweather.variable}`}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <style dangerouslySetInnerHTML={{ __html: PRINT_RESUME_STYLES }} />
+        <style dangerouslySetInnerHTML={{ __html: GLOBAL_DESIGN_STYLES + PRINT_RESUME_STYLES }} />
       </head>
-      <body className="font-jakarta antialiased">{children}<Toaster /></body>
+      <body className="antialiased">{children}<Toaster /></body>
     </html>
   );
 }
