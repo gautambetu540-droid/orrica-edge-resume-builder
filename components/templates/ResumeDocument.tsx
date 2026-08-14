@@ -16,20 +16,7 @@ export interface ResumeDocumentProps {
 }
 
 function isEmptyResume(data: ResumeData) {
-  return (
-    !data.personalInfo.fullName?.trim() &&
-    !data.personalInfo.professionalTitle?.trim() &&
-    !data.personalInfo.email?.trim() &&
-    !data.personalInfo.phone?.trim() &&
-    !data.summary?.trim() &&
-    data.experience.length === 0 &&
-    data.education.length === 0 &&
-    data.projects.length === 0 &&
-    data.certifications.length === 0 &&
-    data.languages.length === 0 &&
-    data.achievements.length === 0 &&
-    data.skills.every((category) => category.items.length === 0)
-  );
+  return !data.personalInfo.fullName?.trim() && !data.personalInfo.professionalTitle?.trim() && !data.personalInfo.email?.trim() && !data.personalInfo.phone?.trim() && !data.summary?.trim() && data.experience.length === 0 && data.education.length === 0 && data.projects.length === 0 && data.certifications.length === 0 && data.languages.length === 0 && data.achievements.length === 0 && data.skills.every((category) => category.items.length === 0);
 }
 
 export function ResumeDocument({ data, settings, forPrint = false, activeSection }: ResumeDocumentProps) {
@@ -40,7 +27,6 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
       setPreviewData(null);
       return;
     }
-
     const inTemplateLibrary = Boolean(document.querySelector('.oe-template'));
     if (inTemplateLibrary) setPreviewData(TEMPLATE_PREVIEW_RESUME);
   }, [data, forPrint]);
@@ -48,21 +34,8 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
   const renderData = previewData ?? data;
   const preset = TEMPLATE_PRESETS[settings.template];
   const pageMargin = Math.max(10, Math.min(25, settings.margin));
-  const pagePadding = preset.layout === 'two-column'
-    ? 0
-    : preset.headerVariant === 'banner'
-      ? `0 ${pageMargin}mm ${pageMargin}mm`
-      : `${pageMargin}mm`;
-
-  const style: React.CSSProperties & {
-    '--accent'?: string;
-    '--section-gap'?: string;
-    '--entry-gap'?: string;
-    '--heading-scale'?: string;
-    '--resume-text'?: string;
-    '--resume-muted'?: string;
-    '--resume-margin'?: string;
-  } = {
+  const pagePadding = preset.layout === 'two-column' ? 0 : preset.headerVariant === 'banner' ? `0 ${pageMargin}mm ${pageMargin}mm` : `${pageMargin}mm`;
+  const style: React.CSSProperties & Record<string, string | number> = {
     '--accent': settings.accentColor || preset.defaultAccentColor,
     '--section-gap': `${Math.max(10, Math.min(28, settings.sectionSpacing))}px`,
     '--entry-gap': `${Math.max(8, settings.sectionSpacing * 0.55)}px`,
@@ -81,20 +54,44 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
   };
 
   return (
-    <div
-      className="resume-page bg-white"
-      style={style}
-      id="resume-document-root"
-      data-resume-font={settings.font}
-      data-active-section={activeSection || ''}
-    >
-      <div className="resume-preview-highlight-layer" aria-hidden="true" />
-      {preset.layout === 'two-column' ? (
-        <TwoColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />
-      ) : (
-        <SingleColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />
-      )}
+    <div className="resume-page bg-white" style={style} id="resume-document-root" data-resume-font={settings.font} data-active-section={activeSection || ''}>
+      {preset.layout === 'two-column' ? <TwoColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} /> : <SingleColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />}
       <BrandFooter />
+      {!forPrint && activeSection && (
+        <style jsx global>{`
+          #resume-document-root[data-active-section="personal"] [data-resume-section="personal"],
+          #resume-document-root[data-active-section="experience"] [data-resume-section="experience"],
+          #resume-document-root[data-active-section="education"] [data-resume-section="education"],
+          #resume-document-root[data-active-section="skills"] [data-resume-section="skills"],
+          #resume-document-root[data-active-section="projects"] [data-resume-section="projects"],
+          #resume-document-root[data-active-section="more"] [data-resume-section="more"],
+          #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] {
+            background: #111827 !important;
+            color: #ffffff !important;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-left: -10px;
+            margin-right: -10px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+          }
+          #resume-document-root[data-active-section="personal"] [data-resume-section="personal"] *,
+          #resume-document-root[data-active-section="experience"] [data-resume-section="experience"] *,
+          #resume-document-root[data-active-section="education"] [data-resume-section="education"] *,
+          #resume-document-root[data-active-section="skills"] [data-resume-section="skills"] *,
+          #resume-document-root[data-active-section="projects"] [data-resume-section="projects"] *,
+          #resume-document-root[data-active-section="more"] [data-resume-section="more"] *,
+          #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] * {
+            color: #ffffff !important;
+          }
+          #resume-document-root[data-active-section="personal"] [data-resume-section="personal"] a,
+          #resume-document-root[data-active-section="experience"] [data-resume-section="experience"] a,
+          #resume-document-root[data-active-section="education"] [data-resume-section="education"] a,
+          #resume-document-root[data-active-section="skills"] [data-resume-section="skills"] a,
+          #resume-document-root[data-active-section="projects"] [data-resume-section="projects"] a,
+          #resume-document-root[data-active-section="more"] [data-resume-section="more"] a,
+          #resume-document-root[data-active-section="summary"] [data-resume-section="summary"] a { color: #e0f2fe !important; }
+        `}</style>
+      )}
     </div>
   );
 }
