@@ -27,7 +27,7 @@ export function SiteFooter() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-400/10 text-orange-400"><UserRound className="h-5 w-5" /></div>
-              <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-400">Meet the developer</p><h3 className="mt-1 text-xl font-semibold tracking-tight">Sudhanshu Gautam</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-400">Building Orrica Edge with a focus on a clean resume workflow, useful AI assistance and a polished application experience.</p></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-400">Meet the developer</p><h3 className="mt-1 text-xl font-semibold tracking-tight">Sudhanshu </h3><p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-400">Building Orrica Edge with a focus on a clean resume workflow, useful AI assistance and a polished application experience.</p></div>
             </div>
             <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-black text-neutral-950 transition-all hover:-translate-y-0.5 hover:bg-orange-50"><Linkedin className="h-4 w-4" /> Meet on LinkedIn <ArrowUpRight className="h-3.5 w-3.5" /></a>
           </div>
