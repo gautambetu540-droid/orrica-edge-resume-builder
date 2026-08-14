@@ -45,7 +45,11 @@ const PRINT_RESUME_STYLES = `@media print {
 
 const GLOBAL_DESIGN_STYLES = `
   :root {
-    --oe-font-family: "Times New Roman", "Proxima Nova", Nunito, Arial, Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --oe-font-family: "Proxima Nova", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --oe-font-weight-regular: 400;
+    --oe-font-weight-medium: 500;
+    --oe-font-weight-semibold: 600;
+    --oe-font-weight-bold: 700;
     --oe-color-black: #000000;
     --oe-color-gray: #F0F0F0;
     --oe-color-dark: #230939;
@@ -58,13 +62,8 @@ const GLOBAL_DESIGN_STYLES = `
     font-family: var(--oe-font-family) !important;
   }
 
-  body {
-    color: var(--oe-color-black);
-  }
-
-  .font-display, .font-ui, .font-reading {
-    font-family: var(--oe-font-family) !important;
-  }
+  body { color: var(--oe-color-black); }
+  .font-display, .font-ui, .font-reading { font-family: var(--oe-font-family) !important; }
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
