@@ -46,7 +46,12 @@ const presetWithCategory = (
   id: TemplateId,
   name: string,
   options: Omit<TemplatePreset, 'id' | 'name' | 'description'> & { description: string },
-): TemplatePreset => ({ id, name, category: '', ...options });
+): TemplatePreset => ({
+  id,
+  name,
+  category: options.layout === 'two-column' ? 'Two Column' : 'Single Column',
+  ...options,
+});
 
 export const TEMPLATE_PRESETS: Record<TemplateId, TemplatePreset> = {
   'modern-ats': preset('modern-ats', 'Modern ATS', { layout: 'single-column', headerAlign: 'left', headerVariant: 'clean', sidebarVariant: 'plain', sectionHeadingStyle: 'uppercase-accent', dividers: true, photoAllowed: false, defaultAccentColor: '#F97316', recommendedFont: 'arial', defaultFontSize: 10.2, defaultHeadingScale: 1.08, defaultLineSpacing: 1.28, defaultSectionSpacing: 13, defaultMargin: 15, description: 'Clean, recruiter-friendly single-column layout with strong ATS readability.' }),
