@@ -1,10 +1,7 @@
-import { BuilderPageIndicator } from '@/components/wizard/BuilderPageIndicator';
-
 export default function ResumeNewLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div className="oe-builder-polished">{children}</div>
-      <BuilderPageIndicator />
       <style dangerouslySetInnerHTML={{ __html: `
         .oe-builder-polished,
         .oe-builder-polished input,
