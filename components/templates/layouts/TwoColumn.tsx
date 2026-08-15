@@ -19,7 +19,6 @@ export function TwoColumnLayout({ data, settings, preset, activeSection }: { dat
   const info = data.personalInfo;
   const solid = preset.sidebarVariant === 'solid';
   const soft = preset.sidebarVariant === 'soft';
-  // activeSection is intentionally accepted here so ResumeDocument can pass the editor selection consistently across layouts.
   void activeSection;
 
   return <div className="flex min-h-full">
@@ -27,6 +26,6 @@ export function TwoColumnLayout({ data, settings, preset, activeSection }: { dat
       <div data-resume-section="personal" className="resume-preview-section">{preset.photoAllowed && info.photoUrl && <img src={info.photoUrl} alt="" className={`mb-4 h-20 w-20 rounded-full object-cover border-2 ${solid ? 'border-white/40' : 'border-neutral-200'}`} />}<h1 className="mb-1 text-[1.55em] font-bold leading-tight tracking-[-0.025em]">{info.fullName || 'Your Name'}</h1>{info.professionalTitle && <p className={`mb-4 text-[0.9em] ${solid ? 'text-white/80' : 'text-neutral-500'}`}>{info.professionalTitle}</p>}<ContactBlock data={data} /></div>
       <div className="flex flex-col gap-5">{sidebar.map((section) => <div key={section.id} data-resume-section={section.id} className="resume-preview-section break-inside-avoid"><h2 className="mb-2 text-[0.78em] font-bold uppercase tracking-[0.13em]" style={{ color: solid ? '#fff' : 'var(--accent)' }}>{getSectionTitle(section.id)}</h2><div className={solid ? 'text-white/90 [&_span]:text-white/90 [&_a]:text-white/90' : 'text-neutral-700'}>{renderSectionBody(section.id, data, true)}</div></div>)}</div>
     </aside>
-    <main className="flex-1 px-7 py-7" style={{ gap: 'var(--section-gap)' }}>{main.map((section) => <div key={section.id} data-resume-section={section.id} className="resume-preview-section mb-[var(--section-gap)] break-inside-avoid-page last:mb-0"><SectionHeading preset={preset}>{getSectionTitle(section.id)}</SectionHeading>{renderSectionBody(section.id, data)}</div>)}</main>
+    <main className="flex-1 px-7 py-7">{main.map((section) => <div key={section.id} data-resume-section={section.id} className="resume-preview-section mb-[var(--section-gap)] last:mb-0"><SectionHeading preset={preset}>{getSectionTitle(section.id)}</SectionHeading>{renderSectionBody(section.id, data)}</div>)}</main>
   </div>;
 }
