@@ -88,18 +88,6 @@ function CareerPartnerSection() {
   );
 }
 
-function CareerResourcesSection() {
-  const resources = [
-    ['Resume Writing', 'Learn how to structure a resume, strengthen your summary and present achievements clearly.', '/career-advice'],
-    ['Interview Preparation', 'Prepare for common interview questions, improve responses and communicate your experience with confidence.', '/career-advice'],
-    ['Job Search', 'Get practical guidance for applications, role targeting and making your resume fit the jobs you want.', '/career-advice'],
-    ['Career Development', 'Build stronger applications by understanding transferable skills, career paths and professional growth.', '/career-advice'],
-  ];
-  return (
-    <section className="py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Explore Career Resources</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Build your career like an expert.</h2></div><Link href="/career-advice" className="inline-flex items-center text-sm font-bold text-orange-700 hover:text-orange-800">View all career advice <ArrowRight className="ml-1 h-4 w-4" /></Link></div><div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{resources.map(([title,desc,href])=><Link href={href} key={title} className="group rounded-3xl border border-neutral-200 bg-white p-6 transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_24px_50px_-36px_rgba(249,115,22,.5)]"><div className="flex items-center justify-between"><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-orange-700">Resource</span><ArrowRight className="h-4 w-4 text-neutral-300 transition group-hover:translate-x-1 group-hover:text-orange-600" /></div><h3 className="mt-5 text-base font-bold text-neutral-950">{title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{desc}</p></Link>)}</div></div></section>
-  );
-}
-
 function CandidateFeedbackSection() {
   const [items, setItems] = useState<Array<{ id: string; rating: number; feedback: string; candidateName?: string }>>([]);
   useEffect(() => { fetch('/api/feedback/public', { cache: 'no-store' }).then((response) => response.ok ? response.json() : { feedback: [] }).then((payload) => setItems(payload.feedback ?? [])).catch(() => setItems([])); }, []);
@@ -118,7 +106,6 @@ export default function LandingPage() {
         <TemplateShowcase />
         <FreeAccessSection />
         <CareerPartnerSection />
-        <CareerResourcesSection />
         <CandidateFeedbackSection />
         <section id="faq" className="border-y border-black/[0.06] bg-neutral-50 py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8"><div className="text-center"><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">FAQ</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Questions, answered clearly.</h2></div><div className="mt-10 divide-y divide-neutral-200 overflow-hidden rounded-3xl border border-neutral-200 bg-white">{FAQS.map(([question,answer])=><details key={question} className="group px-5 py-5 sm:px-7"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-neutral-900"><span>{question}</span><ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" /></summary><p className="mt-3 max-w-3xl pr-8 text-sm leading-6 text-neutral-500">{answer}</p></details>)}</div></div></section>
         <section className="py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8"><div className="relative overflow-hidden rounded-[32px] bg-orange-500 px-6 py-14 text-center text-white shadow-[0_35px_90px_-50px_rgba(249,115,22,.7)] sm:px-12 sm:py-20"><div className="relative"><h2 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">Ready to build a resume you can send?</h2><p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/75 sm:text-base">Start with your real experience, improve what matters and export a clean A4 resume when it is ready.</p><Link href="/resume/new" className="mt-8 inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-bold text-orange-700 shadow-lg">Create my resume <ArrowRight className="ml-1 h-4 w-4" /></Link></div></div></div></section>
