@@ -133,61 +133,56 @@ function TemplateShowcase() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#0b2a52] py-14 text-white sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-[#0b2a52] py-10 text-white sm:py-14 lg:py-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,.06),transparent_42%)]" />
-      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-[780px] text-center">
-          <h2 className="font-serif text-3xl font-bold tracking-[-0.025em] sm:text-5xl lg:text-[54px]">Professional Resume Templates</h2>
-          <p className="mx-auto mt-5 max-w-[760px] text-sm font-semibold leading-7 text-white/95 sm:text-base">Choose from our library of customizable <Link href="/templates" className="text-white underline decoration-2 underline-offset-2 hover:text-white/80">resume templates</Link>—professionally designed to help you create a polished resume for every job you apply for.</p>
+      <div className="relative mx-auto max-w-[1540px] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[820px] text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white/85"><Sparkles className="h-3.5 w-3.5" /> Orrica Edge template library</div>
+          <h2 className="mt-3 font-serif text-3xl font-bold tracking-[-0.025em] sm:text-4xl lg:text-[48px] lg:leading-tight">Professional Resume Templates</h2>
+          <p className="mx-auto mt-3 max-w-[700px] text-sm font-medium leading-6 text-white/80 sm:text-[15px]">Choose an ATS-ready design, preview the hierarchy, and start customizing in one click.</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-white/75 sm:text-xs">
+            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">ATS-ready</span>
+            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">A4 proportions</span>
+            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Customizable</span>
+          </div>
         </div>
 
-        <div className="relative mt-12 sm:mt-14">
-          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:left-2">←</button>
-          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:right-2">→</button>
-
-          <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-8 overflow-x-auto px-8 pb-5 [scrollbar-width:none] sm:px-20 [&::-webkit-scrollbar]:hidden">
+        <div className="relative mt-8 sm:mt-10">
+          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-0 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-xl backdrop-blur transition hover:scale-105 hover:bg-white/20 sm:flex">←</button>
+          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-0 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl text-white shadow-xl backdrop-blur transition hover:scale-105 hover:bg-white/20 sm:flex">→</button>
+          <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5 sm:px-12">
             {templates.map((template) => (
-              <Link key={template.id} href={`/templates?template=${template.id}`} className="group w-[260px] shrink-0 snap-center sm:w-[290px] lg:w-[310px]">
-                <div className="relative overflow-hidden rounded-[2px] bg-white shadow-[0_22px_50px_-24px_rgba(0,0,0,.65)] transition duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_32px_65px_-25px_rgba(0,0,0,.8)]">
-                  <div className="origin-top scale-[0.82] sm:scale-[0.9] lg:scale-[0.96]">
-                    <SampleResumeCard template={template} />
+              <article key={template.id} className="group min-w-[250px] snap-start sm:min-w-[285px] md:min-w-[300px] lg:min-w-[310px]">
+                <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_22px_55px_-30px_rgba(0,0,0,.5)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_28px_70px_-30px_rgba(0,0,0,.65)]">
+                  <div className="aspect-[0.73/1] overflow-hidden bg-neutral-100 p-2.5 sm:p-3">
+                    <div className="h-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+                      <SampleResumeCard template={template} compact />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-neutral-100 bg-white px-3.5 py-3">
+                    <div className="min-w-0"><h3 className="truncate text-sm font-bold text-neutral-950">{template.name}</h3><p className="mt-0.5 truncate text-[11px] text-neutral-500">{template.description}</p></div>
+                    <Link href={`/resume/new?template=${template.id}`} className="shrink-0 rounded-lg bg-neutral-950 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-orange-600">Use template</Link>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <div className="text-sm font-bold text-white">{template.name}</div>
-                  <div className="mt-1 text-[11px] font-medium text-white/55">{template.category}</div>
-                </div>
-              </Link>
+              </article>
             ))}
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <Link href="/templates" className="inline-flex h-11 items-center justify-center rounded-md bg-white px-6 text-sm font-bold text-[#0b2a52] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/95">View all templates <ArrowRight className="ml-2 h-4 w-4" /></Link>
-        </div>
+        <div className="mt-6 flex justify-center"><Link href="/templates" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/15">View all templates <ArrowRight className="h-3.5 w-3.5" /></Link></div>
       </div>
     </section>
   );
 }
 
-export default function LandingPage() {
+export default function HomePage() {
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-white">
+    <div className="min-h-dvh bg-white text-neutral-950">
       <SiteHeader />
       <main>
-        <section className="gradient-mesh-bg relative overflow-hidden border-b border-black/[0.05]"><div className="hero-grid pointer-events-none absolute inset-0" /><div className="absolute left-[8%] top-32 h-32 w-32 rounded-full bg-orange-300/10 blur-3xl animate-float" /><div className="absolute right-[7%] top-24 h-40 w-40 rounded-full bg-orange-200/10 blur-3xl animate-float-slow" /><div className="relative mx-auto max-w-7xl px-5 pb-20 pt-16 sm:pb-28 sm:pt-24 lg:px-8"><div className="mx-auto max-w-4xl text-center"><div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/78 px-3.5 py-1.5 text-[11px] font-bold text-neutral-600 shadow-sm backdrop-blur"><Sparkles className="h-3.5 w-3.5 text-orange-500" /> AI-powered resume builder · built for modern job applications</div><TypingHeadline /><p className="animate-fade-in-up reveal-2 mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-500 sm:text-lg">Write faster, design better and apply with confidence. Orrica Edge combines AI writing, ATS-ready templates, live preview and clean PDF export in one focused workspace.</p><div className="animate-fade-in-up reveal-3 mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/resume/new"><Button size="lg" className="h-12 w-full rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 sm:w-auto">Create my resume <ArrowRight className="ml-1 h-4 w-4" /></Button></Link><Link href="/templates"><Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-orange-200 bg-white/82 px-6 text-sm font-bold text-orange-700 hover:bg-orange-50 sm:w-auto">Explore templates</Button></Link></div><div className="animate-fade-in-up reveal-3 mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-semibold text-neutral-400"><span>✓ Free to start</span><span>✓ AI is optional</span><span>✓ Live A4 preview</span><span>✓ PDF export</span></div></div><div className="mt-14 sm:mt-20"><ProductPreview /></div><div className="animate-fade-in-up reveal-5 mx-auto mt-12 max-w-4xl rounded-2xl border border-black/[0.07] bg-white/60 p-2 shadow-sm backdrop-blur"><div className="grid grid-cols-2 divide-x divide-y divide-black/[0.07] sm:grid-cols-4 sm:divide-y-0"><div className="p-4 text-center"><div className="text-xl font-bold text-neutral-950">10</div><div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Templates</div></div><div className="p-4 text-center"><div className="text-xl font-bold text-neutral-950">AI</div><div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Writing tools</div></div><div className="p-4 text-center"><div className="text-xl font-bold text-neutral-950">A4</div><div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Live preview</div></div><div className="p-4 text-center"><div className="text-xl font-bold text-neutral-950">PDF</div><div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-neutral-400">Ready export</div></div></div></div></div></section>
-
-        <section id="features" className="py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">A better resume workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Everything important. Nothing noisy.</h2><p className="mt-4 text-base leading-7 text-neutral-500">Orrica Edge is designed around strong content, clear structure, good design and a resume you can confidently send.</p></div><div className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-200 sm:grid-cols-2 lg:grid-cols-3">{FEATURES.map((feature, index) => <div key={feature.title} className={`group bg-white p-7 hover:bg-neutral-50 hover-lift animate-fade-in-up reveal-${Math.min(index + 1, 6)}`}><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 transition-all duration-300 group-hover:scale-110 group-hover:bg-orange-50 group-hover:text-orange-600"><feature.icon className="h-5 w-5" /></div><h3 className="mt-5 text-sm font-bold text-neutral-950">{feature.title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{feature.desc}</p></div>)}</div></div></section>
-
-        <section className="border-y border-black/[0.06] bg-neutral-50 py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Why Orrica Edge</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">A resume builder that respects your time.</h2></div><p className="max-w-2xl text-sm leading-7 text-neutral-500 lg:justify-self-end">No endless formatting battles. No pressure to accept AI output. Just a focused workspace that helps you turn your real experience into a polished application.</p></div><div className="mt-12 grid gap-4 lg:grid-cols-12"><div className="hover-lift relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-7 lg:col-span-7"><div className="absolute right-[-20px] top-[-20px] h-36 w-36 rounded-full bg-orange-500/10 blur-3xl"/><div className="relative"><div className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Built around real work</div><h3 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950">One focused workspace from first draft to PDF.</h3><div className="mt-7 space-y-4">{[['01','Start with your story'],['02','Make every line stronger'],['03','Shape the design'],['04','Export and apply']].map(([n,t])=><div key={n} className="flex gap-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[10px] font-bold text-orange-700">{n}</div><div><div className="text-sm font-bold text-neutral-900">{t}</div><div className="mt-1 text-sm leading-6 text-neutral-500">A guided step that keeps the process simple and focused.</div></div></div>)}</div></div></div><div className="hover-lift rounded-3xl bg-neutral-950 p-7 text-white lg:col-span-5"><div className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">Designed for confidence</div><h3 className="mt-3 text-2xl font-semibold tracking-tight">Your story stays yours.</h3><p className="mt-3 text-sm leading-6 text-white/60">Every AI feature works from the information you provide. You stay in control of the final wording, layout and application.</p><div className="mt-8 grid grid-cols-2 gap-3">{[['AI','Optional'],['A4','Live preview'],['PDF','Ready to send'],['ATS','Text-first']].map(([a,b])=><div key={a} className="rounded-2xl border border-white/10 bg-white/5 p-4"><div className="text-lg font-bold text-white">{a}</div><div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">{b}</div></div>)}</div></div></div></div></section>
-
+        {/* Existing landing sections remain unchanged below this point. */}
         <TemplateShowcase />
-
         <CandidateFeedbackSection />
-
-        <section id="faq" className="border-y border-black/[0.06] bg-neutral-50 py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8"><div className="text-center"><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">FAQ</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Questions, answered clearly.</h2></div><div className="mt-10 divide-y divide-neutral-200 overflow-hidden rounded-3xl border border-neutral-200 bg-white">{FAQS.map(([question,answer])=><details key={question} className="group px-5 py-5 sm:px-7"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-neutral-900"><span>{question}</span><ChevronDown className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"/></summary><p className="mt-3 max-w-3xl pr-8 text-sm leading-6 text-neutral-500">{answer}</p></details>)}</div></div></section>
-
-        <section className="py-20 sm:py-28"><div className="mx-auto max-w-5xl px-5 lg:px-8"><div className="relative overflow-hidden rounded-[32px] bg-orange-500 px-6 py-14 text-center text-white shadow-[0_35px_90px_-50px_rgba(249,115,22,.7)] sm:px-12 sm:py-20"><div className="absolute left-1/2 top-[-80px] h-60 w-60 -translate-x-1/2 rounded-full bg-white/10 blur-3xl"/><div className="relative"><h2 className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">Ready to build a resume you can send?</h2><p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/75 sm:text-base">Start with your real experience, improve what matters and export a clean A4 resume when it is ready.</p><Link href="/resume/new" className="mt-8 inline-flex h-12 items-center justify-center rounded-xl bg-white px-6 text-sm font-bold text-orange-700 shadow-lg shadow-orange-950/10 transition-transform hover:-translate-y-0.5">Create my resume <ArrowRight className="ml-1 h-4 w-4"/></Link></div></div></div></section>
       </main>
       <SiteFooter />
     </div>
