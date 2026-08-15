@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { EditorShell } from '@/components/editor/EditorShell';
+import { MonsterStyleEditorShell } from '@/components/editor/MonsterStyleEditorShell';
 import {
   DEFAULT_SETTINGS,
   EMPTY_RESUME_DATA,
@@ -33,15 +33,14 @@ export default async function ResumeEditorPage({
   }
 
   return (
-    <EditorShell
+    <MonsterStyleEditorShell
       resumeId={resume.id}
       title={resume.title}
       data={{ ...EMPTY_RESUME_DATA, ...resume.resume_data }}
       settings={{
         ...DEFAULT_SETTINGS,
         ...resume.settings,
-        template:
-          resume.template ?? DEFAULT_SETTINGS.template,
+        template: resume.template ?? DEFAULT_SETTINGS.template,
       }}
     />
   );
