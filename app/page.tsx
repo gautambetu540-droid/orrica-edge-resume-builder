@@ -133,11 +133,11 @@ function TemplateShowcase() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbfd_0%,#f3f7fa_100%)] py-12 text-slate-900 sm:py-16 lg:py-20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,.12),transparent_42%)]" />
-      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">
+    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#fff8f1_0%,#fffaf7_52%,#fff3e8_100%)] py-12 text-neutral-900 sm:py-16 lg:py-20">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,.16),transparent_42%)]" />
+      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 [&_[class*="text-sky-"]]:!text-orange-600 [&_[class*="text-blue-"]]:!text-orange-600 [&_[class*="text-teal-"]]:!text-orange-600 [&_[class*="border-sky-"]]:!border-orange-200 [&_[class*="border-blue-"]]:!border-orange-200 [&_[class*="border-teal-"]]:!border-orange-200 [&_[class*="bg-sky-"]]:!bg-orange-50 [&_[class*="bg-blue-"]]:!bg-orange-50 [&_[class*="bg-teal-"]]:!bg-orange-50">
         <div className="mx-auto max-w-[820px] text-center">
-          <h2 className="font-serif text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl lg:text-[50px]">Professional Resume Templates</h2>
+          <h2 className="font-serif text-3xl font-bold tracking-[-0.035em] text-neutral-950 sm:text-4xl lg:text-[50px]">Professional Resume Templates</h2>
           <p className="mx-auto mt-3 max-w-[720px] text-sm font-medium leading-6 text-orange-800/80 sm:text-[15px]">Choose an ATS-friendly, recruiter-ready <Link href="/templates" className="font-semibold text-orange-700 underline decoration-orange-200 decoration-2 underline-offset-4 hover:text-orange-800">resume template</Link> and customize it for the role you want.</p>
         </div>
 
