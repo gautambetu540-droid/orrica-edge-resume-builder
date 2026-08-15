@@ -24,6 +24,195 @@ export function SampleResumeCard({
   const fontFamily = serif ? "Georgia, 'Times New Roman', serif" : "var(--font-source-sans-3), Arial, sans-serif";
   const shellStyle = { fontFamily } as React.CSSProperties;
 
+  const showcaseStyles = (
+    <style jsx global>{`
+      /* Homepage-only template showcase refinement. The selector is anchored to
+         the carousel so these rules do not affect resume previews elsewhere. */
+      section:has(#oe-template-carousel) {
+        padding-top: 3.5rem !important;
+        padding-bottom: 4rem !important;
+      }
+
+      section:has(#oe-template-carousel) > div {
+        max-width: 1320px !important;
+      }
+
+      section:has(#oe-template-carousel) h2 {
+        max-width: 920px !important;
+        margin-inline: auto !important;
+        font-family: var(--oe-font-ui) !important;
+        font-size: clamp(2rem, 3.3vw, 2.65rem) !important;
+        line-height: 1.04 !important;
+        letter-spacing: -.045em !important;
+      }
+
+      section:has(#oe-template-carousel) h2 + p {
+        max-width: 760px !important;
+        margin-top: .75rem !important;
+        font-size: .9rem !important;
+        line-height: 1.55 !important;
+        font-weight: 500 !important;
+        color: rgba(255,255,255,.78) !important;
+      }
+
+      /* Replace the generic SaaS sentence visually with a more direct Orrica
+         benefit statement while keeping the existing templates link clickable. */
+      section:has(#oe-template-carousel) h2 + p {
+        font-size: 0 !important;
+        line-height: 1.55 !important;
+      }
+      section:has(#oe-template-carousel) h2 + p::before {
+        content: 'Choose an ATS-friendly, recruiter-ready design and build a polished, job-ready resume for the role you want.';
+        font-size: .9rem;
+        line-height: 1.55;
+        font-weight: 500;
+        color: rgba(255,255,255,.78);
+      }
+      section:has(#oe-template-carousel) h2 + p a {
+        display: inline-block;
+        width: 0;
+        overflow: hidden;
+        font-size: 0 !important;
+        text-decoration: none !important;
+        vertical-align: middle;
+      }
+
+      section:has(#oe-template-carousel) > div > div:has(> #oe-template-carousel) {
+        margin-top: 1.6rem !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel {
+        display: grid !important;
+        grid-auto-flow: column !important;
+        grid-auto-columns: calc((100% - 3.75rem) / 4) !important;
+        gap: 1.25rem !important;
+        width: 100% !important;
+        padding: .35rem .15rem .8rem !important;
+        margin: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scroll-padding-inline: .15rem !important;
+        scroll-snap-type: x mandatory !important;
+        overscroll-behavior-inline: contain;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        scroll-snap-align: start !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:first-child {
+        height: 430px !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(15,23,42,.10);
+        box-shadow: 0 22px 45px -28px rgba(0,0,0,.65) !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:first-child > div {
+        transform: none !important;
+        transform-origin: top center !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:first-child > div > div {
+        min-height: 100%;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:last-child {
+        margin-top: .7rem !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:last-child > div:first-child {
+        font-size: .88rem !important;
+        line-height: 1.25 !important;
+        font-weight: 700 !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel > a > div:last-child > div:last-child {
+        margin-top: .25rem !important;
+        font-size: .68rem !important;
+        color: rgba(255,255,255,.58) !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel + * {
+        margin-top: 1.25rem !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel ~ div a {
+        height: 2.65rem !important;
+        border-radius: .7rem !important;
+      }
+
+      section:has(#oe-template-carousel) #oe-template-carousel ~ div a:first-child {
+        padding-inline: 1.25rem !important;
+        font-size: .78rem !important;
+      }
+
+      @media (min-width: 1024px) {
+        section:has(#oe-template-carousel) {
+          padding-top: 3.75rem !important;
+          padding-bottom: 4.25rem !important;
+        }
+      }
+
+      @media (min-width: 768px) and (max-width: 1023px) {
+        section:has(#oe-template-carousel) #oe-template-carousel {
+          grid-auto-columns: calc((100% - 1.25rem) / 2) !important;
+          gap: 1.25rem !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel > a > div:first-child {
+          height: 410px !important;
+        }
+      }
+
+      @media (max-width: 767px) {
+        section:has(#oe-template-carousel) {
+          padding-top: 2.75rem !important;
+          padding-bottom: 3.25rem !important;
+        }
+        section:has(#oe-template-carousel) > div {
+          padding-inline: 1rem !important;
+        }
+        section:has(#oe-template-carousel) h2 {
+          max-width: 22rem !important;
+          font-size: 1.9rem !important;
+          line-height: 1.05 !important;
+        }
+        section:has(#oe-template-carousel) h2 + p::before {
+          font-size: .82rem;
+          line-height: 1.5;
+        }
+        section:has(#oe-template-carousel) > div > div:has(> #oe-template-carousel) {
+          margin-top: 1.15rem !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel {
+          grid-auto-columns: 100% !important;
+          gap: .85rem !important;
+          padding-inline: 0 !important;
+          scroll-padding-inline: 0 !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel > a > div:first-child {
+          height: 390px !important;
+          border-radius: 12px !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel > a > div:last-child > div:first-child {
+          font-size: .85rem !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel > a > div:last-child > div:last-child {
+          font-size: .65rem !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel ~ div {
+          margin-top: .9rem !important;
+        }
+        section:has(#oe-template-carousel) #oe-template-carousel ~ div a {
+          height: 2.55rem !important;
+          font-size: .76rem !important;
+        }
+      }
+    `}</style>
+  );
+
   const body = (
     <div className={compact ? 'p-3 text-[6px] leading-[1.22]' : 'p-6 text-[10px] leading-[1.28]'} style={shellStyle}>
       <div className={`flex items-start justify-between gap-3 ${isTeal ? 'border-b-0' : ''}`}>
@@ -79,11 +268,12 @@ export function SampleResumeCard({
         </aside>
         <div className="min-w-0 flex-1">{body}</div>
         {scoreBadge && <ScoreBadge accent={resolvedAccent} />}
+        {showcaseStyles}
       </div>
     );
   }
 
-  return <div className="relative h-full w-full overflow-hidden bg-white">{body}{scoreBadge && <ScoreBadge accent={resolvedAccent} />}</div>;
+  return <div className="relative h-full w-full overflow-hidden bg-white">{body}{scoreBadge && <ScoreBadge accent={resolvedAccent} />}{showcaseStyles}</div>;
 }
 
 function SectionTitle({ accent, compact, children }: { accent: string; compact: boolean; children: React.ReactNode }) {
