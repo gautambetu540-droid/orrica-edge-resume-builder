@@ -73,6 +73,120 @@ export function DownloadButton({ resumeId, fileName, variant = 'default', classN
         <span>{downloading ? 'Creating PDF…' : downloaded ? 'Downloaded' : 'Download PDF'}</span>
       </Button>
       <DownloadFeedback resumeId={resumeId} open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <style jsx global>{`
+        @media (max-width: 767px) {
+          .oe-editor-shell {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell .oe-editor-header {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 56px !important;
+            padding: 0 10px !important;
+            gap: 7px !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell .oe-editor-header > div:nth-of-type(2) {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell .oe-editor-header input[aria-label="Resume name"] {
+            display: block !important;
+            width: 100% !important;
+            max-width: 155px !important;
+            min-width: 0 !important;
+            font-size: 13px !important;
+            line-height: 18px !important;
+          }
+
+          .oe-editor-shell .oe-editor-header .inline-flex {
+            flex: 0 0 auto !important;
+            white-space: nowrap !important;
+          }
+
+          .oe-editor-shell > .flex.min-h-0.flex-1.flex-col.md\\:hidden {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .oe-editor-shell > .flex.min-h-0.flex-1.flex-col.md\\:hidden > .flex-1.min-h-0 {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+          }
+
+          .oe-editor-shell .oe-mobile-tabs {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+          }
+          .oe-editor-shell .oe-mobile-tabs::-webkit-scrollbar { display: none !important; }
+
+          /* The edit form itself must never create a second horizontal page. */
+          .oe-editor-shell .oe-mobile-tabs + div {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+          }
+
+          .oe-editor-shell .oe-mobile-tabs + div input,
+          .oe-editor-shell .oe-mobile-tabs + div select,
+          .oe-editor-shell .oe-mobile-tabs + div textarea {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+          }
+
+          .oe-editor-shell .oe-mobile-tabs + div > * {
+            max-width: 100% !important;
+            min-width: 0 !important;
+          }
+
+          .oe-editor-shell .oe-mobile-dock {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 66px !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            overflow: hidden !important;
+            padding-top: 3px !important;
+            background: rgba(255,255,255,.98) !important;
+            box-shadow: 0 -10px 28px -24px rgba(70,35,10,.35) !important;
+          }
+
+          .oe-editor-shell .oe-mobile-nav {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            min-height: 58px !important;
+            padding: 3px 2px !important;
+            overflow: hidden !important;
+            gap: 2px !important;
+          }
+
+          .oe-editor-shell .oe-mobile-nav svg { width: 20px !important; height: 20px !important; flex: 0 0 auto !important; }
+          .oe-editor-shell .oe-mobile-nav span { font-size: 9px !important; line-height: 13px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 100% !important; }
+        }
+      `}</style>
     </>
   );
 }
