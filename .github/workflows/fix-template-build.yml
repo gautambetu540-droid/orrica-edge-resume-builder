@@ -1,0 +1,45 @@
+name: Fix template showcase build
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix invalid JSX class and add scoped orange theme
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          page = Path('app/page.tsx')
+          text = page.read_text()
+          bad = 'className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 [&_[class*=\"text-sky-\"]]:!text-orange-600 [&_[class*=\"text-blue-\"]]:!text-orange-600 [&_[class*=\"text-teal-\"]]:!text-orange-600 [&_[class*=\"border-sky-\"]]:!border-orange-200 [&_[class*=\"border-blue-\"]]:!border-orange-200 [&_[class*=\"border-teal-\"]]:!border-orange-200 [&_[class*=\"bg-sky-\"]]:!bg-orange-50 [&_[class*=\"bg-blue-\"]]:!bg-orange-50 [&_[class*=\"bg-teal-\"]]:!bg-orange-50"'
+          good = 'className="template-showcase-inner relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10"'
+          if bad not in text:
+              raise SystemExit('Expected invalid JSX class was not found')
+          page.write_text(text.replace(bad, good, 1))
+
+          css = Path('app/globals.css')
+          c = css.read_text()
+          rules = '''\n\n/* Scoped orange theme for the homepage resume template showcase. */\n.template-showcase-inner [class*="text-sky-"],\n.template-showcase-inner [class*="text-blue-"],\n.template-showcase-inner [class*="text-teal-"] { color: #ea580c !important; }\n.template-showcase-inner [class*="border-sky-"],\n.template-showcase-inner [class*="border-blue-"],\n.template-showcase-inner [class*="border-teal-"] { border-color: #fed7aa !important; }\n.template-showcase-inner [class*="bg-sky-"],\n.template-showcase-inner [class*="bg-blue-"],\n.template-showcase-inner [class*="bg-teal-"] { background-color: #fff7ed !important; }\n.template-showcase-inner [class*="group-hover:border-sky-"] { border-color: #fdba74 !important; }\n'''
+          if 'Scoped orange theme for the homepage resume template showcase.' not in c:
+              css.write_text(c.rstrip() + rules)
+          PY
+      - name: Verify build
+        run: |
+          npm ci
+          npm run build
+      - name: Commit fix and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/globals.css
+          git rm .github/workflows/fix-template-build.yml
+          git commit -m "fix: repair template showcase JSX and orange theme"
+          git push
