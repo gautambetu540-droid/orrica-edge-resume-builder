@@ -55,20 +55,20 @@ const GLOBAL_DESIGN_STYLES = `
     --oe-font-weight-semibold: 600;
     --oe-font-weight-bold: 700;
     --oe-color-black: #000000;
-    --oe-color-primary: #6E46AE;
-    --oe-color-primary-hover: #5D389C;
-    --oe-color-secondary: #B051AA;
-    --oe-color-mint: #E0F3F2;
-    --oe-color-lavender: #E9E7F7;
+    --oe-color-primary: #C95F2D;
+    --oe-color-primary-hover: #B95329;
+    --oe-color-secondary: #D97845;
+    --oe-color-soft-orange: #F6E7DF;
+    --oe-color-light-orange: #FBF3EE;
     --oe-color-gray: #F0F0F0;
     --oe-color-white: #FFFFFF;
     --oe-color-dark: #000000;
     --oe-page: #FFFFFF;
     --oe-surface: #FFFFFF;
     --oe-line: #F0F0F0;
-    --oe-ring: rgba(110,70,174,.16);
-    --oe-shadow-sm: 0 8px 24px -18px rgba(0,0,0,.20);
-    --oe-shadow-md: 0 24px 60px -38px rgba(0,0,0,.24);
+    --oe-ring: rgba(201,95,45,.16);
+    --oe-shadow-sm: 0 8px 24px -18px rgba(0,0,0,.18);
+    --oe-shadow-md: 0 24px 60px -38px rgba(0,0,0,.22);
   }
 
   html, body, button, input, textarea, select, option, a, label, table, th, td {
@@ -93,15 +93,13 @@ const GLOBAL_DESIGN_STYLES = `
 
   .oe-primary-button, button.bg-orange-500, button.bg-orange-600, .bg-orange-500 { background-color: var(--oe-color-primary) !important; }
   .oe-primary-button:hover, button.bg-orange-500:hover, button.bg-orange-600:hover, .bg-orange-500:hover { background-color: var(--oe-color-primary-hover) !important; }
-  .text-orange-500, .text-orange-600, .text-orange-700 { color: var(--oe-color-primary) !important; }
+  .text-orange-400, .text-orange-500, .text-orange-600, .text-orange-700 { color: var(--oe-color-primary) !important; }
   .hover\\:text-orange-400:hover, .hover\\:text-orange-500:hover, .hover\\:text-orange-600:hover, .hover\\:text-orange-700:hover { color: var(--oe-color-secondary) !important; }
-  .bg-orange-50, .bg-orange-100 { background-color: var(--oe-color-lavender) !important; }
+  .bg-orange-50, .bg-orange-100 { background-color: var(--oe-color-soft-orange) !important; }
 
-  /* Consistent shared landing header logo sizing. */
   .oe-glass-nav img[alt*="Orrica Edge"] { height: 32px !important; width: auto !important; max-width: 150px !important; object-fit: contain !important; object-position: left center !important; }
   @media (max-width: 767px) { .oe-glass-nav img[alt*="Orrica Edge"] { height: 26px !important; max-width: 124px !important; } }
 
-  /* Keep standalone resume-flow logos centered and visually consistent. */
   .oe-intro img[src*="logo-orricaedge"], .oe-choice img[src*="logo-orricaedge"], .oe-upload img[src*="logo-orricaedge"], .oe-resume-wizard img[src*="logo-orricaedge"] { height: 30px !important; width: auto !important; max-width: 150px !important; object-fit: contain !important; object-position: center !important; }
   @media (max-width: 767px) {
     .oe-intro img[src*="logo-orricaedge"], .oe-choice img[src*="logo-orricaedge"], .oe-upload img[src*="logo-orricaedge"], .oe-resume-wizard img[src*="logo-orricaedge"] { height: 26px !important; max-width: 132px !important; }
