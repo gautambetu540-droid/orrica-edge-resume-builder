@@ -13,28 +13,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Fix invalid JSX class and add scoped orange theme
         run: |
           python - <<'PY'
           from pathlib import Path
+
           page = Path('app/page.tsx')
-          text = page.read_text()
-          bad = 'className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10 [&_[class*=\"text-sky-\"]]:!text-orange-600 [&_[class*=\"text-blue-\"]]:!text-orange-600 [&_[class*=\"text-teal-\"]]:!text-orange-600 [&_[class*=\"border-sky-\"]]:!border-orange-200 [&_[class*=\"border-blue-\"]]:!border-orange-200 [&_[class*=\"border-teal-\"]]:!border-orange-200 [&_[class*=\"bg-sky-\"]]:!bg-orange-50 [&_[class*=\"bg-blue-\"]]:!bg-orange-50 [&_[class*=\"bg-teal-\"]]:!bg-orange-50"'
-          good = 'className="template-showcase-inner relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10"'
-          if bad not in text:
-              raise SystemExit('Expected invalid JSX class was not found')
-          page.write_text(text.replace(bad, good, 1))
+          lines = page.read_text().splitlines()
+          target = 'className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10'
+          replacement = '      <div className="template-showcase-inner relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">'
+
+          replaced = False
+          for i, line in enumerate(lines):
+              if target in line and '[class*=' in line:
+                  lines[i] = replacement
+                  replaced = True
+                  break
+
+          if not replaced:
+              raise SystemExit('Expected invalid template showcase class was not found')
+
+          page.write_text('\n'.join(lines) + '\n')
 
           css = Path('app/globals.css')
           c = css.read_text()
-          rules = '''\n\n/* Scoped orange theme for the homepage resume template showcase. */\n.template-showcase-inner [class*="text-sky-"],\n.template-showcase-inner [class*="text-blue-"],\n.template-showcase-inner [class*="text-teal-"] { color: #ea580c !important; }\n.template-showcase-inner [class*="border-sky-"],\n.template-showcase-inner [class*="border-blue-"],\n.template-showcase-inner [class*="border-teal-"] { border-color: #fed7aa !important; }\n.template-showcase-inner [class*="bg-sky-"],\n.template-showcase-inner [class*="bg-blue-"],\n.template-showcase-inner [class*="bg-teal-"] { background-color: #fff7ed !important; }\n.template-showcase-inner [class*="group-hover:border-sky-"] { border-color: #fdba74 !important; }\n'''
+          rules = '''
+
+/* Scoped orange theme for the homepage resume template showcase. */
+.template-showcase-inner [class*="text-sky-"],
+.template-showcase-inner [class*="text-blue-"],
+.template-showcase-inner [class*="text-teal-"] { color: #ea580c !important; }
+.template-showcase-inner [class*="border-sky-"],
+.template-showcase-inner [class*="border-blue-"],
+.template-showcase-inner [class*="border-teal-"] { border-color: #fed7aa !important; }
+.template-showcase-inner [class*="bg-sky-"],
+.template-showcase-inner [class*="bg-blue-"],
+.template-showcase-inner [class*="bg-teal-"] { background-color: #fff7ed !important; }
+.template-showcase-inner [class*="group-hover:border-sky-"] { border-color: #fdba74 !important; }
+'''
           if 'Scoped orange theme for the homepage resume template showcase.' not in c:
               css.write_text(c.rstrip() + rules)
           PY
+
       - name: Verify build
         run: |
           npm install
           npm run build
+
       - name: Commit fix and remove workflow
         run: |
           git config user.name "github-actions[bot]"
