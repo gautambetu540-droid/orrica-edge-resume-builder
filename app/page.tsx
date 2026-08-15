@@ -80,7 +80,7 @@ function ProductPreview() {
 }
 
 function CandidateFeedbackSection() {
-  const [items, setItems] = useState<Array<{ id: string; rating: number; feedback: string }>>([]);
+  const [items, setItems] = useState<Array<{ id: string; rating: number; feedback: string; candidateName?: string }>>([]);
 
   useEffect(() => {
     fetch('/api/feedback/public', { cache: 'no-store' })
@@ -90,23 +90,23 @@ function CandidateFeedbackSection() {
   }, []);
 
   return (
-    <section id="feedback" className="border-y border-black/[0.06] bg-white py-20 sm:py-28">
+    <section id="feedback" className="relative overflow-hidden border-y border-orange-100 bg-[linear-gradient(180deg,#fffaf6_0%,#ffffff_55%,#fff7f0_100%)] py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50/70 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700"><Sparkles className="h-3.5 w-3.5" /> Candidate feedback</div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-orange-700"><Sparkles className="h-3.5 w-3.5" /> Candidate feedback</div>
           <h2 className="mt-4 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">What candidates say after building their resume.</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-neutral-500 sm:text-base">Real feedback from candidates helps us keep the experience faster, clearer and more useful.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-orange-800/75 sm:text-base">Real feedback from candidates helps us build a faster, clearer and more useful resume experience.</p>
         </div>
         {items.length > 0 ? (
           <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
-              <article key={item.id} className="group relative overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:bg-white hover:shadow-[0_24px_60px_-35px_rgba(15,23,42,.35)]">
+              <article key={item.id} className="group relative overflow-hidden rounded-3xl border border-orange-100 bg-white p-6 shadow-[0_18px_45px_-32px_rgba(249,115,22,.28)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300 hover:bg-white hover:shadow-[0_28px_65px_-35px_rgba(249,115,22,.30)]">
                 <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-orange-500/10 blur-2xl transition-transform duration-500 group-hover:scale-150" />
                 <div className="relative">
                   <div className="flex items-center gap-1" aria-label={`${item.rating} out of 5 stars`}>{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={`h-4 w-4 ${index < item.rating ? 'fill-orange-400 text-orange-400' : 'text-neutral-200'}`} />)}</div>
                   <div className="mt-5 text-3xl leading-none text-orange-400">“</div>
                   <p className="mt-1 text-[15px] leading-7 text-neutral-700">{item.feedback}</p>
-                  <div className="mt-6 flex items-center gap-3 border-t border-neutral-200 pt-4"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950 text-xs font-bold text-white">C</div><div><div className="text-xs font-bold text-neutral-900">Candidate feedback</div><div className="text-[10px] text-neutral-400">Shared after PDF download</div></div></div>
+                  <div className="mt-6 flex items-center gap-3 border-t border-orange-100 pt-4"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">{(item.candidateName || "Candidate").trim().charAt(0).toUpperCase()}</div><div><div className="text-xs font-bold text-neutral-950">{item.candidateName || "Candidate"}</div><div className="text-[10px] font-medium text-orange-700/70">Candidate · Shared after PDF download</div></div></div>
                 </div>
               </article>
             ))}
@@ -134,16 +134,16 @@ function TemplateShowcase() {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbfd_0%,#f3f7fa_100%)] py-12 text-slate-900 sm:py-16 lg:py-20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(14,165,233,.10),transparent_42%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,.12),transparent_42%)]" />
       <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-[820px] text-center">
           <h2 className="font-serif text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl lg:text-[50px]">Professional Resume Templates</h2>
-          <p className="mx-auto mt-3 max-w-[720px] text-sm font-medium leading-6 text-slate-500 sm:text-[15px]">Choose an ATS-friendly, recruiter-ready <Link href="/templates" className="font-semibold text-sky-700 underline decoration-sky-200 decoration-2 underline-offset-4 hover:text-sky-800">resume template</Link> and customize it for the role you want.</p>
+          <p className="mx-auto mt-3 max-w-[720px] text-sm font-medium leading-6 text-orange-800/80 sm:text-[15px]">Choose an ATS-friendly, recruiter-ready <Link href="/templates" className="font-semibold text-orange-700 underline decoration-orange-200 decoration-2 underline-offset-4 hover:text-orange-800">resume template</Link> and customize it for the role you want.</p>
         </div>
 
         <div className="relative mt-9 sm:mt-11">
-          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold text-slate-700 shadow-[0_10px_28px_-18px_rgba(15,23,42,.45)] transition hover:-translate-x-0.5 hover:border-sky-200 hover:text-sky-700 sm:left-2">←</button>
-          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold text-slate-700 shadow-[0_10px_28px_-18px_rgba(15,23,42,.45)] transition hover:translate-x-0.5 hover:border-sky-200 hover:text-sky-700 sm:right-2">→</button>
+          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-orange-100 bg-white text-xl font-semibold text-orange-700 shadow-[0_10px_28px_-18px_rgba(249,115,22,.30)] transition hover:-translate-x-0.5 hover:border-orange-300 hover:text-orange-800 sm:left-2">←</button>
+          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-orange-100 bg-white text-xl font-semibold text-orange-700 shadow-[0_10px_28px_-18px_rgba(249,115,22,.30)] transition hover:translate-x-0.5 hover:border-orange-300 hover:text-orange-800 sm:right-2">→</button>
 
           <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-12 pb-5 [scrollbar-width:none] sm:gap-6 sm:px-20 [&::-webkit-scrollbar]:hidden">
             {templates.map((template) => (

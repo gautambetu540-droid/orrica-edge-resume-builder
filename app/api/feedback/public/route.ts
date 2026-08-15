@@ -7,7 +7,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('feedback')
-    .select('id, rating, feedback, created_at')
+    .select('id, candidate_name, rating, feedback, created_at')
     .neq('feedback', '')
     .order('created_at', { ascending: false })
     .limit(6);

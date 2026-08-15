@@ -33,9 +33,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  let candidateName = '';
+  if (parsed.data.resumeId && user) {
+    const { data: resume } = await supabase
+      .from('resumes')
+      .select('resume_data')
+      .eq('id', parsed.data.resumeId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const personalInfo = (resume?.resume_data as { personalInfo?: { fullName?: string } } | null)?.personalInfo;
+    candidateName = personalInfo?.fullName?.trim() ?? '';
+  }
+
   const { error } = await supabase.from('feedback').insert({
     user_id: user?.id ?? null,
     resume_id: parsed.data.resumeId ?? null,
+    candidate_name: candidateName,
     rating: parsed.data.rating,
     feedback: parsed.data.feedback,
   });
