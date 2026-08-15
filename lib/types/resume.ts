@@ -92,36 +92,19 @@ export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
 ];
 
 export type TemplateId =
-  | 'modern-ats'
-  | 'classic-professional'
-  | 'minimal'
-  | 'executive'
-  | 'modern-two-column'
-  | 'fresh-graduate'
-  | 'bold-header'
-  | 'elegant-serif'
-  | 'compact-ats'
-  | 'creative-sidebar'
-  | 'clean-corporate'
-  | 'tech-modern'
-  | 'simple-chronological'
-  | 'classic-two-column'
-  | 'creative-modern'
-  | 'dark-executive'
-  | 'blue-accent'
-  | 'orange-accent'
-  | 'editorial-clean'
-  | 'timeline-pro';
+  | 'modern-ats' | 'classic-professional' | 'minimal' | 'executive' | 'modern-two-column'
+  | 'fresh-graduate' | 'bold-header' | 'elegant-serif' | 'compact-ats' | 'creative-sidebar'
+  | 'clean-corporate' | 'tech-modern' | 'simple-chronological' | 'classic-two-column'
+  | 'creative-modern' | 'dark-executive' | 'blue-accent' | 'orange-accent' | 'editorial-clean'
+  | 'timeline-pro'
+  | 'fresher-01' | 'fresher-02' | 'fresher-03' | 'fresher-04' | 'fresher-05' | 'fresher-06' | 'fresher-07' | 'fresher-08' | 'fresher-09' | 'fresher-10'
+  | 'photo-01' | 'photo-02' | 'photo-03' | 'photo-04' | 'photo-05' | 'photo-06' | 'photo-07' | 'photo-08' | 'photo-09' | 'photo-10'
+  | 'it-01' | 'it-02' | 'it-03' | 'it-04' | 'it-05' | 'it-06' | 'it-07' | 'it-08' | 'it-09' | 'it-10'
+  | 'bpo-01' | 'bpo-02' | 'bpo-03' | 'bpo-04' | 'bpo-05' | 'bpo-06' | 'bpo-07' | 'bpo-08' | 'bpo-09' | 'bpo-10';
 
 export type ResumeFont =
-  | 'proxima-nova'
-  | 'arial'
-  | 'times-new-roman'
-  | 'inter'
-  | 'source-sans-3'
-  | 'ibm-plex-sans'
-  | 'merriweather'
-  | 'georgia';
+  | 'proxima-nova' | 'arial' | 'times-new-roman' | 'inter' | 'source-sans-3'
+  | 'ibm-plex-sans' | 'merriweather' | 'georgia';
 
 export interface ResumeSettings {
   template: TemplateId;
@@ -132,6 +115,9 @@ export interface ResumeSettings {
   sectionSpacing: number;
   margin: number;
   accentColor: string;
+  textColor?: string;
+  headingColor?: string;
+  backgroundColor?: string;
   sections: SectionConfig[];
 }
 
@@ -149,7 +135,10 @@ export const DEFAULT_SETTINGS: ResumeSettings = {
   lineSpacing: 1.35,
   sectionSpacing: 16,
   margin: 16,
-  accentColor: '#F97316',
+  accentColor: '#2563EB',
+  textColor: '#1F2937',
+  headingColor: '#111827',
+  backgroundColor: '#FFFFFF',
   sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })),
 };
 
@@ -168,19 +157,11 @@ export interface ResumeData {
 
 export const EMPTY_RESUME_DATA: ResumeData = {
   personalInfo: { fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' },
-  summary: '',
-  experience: [],
-  education: [],
+  summary: '', experience: [], education: [], projects: [], certifications: [], languages: [], achievements: [],
   skills: [
-    { category: 'technical', items: [] },
-    { category: 'soft', items: [] },
-    { category: 'tools', items: [] },
-    { category: 'languages', items: [] },
+    { category: 'technical', items: [] }, { category: 'soft', items: [] },
+    { category: 'tools', items: [] }, { category: 'languages', items: [] },
   ],
-  projects: [],
-  certifications: [],
-  languages: [],
-  achievements: [],
 };
 
 export interface Resume {
