@@ -1,0 +1,75 @@
+/* Orrica Edge template showcase polish: readable copy, consistent heading font, and four-up desktop spacing. */
+.template-showcase-inner h2 {
+  font-family: var(--oe-font-heading) !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+.template-showcase-inner > div:first-child > p {
+  color: #3f3f46 !important;
+  font-family: var(--oe-font-family) !important;
+  font-weight: 500 !important;
+}
+
+.template-showcase-inner > div:first-child > p a {
+  color: #C95F2D !important;
+}
+
+#oe-template-carousel {
+  gap: 20px !important;
+  padding-left: 48px !important;
+  padding-right: 48px !important;
+}
+
+#oe-template-carousel > a {
+  width: auto !important;
+  flex: 0 0 calc((100% - 60px) / 4) !important;
+}
+
+#oe-template-carousel > a > div:first-child {
+  border-color: #e5e7eb !important;
+  box-shadow: 0 14px 34px -26px rgba(0,0,0,.28) !important;
+}
+
+#oe-template-carousel > a:hover > div:first-child {
+  border-color: rgba(201,95,45,.35) !important;
+  box-shadow: 0 22px 48px -28px rgba(201,95,45,.24) !important;
+}
+
+#oe-template-carousel + * {
+  font-family: var(--oe-font-family) !important;
+}
+
+@media (max-width: 1023px) {
+  #oe-template-carousel {
+    gap: 16px !important;
+    padding-left: 42px !important;
+    padding-right: 42px !important;
+  }
+
+  #oe-template-carousel > a {
+    flex-basis: calc((100% - 32px) / 3) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .template-showcase-inner > div:first-child > h2 {
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+  }
+
+  .template-showcase-inner > div:first-child > p {
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  #oe-template-carousel {
+    gap: 14px !important;
+    padding-left: 38px !important;
+    padding-right: 38px !important;
+  }
+
+  #oe-template-carousel > a {
+    flex-basis: min(78vw, 300px) !important;
+  }
+}
