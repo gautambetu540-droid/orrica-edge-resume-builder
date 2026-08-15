@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ChevronDown, Download, Eye, FileCheck2, FileText, Layers3, PencilLine, Sparkles, Star, Target, Upload, WandSparkles } from 'lucide-react';
+import { ArrowRight, ChevronDown, Download, Eye, FileCheck2, FileText, Layers3, PencilLine, Sparkles, Star, Target, Upload, WandSparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/landing/SiteHeader';
 import { SiteFooter } from '@/components/landing/SiteFooter';
@@ -38,6 +38,16 @@ const FAQS = [
   ['Can I create multiple resumes for different jobs?', 'Yes. Create separate versions for different roles so you can tailor summaries, keywords, skills and experience highlights to each application.'],
   ['What formats can I download my resume in?', 'The landing-page workflow currently highlights clean PDF export. Keep the final format aligned with the export options available inside your builder account.'],
   ['Does Orrica Edge Resume work on mobile devices?', 'The experience is designed to be responsive so candidates can review and update their resume from desktop, tablet or mobile screens.'],
+];
+
+const CAREER_RESOURCES = [
+  { icon: FileText, title: 'Resume Builder', desc: 'Create a professional resume with guided sections, smart prompts and editable content built for modern applications.', href: '/career-advice/resume-builder' },
+  { icon: Layers3, title: 'Resume Templates', desc: 'Explore professional resume templates for freshers and experienced candidates, with clean layouts made for recruiter scanning.', href: '/career-advice/resume-templates' },
+  { icon: FileCheck2, title: 'ATS Resume Guide', desc: 'Understand ATS-friendly resume formatting, keyword placement, headings and the mistakes that can make a resume harder to parse.', href: '/career-advice/ats-resume-guide' },
+  { icon: PencilLine, title: 'Resume Writing', desc: 'Learn how to write stronger summaries, experience bullets, skills sections and achievement-focused resume content.', href: '/career-advice/resume-writing' },
+  { icon: Target, title: 'Fresher Resume Guide', desc: 'Build a resume with no experience by presenting education, projects, internships, skills and achievements effectively.', href: '/career-advice/fresher-resume-guide' },
+  { icon: Sparkles, title: 'Interview Preparation', desc: 'Prepare for common interview questions and learn practical ways to explain your skills, projects and experience with confidence.', href: '/career-advice/interview-preparation' },
+  { icon: ArrowRight, title: 'Job Search Guide', desc: 'Learn how to target relevant roles, tailor applications and use your resume more effectively during your job search.', href: '/career-advice/job-search-guide' },
 ];
 
 function TypingHeadline() {
@@ -85,7 +95,7 @@ function FreeAccessSection() {
 
 function CareerPartnerSection() {
   return (
-    <section className="border-y border-black/[0.06] bg-neutral-50 py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="mx-auto max-w-3xl text-center"><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Your Strategic Career Partner</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Practical guidance for every step of the application.</h2><p className="mt-4 text-base leading-7 text-neutral-500">Orrica Edge Resume brings resume writing, job-application preparation and career resources into one simple experience.</p></div><div className="mt-12 grid gap-4 lg:grid-cols-4">{[['Expertise you can trust','Clear, practical resume guidance built around strong content and professional presentation.'],['Industry-aware advice','Role-focused tips to help you highlight the skills, projects and experience that matter for your target job.'],['Practical strategies','Actionable help for resumes, interviews, applications and improving your chances of being noticed.'],['Clear and useful resources','Simple career content you can use immediately without getting lost in unnecessary complexity.']].map(([title,desc])=><article key={title} className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,.25)]"><div className="h-1.5 w-12 rounded-full bg-orange-500"/><h3 className="mt-5 text-base font-bold text-neutral-950">{title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{desc}</p></article>)}</div></div></section>
+    <section className="oe-career-resources relative overflow-hidden border-y border-orange-950/10 bg-[linear-gradient(180deg,#fff4ea_0%,#f97316_24%,#ea580c_78%,#c2410c_100%)] py-20 text-white sm:py-28"><div className="oe-career-angle oe-career-angle-top"/><div className="oe-career-angle oe-career-angle-bottom"/><div className="relative z-10 mx-auto max-w-7xl px-5 lg:px-8"><div className="mx-auto max-w-3xl text-center"><p className="text-xs font-black uppercase tracking-[0.2em] text-orange-100">Orrica Edge Resume Resources</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">Build Your Career with Smarter Resume Tools</h2><p className="mt-4 text-base leading-7 text-orange-50 sm:text-lg">Create stronger resumes, understand ATS requirements and prepare for your next opportunity with practical, search-friendly guidance from Orrica Edge Resume.</p></div><div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{CAREER_RESOURCES.map((resource) => <Link href={resource.href} key={resource.title} className="group flex min-h-[225px] flex-col rounded-2xl border border-orange-100 bg-white p-6 text-neutral-950 shadow-[0_22px_45px_-30px_rgba(67,27,4,.55)] transition duration-300 hover:-translate-y-1 hover:border-orange-300 hover:shadow-[0_28px_55px_-30px_rgba(67,27,4,.65)] focus:outline-none focus:ring-4 focus:ring-white/40"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600 ring-1 ring-orange-100 transition group-hover:bg-orange-100"><resource.icon className="h-5 w-5" /></div><h3 className="mt-5 text-base font-bold tracking-tight">{resource.title}</h3><p className="mt-2 text-sm leading-6 text-neutral-600">{resource.desc}</p><span className="mt-auto pt-5 text-xs font-black text-orange-600">Explore resource <ArrowRight className="ml-1 inline h-3.5 w-3.5 transition group-hover:translate-x-1" /></span></Link>)}</div></div></section>
   );
 }
 
