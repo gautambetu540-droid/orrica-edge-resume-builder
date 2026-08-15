@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Plus_Jakarta_Sans, Source_Sans_3, IBM_Plex_Sans, Merriweather, Noto_Sans } from 'next/font/google';
 import './globals.css';
 import './premium-3d.css';
+import './template-showcase-fix.css';
 import { Toaster } from '@/components/ui/toaster';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', display: 'swap', weight: ['400', '500', '600', '700', '800'] });
