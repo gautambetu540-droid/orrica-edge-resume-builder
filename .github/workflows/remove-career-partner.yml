@@ -1,0 +1,49 @@
+name: Remove unwanted career partner section
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  remove-section:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove section and workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('app/page.tsx')
+          text = path.read_text()
+          updated = re.sub(
+              r'\nfunction CareerPartnerSection\(\) \{.*?\n\}\n\nfunction CandidateFeedbackSection',
+              '\nfunction CandidateFeedbackSection',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          updated = updated.replace('\n        <CareerPartnerSection />', '')
+          path.write_text(updated)
+          Path('.github/workflows/remove-career-partner.yml').unlink(missing_ok=True)
+          PY
+
+          if git diff --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/page.tsx .github/workflows/remove-career-partner.yml
+          git commit -m 'fix: remove career partner section from landing page'
+          git push
