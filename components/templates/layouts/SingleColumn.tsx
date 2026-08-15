@@ -29,7 +29,7 @@ export function SingleColumnLayout({
         <ResumeHeader info={data.personalInfo} preset={preset} />
       </div>
 
-      <div className="flex flex-col" style={{ gap: 'var(--section-gap)' }}>
+      <div className="resume-sections-stack flex flex-col" style={{ gap: 'var(--section-gap)' }}>
         {visibleSections.map((section) => {
           if (section.id === 'header') return null;
           const sectionId = section.id as Exclude<ResumeSectionId, 'header'>;
@@ -39,7 +39,7 @@ export function SingleColumnLayout({
             <div
               key={section.id}
               data-resume-section={section.id}
-              className="resume-preview-section break-inside-avoid-page rounded-[3px] transition-[background-color,box-shadow] duration-200"
+              className="resume-preview-section rounded-[3px] transition-[background-color,box-shadow] duration-200"
             >
               <SectionHeading preset={preset}>{title}</SectionHeading>
               {renderSectionBody(sectionId, data)}
