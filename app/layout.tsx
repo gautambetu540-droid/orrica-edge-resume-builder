@@ -112,6 +112,47 @@ const GLOBAL_DESIGN_STYLES = `
   }
   @media (max-width: 767px) { .oe-intro-visual { display:none !important; } }
   @media (prefers-reduced-motion: reduce) { .oe-intro-orbit,.oe-intro-resume-card,.oe-intro-action { animation:none !important; } }
+
+  /* Landing-page-only visual system. Content is intentionally unchanged. */
+  body:has(.template-showcase-inner) main { color: #111111; }
+  body:has(.template-showcase-inner) main h1,
+  body:has(.template-showcase-inner) main h2,
+  body:has(.template-showcase-inner) main h3 { color: #111111 !important; font-family: var(--oe-font-heading) !important; }
+  body:has(.template-showcase-inner) main .text-neutral-950,
+  body:has(.template-showcase-inner) main .text-neutral-900,
+  body:has(.template-showcase-inner) main .text-slate-900 { color: #111111 !important; }
+  body:has(.template-showcase-inner) main .text-neutral-700 { color: #333333 !important; }
+  body:has(.template-showcase-inner) main .text-neutral-500,
+  body:has(.template-showcase-inner) main .text-slate-500 { color: #666666 !important; }
+  body:has(.template-showcase-inner) main .text-neutral-400 { color: #737373 !important; }
+  body:has(.template-showcase-inner) main .bg-neutral-50 { background-color: #FFF9F4 !important; }
+  body:has(.template-showcase-inner) main .bg-neutral-100 { background-color: #F7F3EF !important; }
+  body:has(.template-showcase-inner) main .border-neutral-200 { border-color: #E7E0DA !important; }
+  body:has(.template-showcase-inner) main .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: #E7E0DA !important; }
+  body:has(.template-showcase-inner) main .bg-emerald-50 { background-color: #F6E7DF !important; }
+  body:has(.template-showcase-inner) main .text-emerald-600,
+  body:has(.template-showcase-inner) main .text-emerald-700 { color: #C95F2D !important; }
+  body:has(.template-showcase-inner) main .bg-sky-50 { background-color: #FBF3EE !important; }
+  body:has(.template-showcase-inner) main .text-sky-600,
+  body:has(.template-showcase-inner) main .text-sky-700 { color: #C95F2D !important; }
+  body:has(.template-showcase-inner) main .border-sky-200 { border-color: #F1CDBB !important; }
+  body:has(.template-showcase-inner) main .group-hover\\:border-sky-200:hover { border-color: #F1CDBB !important; }
+  body:has(.template-showcase-inner) main .font-serif { font-family: var(--oe-font-heading) !important; }
+  body:has(.template-showcase-inner) main .bg-slate-950 { background-color: #111111 !important; }
+  body:has(.template-showcase-inner) main .hover\\:bg-slate-800:hover { background-color: #222222 !important; }
+  body:has(.template-showcase-inner) main .bg-white\\/60 { background-color: rgba(255,255,255,.82) !important; }
+  body:has(.template-showcase-inner) main .bg-white\\/78 { background-color: rgba(255,255,255,.88) !important; }
+  body:has(.template-showcase-inner) main .bg-white\\/82 { background-color: rgba(255,255,255,.92) !important; }
+  body:has(.template-showcase-inner) main .text-white\\/60 { color: rgba(255,255,255,.72) !important; }
+  body:has(.template-showcase-inner) main .text-white\\/40 { color: rgba(255,255,255,.58) !important; }
+  body:has(.template-showcase-inner) main .text-orange-800\\/80 { color: #8F492D !important; }
+  body:has(.template-showcase-inner) main .text-orange-800\\/75 { color: #8F492D !important; }
+
+  @media (max-width: 767px) {
+    body:has(.template-showcase-inner) main h1 { font-size: clamp(2rem, 9vw, 3rem) !important; line-height: 1.05 !important; }
+    body:has(.template-showcase-inner) main h2 { line-height: 1.1 !important; }
+    body:has(.template-showcase-inner) main p { text-wrap: pretty; }
+  }
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
