@@ -133,37 +133,37 @@ function TemplateShowcase() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#0b2a52] py-14 text-white sm:py-20 lg:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,.06),transparent_42%)]" />
+    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbfd_0%,#f3f7fa_100%)] py-12 text-slate-900 sm:py-16 lg:py-20">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(14,165,233,.10),transparent_42%)]" />
       <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-[780px] text-center">
-          <h2 className="font-serif text-3xl font-bold tracking-[-0.025em] sm:text-5xl lg:text-[54px]">Professional Resume Templates</h2>
-          <p className="mx-auto mt-5 max-w-[760px] text-sm font-semibold leading-7 text-white/95 sm:text-base">Choose from our library of customizable <Link href="/templates" className="text-white underline decoration-2 underline-offset-2 hover:text-white/80">resume templates</Link>—professionally designed to help you create a polished resume for every job you apply for.</p>
+        <div className="mx-auto max-w-[820px] text-center">
+          <h2 className="font-serif text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl lg:text-[50px]">Professional Resume Templates</h2>
+          <p className="mx-auto mt-3 max-w-[720px] text-sm font-medium leading-6 text-slate-500 sm:text-[15px]">Choose an ATS-friendly, recruiter-ready <Link href="/templates" className="font-semibold text-sky-700 underline decoration-sky-200 decoration-2 underline-offset-4 hover:text-sky-800">resume template</Link> and customize it for the role you want.</p>
         </div>
 
-        <div className="relative mt-12 sm:mt-14">
-          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:left-2">←</button>
-          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-[#0495a5] text-3xl text-white shadow-xl transition hover:scale-105 hover:bg-[#078a98] sm:right-2">→</button>
+        <div className="relative mt-9 sm:mt-11">
+          <button type="button" aria-label="Previous templates" onClick={() => scroll(-1)} className="absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold text-slate-700 shadow-[0_10px_28px_-18px_rgba(15,23,42,.45)] transition hover:-translate-x-0.5 hover:border-sky-200 hover:text-sky-700 sm:left-2">←</button>
+          <button type="button" aria-label="Next templates" onClick={() => scroll(1)} className="absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-semibold text-slate-700 shadow-[0_10px_28px_-18px_rgba(15,23,42,.45)] transition hover:translate-x-0.5 hover:border-sky-200 hover:text-sky-700 sm:right-2">→</button>
 
-          <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-8 overflow-x-auto px-8 pb-5 [scrollbar-width:none] sm:px-20 [&::-webkit-scrollbar]:hidden">
+          <div id="oe-template-carousel" className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-12 pb-5 [scrollbar-width:none] sm:gap-6 sm:px-20 [&::-webkit-scrollbar]:hidden">
             {templates.map((template) => (
-              <Link key={template.id} href={`/templates?template=${template.id}`} className="group w-[260px] shrink-0 snap-center sm:w-[290px] lg:w-[310px]">
-                <div className="relative overflow-hidden rounded-[2px] bg-white shadow-[0_22px_50px_-24px_rgba(0,0,0,.65)] transition duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_32px_65px_-25px_rgba(0,0,0,.8)]">
-                  <div className="origin-top scale-[0.82] sm:scale-[0.9] lg:scale-[0.96]">
+              <Link key={template.id} href={`/templates?template=${template.id}`} className="group w-[260px] shrink-0 snap-center sm:w-[280px] lg:w-[292px]">
+                <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_16px_40px_-28px_rgba(15,23,42,.30)] transition duration-300 group-hover:-translate-y-1 group-hover:border-sky-200 group-hover:shadow-[0_24px_52px_-28px_rgba(15,23,42,.36)]">
+                  <div className="origin-top scale-[0.82] sm:scale-[0.86] lg:scale-[0.90]">
                     <SampleResumeCard template={template} />
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <div className="text-sm font-bold text-white">{template.name}</div>
-                  <div className="mt-1 text-[11px] font-medium text-white/55">{template.category}</div>
+                <div className="mt-3 text-center">
+                  <div className="text-sm font-bold text-slate-900">{template.name}</div>
+                  <div className="mt-1 text-[11px] font-medium text-slate-500">{template.category} · ATS-ready</div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <Link href="/templates" className="inline-flex h-11 items-center justify-center rounded-md bg-white px-6 text-sm font-bold text-[#0b2a52] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/95">View all templates <ArrowRight className="ml-2 h-4 w-4" /></Link>
+        <div className="mt-7 flex justify-center">
+          <Link href="/templates" className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-5 text-sm font-bold text-white shadow-[0_12px_28px_-18px_rgba(15,23,42,.55)] transition hover:-translate-y-0.5 hover:bg-slate-800">View all resume templates <ArrowRight className="ml-2 h-4 w-4" /></Link>
         </div>
       </div>
     </section>
