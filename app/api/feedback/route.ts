@@ -45,13 +45,24 @@ export async function POST(req: NextRequest) {
     candidateName = personalInfo?.fullName?.trim() ?? '';
   }
 
-  const { error } = await supabase.from('feedback').insert({
+  let { error } = await supabase.from('feedback').insert({
     user_id: user?.id ?? null,
     resume_id: parsed.data.resumeId ?? null,
     candidate_name: candidateName,
     rating: parsed.data.rating,
     feedback: parsed.data.feedback,
   });
+
+  // Keep feedback submission working on databases that have not yet received
+  // the optional candidate_name migration.
+  if (error && /candidate_name|column.*does not exist/i.test(error.message ?? '')) {
+    ({ error } = await supabase.from('feedback').insert({
+      user_id: user?.id ?? null,
+      resume_id: parsed.data.resumeId ?? null,
+      rating: parsed.data.rating,
+      feedback: parsed.data.feedback,
+    }));
+  }
 
   if (error) {
     console.error('feedback insert error:', error);
