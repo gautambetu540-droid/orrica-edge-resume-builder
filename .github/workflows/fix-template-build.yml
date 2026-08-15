@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fix invalid JSX class and add scoped orange theme
+      - name: Repair template showcase JSX
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -24,44 +24,33 @@ jobs:
           target = 'className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10'
           replacement = '      <div className="template-showcase-inner relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-10">'
 
-          replaced = False
           for i, line in enumerate(lines):
               if target in line and '[class*=' in line:
                   lines[i] = replacement
-                  replaced = True
                   break
-
-          if not replaced:
-              raise SystemExit('Expected invalid template showcase class was not found')
+          else:
+              raise SystemExit('Invalid template showcase JSX class not found')
 
           page.write_text('\n'.join(lines) + '\n')
-
-          css = Path('app/globals.css')
-          c = css.read_text()
-          rules = '''
-
-/* Scoped orange theme for the homepage resume template showcase. */
-.template-showcase-inner [class*="text-sky-"],
-.template-showcase-inner [class*="text-blue-"],
-.template-showcase-inner [class*="text-teal-"] { color: #ea580c !important; }
-.template-showcase-inner [class*="border-sky-"],
-.template-showcase-inner [class*="border-blue-"],
-.template-showcase-inner [class*="border-teal-"] { border-color: #fed7aa !important; }
-.template-showcase-inner [class*="bg-sky-"],
-.template-showcase-inner [class*="bg-blue-"],
-.template-showcase-inner [class*="bg-teal-"] { background-color: #fff7ed !important; }
-.template-showcase-inner [class*="group-hover:border-sky-"] { border-color: #fdba74 !important; }
-'''
-          if 'Scoped orange theme for the homepage resume template showcase.' not in c:
-              css.write_text(c.rstrip() + rules)
           PY
 
-      - name: Verify build
+      - name: Add scoped orange theme
         run: |
-          npm install
-          npm run build
+          cat >> app/globals.css <<'CSS'
 
-      - name: Commit fix and remove workflow
+          /* Scoped orange theme for the homepage resume template showcase. */
+          .template-showcase-inner [class*="text-sky-"],
+          .template-showcase-inner [class*="text-blue-"],
+          .template-showcase-inner [class*="text-teal-"] { color: #ea580c !important; }
+          .template-showcase-inner [class*="border-sky-"],
+          .template-showcase-inner [class*="border-blue-"],
+          .template-showcase-inner [class*="border-teal-"] { border-color: #fed7aa !important; }
+          .template-showcase-inner [class*="bg-sky-"],
+          .template-showcase-inner [class*="bg-blue-"],
+          .template-showcase-inner [class*="bg-teal-"] { background-color: #fff7ed !important; }
+          CSS
+
+      - name: Commit repair
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
