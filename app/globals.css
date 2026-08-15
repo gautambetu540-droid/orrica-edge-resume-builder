@@ -233,3 +233,43 @@ header.z-40 { box-shadow: 0 12px 40px -34px rgba(0,0,0,.20); background: rgba(25
 .oe-accent-surface { background: #F6E7DF !important; color: #C95F2D !important; }
 .oe-brand-button { background: #C95F2D !important; color: #FFFFFF !important; }
 .oe-brand-button:hover { background: #B95329 !important; }
+
+/* Professional Resume Templates: clean warm canvas with strong readable typography. */
+.template-showcase-inner { color: #111111 !important; }
+.template-showcase-inner > div:first-child h2 {
+  color: #111111 !important;
+  font-family: var(--oe-font-heading) !important;
+  font-weight: 700 !important;
+}
+.template-showcase-inner > div:first-child p {
+  color: #666666 !important;
+}
+.template-showcase-inner > div:first-child p a {
+  color: #C95F2D !important;
+}
+.template-showcase-inner > div:first-child p a:hover {
+  color: #B95329 !important;
+}
+.template-showcase-inner > div:nth-child(2) {
+  position: relative;
+  z-index: 1;
+}
+.template-showcase-inner > div:nth-child(2) > button {
+  border-color: #E7E0DA !important;
+  color: #C95F2D !important;
+  background: #FFFFFF !important;
+}
+.template-showcase-inner > div:nth-child(2) > button:hover {
+  border-color: #D97845 !important;
+  color: #B95329 !important;
+  background: #FFF9F4 !important;
+}
+.template-showcase-inner .text-slate-900 { color: #111111 !important; }
+.template-showcase-inner .text-slate-500 { color: #737373 !important; }
+.template-showcase-inner > div:last-child a {
+  background: #C95F2D !important;
+  color: #FFFFFF !important;
+}
+.template-showcase-inner > div:last-child a:hover {
+  background: #B95329 !important;
+}
