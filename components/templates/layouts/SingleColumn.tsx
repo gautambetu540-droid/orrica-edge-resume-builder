@@ -25,6 +25,22 @@ export function SingleColumnLayout({
 
   return (
     <div>
+      <style>{`
+        @media print {
+          .resume-sections-stack {
+            display: block !important;
+          }
+          .resume-sections-stack > [data-resume-section] {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            margin-bottom: var(--section-gap) !important;
+          }
+          .resume-sections-stack > [data-resume-section]:last-child {
+            margin-bottom: 0 !important;
+          }
+        }
+      `}</style>
+
       <div data-resume-section="personal">
         <ResumeHeader info={data.personalInfo} preset={preset} />
       </div>
