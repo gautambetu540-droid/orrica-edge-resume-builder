@@ -44,14 +44,11 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       throw new Error(`Chromium executable was not found: ${executablePath || 'empty path'}`);
     }
 
-    const args = await puppeteer.defaultArgs({
-      args: chromium.args,
-      headless: 'shell',
-    });
+    const args = await puppeteer.defaultArgs({ args: chromium.args, headless: 'shell' });
 
     browser = await puppeteer.launch({
       args,
-      defaultViewport: { width: 1240, height: 1754, deviceScaleFactor: 1 },
+      defaultViewport: { width: 794, height: 1123, deviceScaleFactor: 2 },
       executablePath,
       headless: 'shell',
       timeout: 30_000,
@@ -61,29 +58,17 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(35_000);
     page.setDefaultTimeout(20_000);
+    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
 
     const url = new URL(`/resume/${encodeURIComponent(resumeId)}/print`, baseUrl);
-
-    // Keep the exact browser session cookie header. This is more reliable for
-    // Supabase SSR cookies than reconstructing individual cookies by hand.
-    if (cookieHeader) {
-      await page.setExtraHTTPHeaders({ Cookie: cookieHeader });
-    }
+    if (cookieHeader) await page.setExtraHTTPHeaders({ Cookie: cookieHeader });
 
     stage = 'page-load';
-    const response = await page.goto(url.toString(), {
-      waitUntil: 'domcontentloaded',
-      timeout: 35_000,
-    });
-
-    if (!response) {
-      throw new Error('The print page did not return a response.');
-    }
+    const response = await page.goto(url.toString(), { waitUntil: 'networkidle0', timeout: 35_000 });
+    if (!response) throw new Error('The print page did not return a response.');
 
     const status = response.status();
-    if (status < 200 || status >= 300) {
-      throw new Error(`Print page returned HTTP ${status}.`);
-    }
+    if (status < 200 || status >= 300) throw new Error(`Print page returned HTTP ${status}.`);
 
     const finalUrl = page.url();
     const expectedPath = `/resume/${encodeURIComponent(resumeId)}/print`;
@@ -95,15 +80,25 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     await page.waitForSelector('#resume-document-root', { timeout: 15_000 });
     await page.evaluate(async () => {
       if (document.fonts?.ready) await document.fonts.ready;
-      await Promise.all(Array.from(document.images).map((image) => (
-        image.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              image.addEventListener('load', () => resolve(), { once: true });
-              image.addEventListener('error', () => resolve(), { once: true });
-            })
-      )));
-      await new Promise((resolve) => window.setTimeout(resolve, 150));
+      await Promise.all(Array.from(document.images).map((image) => image.complete ? Promise.resolve() : new Promise<void>((resolve) => {
+        image.addEventListener('load', () => resolve(), { once: true });
+        image.addEventListener('error', () => resolve(), { once: true });
+      })));
+
+      const root = document.getElementById('resume-document-root');
+      if (root) {
+        root.style.setProperty('width', '210mm', 'important');
+        root.style.setProperty('max-width', '210mm', 'important');
+        root.style.setProperty('min-width', '210mm', 'important');
+        root.style.setProperty('box-sizing', 'border-box', 'important');
+        root.style.setProperty('background', '#ffffff', 'important');
+      }
+
+      document.documentElement.style.margin = '0';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.background = '#ffffff';
+      await new Promise((resolve) => window.setTimeout(resolve, 250));
     });
 
     stage = 'pdf-generation';
@@ -115,15 +110,14 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       displayHeaderFooter: false,
       margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
       scale: 1,
+      tagged: true,
+      outline: true,
     }));
 
     if (pdf.length < 5) throw new Error('Generated PDF is empty.');
     if (pdf.subarray(0, 5).toString() !== '%PDF-') throw new Error('Generated PDF failed signature validation.');
 
-    console.info('[PDF]', requestId, 'generation completed', {
-      bytes: pdf.length,
-      durationMs: Date.now() - startedAt,
-    });
+    console.info('[PDF]', requestId, 'generation completed', { bytes: pdf.length, durationMs: Date.now() - startedAt });
     return pdf;
   } catch (error) {
     console.error('[PDF]', requestId, 'generation failed', {
@@ -136,9 +130,7 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     throw error;
   } finally {
     if (browser) {
-      for (const openPage of await browser.pages()) {
-        await openPage.close().catch(() => undefined);
-      }
+      for (const openPage of await browser.pages()) await openPage.close().catch(() => undefined);
       await browser.close().catch(() => undefined);
     }
   }
