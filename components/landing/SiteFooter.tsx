@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { ArrowUpRight, Check, FileText, Linkedin, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
+import { ArrowUpRight, FileText, Linkedin, ShieldCheck, Sparkles, UserRound } from 'lucide-react';
 
 const JOB_CHANNEL = 'https://whatsapp.com/channel/0029VbAsVFr4Y9lwo6JDRA2t';
 const LINKEDIN_URL = 'https://www.linkedin.com/in/sudhanshu-g-512937375/';
 
 const COLUMNS = [
   { title: 'Product', links: [{ href: '/resume/new', label: 'Create Resume' }, { href: '/templates', label: 'Resume Templates' }, { href: '/pricing', label: 'Pricing' }, { href: '/#features', label: 'Features' }] },
-  { title: 'Learn', links: [{ href: '/#how-it-works', label: 'How It Works' }, { href: '/#faq', label: 'Resume Builder FAQ' }, { href: '/about', label: 'About Orrica Edge' }] },
+  { title: 'Learn', links: [{ href: '/#how-it-works', label: 'How It Works' }, { href: '/#faq', label: 'Resume Builder FAQ' }, { href: '/about', label: 'About Orrica Edge' }, { href: '/contact-us', label: 'Contact Us' }] },
+  { title: 'Legal', links: [{ href: '/privacy-policy', label: 'Privacy Policy' }, { href: '/terms-and-conditions', label: 'Terms & Conditions' }] },
   { title: 'Account', links: [{ href: '/login', label: 'Sign In' }, { href: '/signup', label: 'Create Account' }, { href: '/dashboard', label: 'Dashboard' }] },
 ];
 
@@ -14,7 +15,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-black/[0.07] bg-neutral-950 text-white">
       <div className="mx-auto max-w-7xl px-5 pb-10 pt-14 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[1.35fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 lg:grid-cols-[1.35fr_1fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="inline-flex items-center gap-2"><img src="/logo-orricaedge.png" alt="Orrica Edge" className="h-8 w-auto brightness-0 invert" /></Link>
             <p className="mt-5 max-w-sm text-sm leading-7 text-neutral-400">A modern AI-assisted resume builder for people who want a stronger application without losing their own voice.</p>
@@ -47,7 +48,7 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col justify-between gap-4 pt-6 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] text-neutral-500"><span>© {new Date().getFullYear()} Orrica Edge</span><span>Built for modern job seekers</span></div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] text-neutral-500"><span>© {new Date().getFullYear()} Orrica Edge</span><span>Built for modern job seekers</span><a href="mailto:info@orricaedge.com" className="transition-colors hover:text-white">info@orricaedge.com</a></div>
           <Link href="/resume/new" className="inline-flex items-center gap-1.5 text-xs font-bold text-white hover:text-orange-400">Build your resume <ArrowUpRight className="h-3.5 w-3.5" /></Link>
         </div>
       </div>
