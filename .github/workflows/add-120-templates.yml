@@ -1,0 +1,79 @@
+name: Add 120 resume templates
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  templates:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Expand template catalog and sample previews
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          types = Path('lib/types/resume.ts')
+          text = types.read_text()
+          text = re.sub(r"export type TemplateId =.*?;\n\nexport type ResumeFont", "export type TemplateId = string;\n\nexport type ResumeFont", text, flags=re.S)
+          types.write_text(text)
+
+          presets = Path('lib/templates/presets.ts')
+          text = presets.read_text()
+          marker = "const bpoColors = ['#0F766E', '#2563EB', '#7C3AED', '#0891B2', '#16A34A', '#4F46E5', '#DB2777', '#0E7490', '#15803D', '#1D4ED8'];"
+          if marker not in text:
+              raise SystemExit('Template color marker not found')
+          extra = '''\nconst financeColors = ['#0F766E', '#1D4ED8', '#334155', '#047857', '#2563EB', '#0E7490', '#475569', '#166534', '#0369A1', '#14532D'];\nconst healthcareColors = ['#0E7490', '#0891B2', '#0F766E', '#2563EB', '#16A34A', '#0369A1', '#0284C7', '#15803D', '#1D4ED8', '#115E59'];\nconst salesColors = ['#EA580C', '#2563EB', '#7C3AED', '#0F766E', '#DB2777', '#0891B2', '#16A34A', '#C2410C', '#4F46E5', '#1D4ED8'];\nconst marketingColors = ['#DB2777', '#7C3AED', '#EA580C', '#E11D48', '#2563EB', '#0891B2', '#9333EA', '#C026D3', '#BE123C', '#4F46E5'];\nconst operationsColors = ['#475569', '#334155', '#0F766E', '#2563EB', '#0369A1', '#166534', '#64748B', '#1D4ED8', '#115E59', '#374151'];\nconst academicColors = ['#7C3AED', '#1D4ED8', '#0F766E', '#475569', '#0369A1', '#6D28D9', '#334155', '#2563EB', '#115E59', '#4338CA'];\n\nfor (let i = 1; i <= 10; i += 1) {\n  const n = String(i).padStart(2, '0');\n  addGenerated(`finance-${n}`, `Finance & Accounting ${i}`, 'Finance & Accounting', financeColors[i - 1], i % 2 === 0 ? 'ibm-plex-sans' : 'inter', false, i % 3 === 0 ? 'two-column' : 'single-column');\n  addGenerated(`healthcare-${n}`, `Healthcare & Medical ${i}`, 'Healthcare & Medical', healthcareColors[i - 1], i % 2 === 0 ? 'source-sans-3' : 'inter', false, i % 3 === 0 ? 'two-column' : 'single-column');\n  addGenerated(`sales-${n}`, `Sales & Business Development ${i}`, 'Sales & Business Development', salesColors[i - 1], i % 2 === 0 ? 'arial' : 'inter', false, i % 2 === 0 ? 'two-column' : 'single-column');\n  addGenerated(`marketing-${n}`, `Marketing & Communications ${i}`, 'Marketing & Communications', marketingColors[i - 1], i % 2 === 0 ? 'proxima-nova' : 'source-sans-3', i % 4 === 0, i % 3 === 0 ? 'two-column' : 'single-column');\n  addGenerated(`operations-${n}`, `Operations & Admin ${i}`, 'Operations & Administration', operationsColors[i - 1], i % 2 === 0 ? 'arial' : 'ibm-plex-sans', false, i % 3 === 0 ? 'two-column' : 'single-column');\n  addGenerated(`academic-${n}`, `Academic & Research ${i}`, 'Academic & Research', academicColors[i - 1], i % 2 === 0 ? 'georgia' : 'times-new-roman', false, 'single-column');\n}\n\n'''
+          text = text.replace(marker, marker + extra, 1)
+          presets.write_text(text)
+
+          preview = Path('components/landing/TemplatePreviewCard.tsx')
+          p = preview.read_text()
+          p = p.replace("const sections = ['SUMMARY', 'EXPERIENCE', 'EDUCATION', 'SKILLS'];", "const sections = ['SUMMARY', 'EXPERIENCE', 'EDUCATION', 'SKILLS', 'PROJECTS', 'CERTIFICATIONS'];")
+          p = p.replace("const lines = Array.from({ length: compact ? 5 : 8 });", "const lines = Array.from({ length: compact ? 7 : 12 });")
+          p = p.replace("{sections.map((section) => <div key={section} className=\"mb-2\"><div className={`${scale} mb-1 font-bold tracking-[0.12em]`} style={{ color: accent }}>{section}</div>{lines.slice(0, section === 'EXPERIENCE' ? 4 : 2).map((_, i) => <div key={i} className=\"mb-0.5 h-[3px] rounded bg-neutral-200\" style={{ width: `${68 + (i % 3) * 10}%` }} />)}</div>)}", "{sections.map((section) => <div key={section} className=\"mb-2\"><div className={`${scale} mb-1 font-bold tracking-[0.12em]`} style={{ color: accent }}>{section}</div>{lines.slice(0, section === 'EXPERIENCE' ? 4 : section === 'PROJECTS' ? 3 : 2).map((_, i) => <div key={i} className=\"mb-0.5 flex items-center gap-1\"><span className=\"h-[2px] w-[7px] rounded\" style={{ backgroundColor: accent }} /><div className=\"h-[3px] flex-1 rounded bg-neutral-200\" /></div>)}</div>)}")
+          preview.write_text(p)
+
+          sample = Path('components/landing/SampleResumeCard.tsx')
+          s = sample.read_text()
+          old = "const SKILLS = ['Figma', 'Design Systems', 'User Research', 'Prototyping', 'Product Strategy', 'Accessibility'];"
+          new = '''const SAMPLE_CONTENT: Record<string, { name: string; title: string; location: string; email: string; summary: string; skills: string[]; company: string; education: string }> = {\n  Fresher: { name: 'Aarav Sharma', title: 'Graduate | Business & Technology', location: 'Bengaluru, India', email: 'aarav.sharma@email.com', summary: 'Motivated graduate with internship experience, strong communication skills and a practical foundation in business, technology and problem solving.', skills: ['Communication', 'MS Office', 'Problem Solving', 'Teamwork', 'Excel', 'Research'], company: 'GrowthBridge Internship Program', education: 'B.B.A. Business Administration · 2025' },\n  'Photo Resume': { name: 'Priya Mehta', title: 'Customer Experience Specialist', location: 'Mumbai, India', email: 'priya.mehta@email.com', summary: 'Customer-focused professional experienced in handling client conversations, resolving issues and maintaining service quality across fast-paced environments.', skills: ['Customer Service', 'CRM', 'Communication', 'Complaint Resolution', 'Excel', 'English'], company: 'BrightServe Solutions', education: 'B.A. English · 2022' },\n  'IT / Technology': { name: 'Rohan Verma', title: 'Software Engineer', location: 'Pune, India', email: 'rohan.verma@email.com', summary: 'Software engineer building reliable web applications with modern JavaScript, React and APIs, with a strong focus on maintainable code and user experience.', skills: ['React', 'TypeScript', 'Node.js', 'REST APIs', 'SQL', 'Git'], company: 'Nexora Technologies', education: 'B.Tech Computer Science · 2021' },\n  'BPO / Customer Support': { name: 'Neha Singh', title: 'International Customer Support Executive', location: 'Gurugram, India', email: 'neha.singh@email.com', summary: 'Customer support professional experienced in international voice and digital processes, escalation handling, quality standards and customer retention.', skills: ['International Voice', 'CRM', 'Escalation Handling', 'English', 'Quality', 'Typing'], company: 'GlobalConnect Services', education: 'B.Com · 2022' },\n  'Finance & Accounting': { name: 'Karan Gupta', title: 'Financial Analyst', location: 'Delhi, India', email: 'karan.gupta@email.com', summary: 'Analytical finance professional skilled in reporting, reconciliations, financial modelling and business insights with strong attention to accuracy and controls.', skills: ['Financial Analysis', 'Excel', 'Power BI', 'Reconciliation', 'Forecasting', 'Reporting'], company: 'Apex Financial Services', education: 'B.Com · 2021' },\n  'Healthcare & Medical': { name: 'Dr. Ananya Rao', title: 'Clinical Operations Associate', location: 'Hyderabad, India', email: 'ananya.rao@email.com', summary: 'Healthcare professional focused on patient coordination, clinical documentation, quality processes and cross-functional support in high-volume care settings.', skills: ['Patient Care', 'Documentation', 'EMR', 'Quality', 'Coordination', 'Compliance'], company: 'CarePoint Hospitals', education: 'B.Sc. Life Sciences · 2022' },\n  'Sales & Business Development': { name: 'Vikram Patel', title: 'Business Development Executive', location: 'Ahmedabad, India', email: 'vikram.patel@email.com', summary: 'Results-driven sales professional experienced in prospecting, consultative selling, pipeline management and building long-term client relationships.', skills: ['Lead Generation', 'CRM', 'Negotiation', 'B2B Sales', 'Pipeline', 'Presentation'], company: 'MarketBridge Technologies', education: 'B.B.A. Marketing · 2021' },\n  'Marketing & Communications': { name: 'Ishita Kapoor', title: 'Digital Marketing Specialist', location: 'Noida, India', email: 'ishita.kapoor@email.com', summary: 'Creative marketing specialist combining content, SEO, social media and campaign analytics to grow qualified reach and improve brand engagement.', skills: ['SEO', 'Content Strategy', 'Analytics', 'Social Media', 'Email Marketing', 'Canva'], company: 'BrandCraft Media', education: 'B.A. Mass Communication · 2022' },\n  'Operations & Administration': { name: 'Aditya Nair', title: 'Operations Coordinator', location: 'Chennai, India', email: 'aditya.nair@email.com', summary: 'Organized operations professional experienced in process coordination, reporting, stakeholder communication and continuous improvement across service teams.', skills: ['Operations', 'MIS Reporting', 'Process Improvement', 'Excel', 'Coordination', 'SOPs'], company: 'PrimeServe Operations', education: 'B.Com · 2020' },\n  'Academic & Research': { name: 'Meera Iyer', title: 'Research Associate', location: 'Kolkata, India', email: 'meera.iyer@email.com', summary: 'Research-oriented professional experienced in literature review, data analysis, academic writing and structured documentation with strong attention to evidence.', skills: ['Research', 'SPSS', 'Academic Writing', 'Data Analysis', 'Literature Review', 'Presentation'], company: 'Centre for Applied Research', education: 'M.A. Economics · 2023' },\n};\n\nconst DEFAULT_SAMPLE = { name: 'Alex Morgan', title: 'Senior Product Designer', location: 'San Francisco, CA', email: 'alex@email.com', summary: 'Product designer with 7+ years of experience turning complex workflows into clear, accessible digital products. Strong across strategy, research, systems and delivery.', skills: ['Figma', 'Design Systems', 'User Research', 'Prototyping', 'Product Strategy', 'Accessibility'], company: 'Northwind Co.', education: 'B.A. Interaction Design · 2019' };\n\nconst SKILLS = DEFAULT_SAMPLE.skills;'''
+          if old not in s:
+              raise SystemExit('Sample skill marker not found')
+          s = s.replace(old, new, 1)
+          s = s.replace("  const resolvedAccent = template?.defaultAccentColor ?? accent;", "  const resolvedAccent = template?.defaultAccentColor ?? accent;\n  const sample = SAMPLE_CONTENT[template?.category ?? ''] ?? DEFAULT_SAMPLE;")
+          s = s.replace('Alex Morgan', "${sample.name}")
+          s = s.replace('Senior Product Designer', "${sample.title}")
+          s = s.replace('alex@email.com', "${sample.email}")
+          s = s.replace('San Francisco, CA', "${sample.location}")
+          s = s.replace('linkedin.com/in/alexmorgan', 'linkedin.com/in/profile')
+          s = s.replace('Product designer with 7+ years of experience turning complex workflows into clear, accessible digital products. Strong across product strategy, design systems, research and cross-functional delivery.', "${sample.summary}")
+          s = s.replace('Northwind Co.', "${sample.company}")
+          s = s.replace('B.A. Interaction Design', "${sample.education.split(' · ')[0]}")
+          s = s.replace('California College of the Arts · 2019', "${sample.education}")
+          s = s.replace("const SKILLS = DEFAULT_SAMPLE.skills;", "const SKILLS = sample.skills;")
+          sample.write_text(s)
+          PY
+
+      - name: Verify TypeScript build
+        run: |
+          npm install
+          npm run build
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/types/resume.ts lib/templates/presets.ts components/landing/TemplatePreviewCard.tsx components/landing/SampleResumeCard.tsx
+          git commit -m "feat: add 120 resume templates with full sample content"
+          git rm .github/workflows/add-120-templates.yml
+          git commit -m "chore: remove temporary template workflow"
+          git push
