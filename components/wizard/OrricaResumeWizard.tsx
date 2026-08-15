@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileText, Palette, Plus, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toaster';
 import { ResumeData, ResumeSettings } from '@/lib/types/resume';
@@ -53,11 +53,11 @@ function PagePreview({ data, settings, activeSection }: { data: ResumeData; sett
     const recompute = () => {
       const viewport = viewportRef.current;
       if (!viewport) return;
-      const availableWidth = Math.max(280, viewport.clientWidth - 72);
-      const availableHeight = Math.max(420, viewport.clientHeight - 42);
+      const availableWidth = Math.max(280, viewport.clientWidth - 36);
+      const availableHeight = Math.max(420, viewport.clientHeight - 36);
       const widthScale = availableWidth / 794;
       const heightScale = availableHeight / 1123;
-      setScale(Math.max(0.30, Math.min(0.44, widthScale, heightScale)));
+      setScale(Math.max(0.30, Math.min(0.48, widthScale, heightScale)));
     };
     recompute();
     const observer = new ResizeObserver(recompute);
@@ -75,25 +75,10 @@ function PagePreview({ data, settings, activeSection }: { data: ResumeData; sett
       <span className="flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-600"><span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> Live</span>
     </div>
 
-    <div ref={viewportRef} className="relative flex h-[520px] w-full items-center justify-center overflow-hidden rounded-2xl border border-orange-100 bg-[#FFF9F5] shadow-inner sm:h-[590px] lg:h-[650px]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(249,115,22,.10),transparent_31%),radial-gradient(circle_at_78%_72%,rgba(251,146,60,.08),transparent_30%)]" />
-      <div className="pointer-events-none absolute left-[18%] top-[7%] h-40 w-40 rounded-full border-[28px] border-orange-100 sm:h-48 sm:w-48" />
-      <div className="pointer-events-none absolute right-[12%] top-[12%] h-24 w-24 rounded-full bg-orange-50" />
-
-      <div className="relative z-10 flex items-center justify-center" style={{ width: Math.max(320, resumeWidth + 82), height: resumeHeight + 28 }}>
-        <div className="absolute left-0 top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-xl border border-orange-100 bg-white shadow-[0_18px_40px_-24px_rgba(90,45,15,.30)]">
-          <div className="flex w-[58px] flex-col items-center divide-y divide-orange-50">
-            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 bg-orange-50 text-orange-600"><FileText className="h-4 w-4" /><span className="text-[8px] font-bold">Templates</span></div>
-            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 text-slate-500"><Palette className="h-4 w-4" /><span className="text-center text-[8px] font-bold leading-3">Design &amp;<br />Formatting</span></div>
-            <div className="flex h-[82px] w-full flex-col items-center justify-center gap-1 text-slate-500"><Plus className="h-4 w-4" /><span className="text-center text-[8px] font-bold leading-3">Add<br />Section</span></div>
-          </div>
-        </div>
-
-        <div className="relative z-20 shrink-0" style={{ width: resumeWidth, height: resumeHeight }}>
-          <div className="absolute -bottom-3 left-1/2 h-3 w-[92%] -translate-x-1/2 rounded-b-xl bg-orange-500/15" />
-          <div ref={documentRef} className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[3px] bg-white shadow-[0_24px_55px_-24px_rgba(90,45,15,.38)]" style={{ width: 794, minHeight: 1123, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-            <ResumeDocument data={data} settings={settings} activeSection={activeSection} />
-          </div>
+    <div ref={viewportRef} className="relative flex h-[520px] w-full items-center justify-center overflow-hidden rounded-2xl border border-orange-100 bg-[#FFF9F5] p-3 shadow-inner sm:h-[590px] lg:h-[650px]">
+      <div className="relative z-10 shrink-0" style={{ width: resumeWidth, height: resumeHeight }}>
+        <div ref={documentRef} className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[3px] bg-white shadow-[0_24px_55px_-24px_rgba(90,45,15,.38)]" style={{ width: 794, minHeight: 1123, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <ResumeDocument data={data} settings={settings} activeSection={activeSection} />
         </div>
       </div>
     </div>
