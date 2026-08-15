@@ -1,5 +1,4 @@
-// Core data model for a resume. This shape is what's stored in
-// `resumes.resume_data` (JSONB) in Supabase and passed to AI endpoints.
+// Core data model for a resume. This shape is what's stored in `resumes.resume_data` (JSONB) in Supabase and passed to AI endpoints.
 
 export interface PersonalInfo {
   fullName: string;
@@ -91,37 +90,26 @@ export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = [
   'header', 'summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'languages', 'achievements',
 ];
 
+type TemplateNumber = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09';
+
 export type TemplateId =
-  | 'modern-ats'
-  | 'classic-professional'
-  | 'minimal'
-  | 'executive'
-  | 'modern-two-column'
-  | 'fresh-graduate'
-  | 'bold-header'
-  | 'elegant-serif'
-  | 'compact-ats'
-  | 'creative-sidebar'
-  | 'clean-corporate'
-  | 'tech-modern'
-  | 'simple-chronological'
-  | 'classic-two-column'
-  | 'creative-modern'
-  | 'dark-executive'
-  | 'blue-accent'
-  | 'orange-accent'
-  | 'editorial-clean'
-  | 'timeline-pro';
+  | 'modern-ats' | 'classic-professional' | 'minimal' | 'executive' | 'modern-two-column'
+  | 'fresh-graduate' | 'bold-header' | 'elegant-serif' | 'compact-ats' | 'creative-sidebar'
+  | 'clean-corporate' | 'tech-modern' | 'simple-chronological' | 'classic-two-column'
+  | 'creative-modern' | 'dark-executive' | 'blue-accent' | 'orange-accent' | 'editorial-clean'
+  | 'timeline-pro'
+  | `fresher-${TemplateNumber}` | `it-${TemplateNumber}` | `bpo-${TemplateNumber}`
+  | `finance-${'01'|'02'|'03'|'04'|'05'|'06'|'07'|'08'}`
+  | `sales-${TemplateNumber}` | `marketing-${TemplateNumber}`
+  | `hr-${'01'|'02'|'03'|'04'|'05'|'06'|'07'|'08'}`
+  | `operations-${'01'|'02'|'03'|'04'|'05'|'06'|'07'}`
+  | `healthcare-${TemplateNumber}` | `creative-${'01'|'02'|'03'|'04'|'05'|'06'|'07'|'08'}`
+  | `executive-${'01'|'02'|'03'|'04'|'05'|'06'|'07'}`
+  | `photo-${'01'|'02'|'03'|'04'|'05'|'06'|'07'|'08'}`;
 
 export type ResumeFont =
-  | 'proxima-nova'
-  | 'arial'
-  | 'times-new-roman'
-  | 'inter'
-  | 'source-sans-3'
-  | 'ibm-plex-sans'
-  | 'merriweather'
-  | 'georgia';
+  | 'proxima-nova' | 'arial' | 'times-new-roman' | 'inter'
+  | 'source-sans-3' | 'ibm-plex-sans' | 'merriweather' | 'georgia';
 
 export interface ResumeSettings {
   template: TemplateId;
