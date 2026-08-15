@@ -1,7 +1,7 @@
 'use client';
 
-import ResumeCreationFlow from '@/components/resume/ResumeCreationFlow';
+import ResumeNewTemplateGate from '@/components/resume/ResumeNewTemplateGate';
 
 export default function NewResumePage() {
-  return <ResumeCreationFlow />;
+  return <ResumeNewTemplateGate />;
 }
