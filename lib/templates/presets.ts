@@ -1,14 +1,27 @@
 import { ResumeFont, TemplateId } from '@/lib/types/resume';
 
 export const FONT_STACKS: Record<ResumeFont, string> = {
-  'proxima-nova': '"Proxima Nova", Arial, sans-serif',
-  arial: 'Arial, "Helvetica Neue", Helvetica, sans-serif',
-  'times-new-roman': '"Times New Roman", Times, serif',
   inter: 'var(--font-inter), Arial, sans-serif',
-  'source-sans-3': 'var(--font-source-sans-3), Arial, sans-serif',
+  aptos: 'Aptos, Arial, sans-serif',
+  arial: 'Arial, "Helvetica Neue", Helvetica, sans-serif',
+  calibri: 'Calibri, Arial, sans-serif',
+  helvetica: 'Helvetica, Arial, sans-serif',
+  roboto: 'Roboto, Arial, sans-serif',
   'ibm-plex-sans': 'var(--font-ibm-plex-sans), Arial, sans-serif',
+  'source-sans-3': 'var(--font-source-sans-3), Arial, sans-serif',
+  'noto-sans': '"Noto Sans", Arial, sans-serif',
+  'open-sans': '"Open Sans", Arial, sans-serif',
+  lato: 'Lato, Arial, sans-serif',
+  montserrat: 'Montserrat, Arial, sans-serif',
+  poppins: 'Poppins, Arial, sans-serif',
+  'nunito-sans': '"Nunito Sans", Arial, sans-serif',
+  'work-sans': '"Work Sans", Arial, sans-serif',
+  manrope: 'Manrope, Arial, sans-serif',
+  'dm-sans': '"DM Sans", Arial, sans-serif',
   merriweather: 'var(--font-merriweather), Georgia, "Times New Roman", serif',
   georgia: 'Georgia, "Times New Roman", serif',
+  'times-new-roman': '"Times New Roman", Times, serif',
+  'proxima-nova': '"Proxima Nova", Arial, sans-serif',
 };
 
 export type TemplateLayout = 'single-column' | 'two-column';
