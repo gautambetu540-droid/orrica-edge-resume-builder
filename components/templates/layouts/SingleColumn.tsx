@@ -30,13 +30,31 @@ export function SingleColumnLayout({
           .resume-sections-stack {
             display: block !important;
           }
+
           .resume-sections-stack > [data-resume-section] {
+            margin-bottom: var(--section-gap) !important;
             break-inside: auto !important;
             page-break-inside: auto !important;
-            margin-bottom: var(--section-gap) !important;
           }
+
           .resume-sections-stack > [data-resume-section]:last-child {
             margin-bottom: 0 !important;
+          }
+
+          /* Never allow the document header to become a fixed/repeated print header. */
+          #resume-document-root .resume-print-header {
+            position: static !important;
+            float: none !important;
+            display: block !important;
+            break-before: auto !important;
+            break-after: avoid-page !important;
+            page-break-after: avoid !important;
+          }
+
+          /* Keep each experience/education/achievement item together when possible. */
+          #resume-document-root [data-resume-entry] {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
