@@ -86,19 +86,89 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       })));
 
       const root = document.getElementById('resume-document-root');
-      if (root) {
-        root.style.setProperty('width', '210mm', 'important');
-        root.style.setProperty('max-width', '210mm', 'important');
-        root.style.setProperty('min-width', '210mm', 'important');
-        root.style.setProperty('box-sizing', 'border-box', 'important');
-        root.style.setProperty('background', '#ffffff', 'important');
-      }
+      if (!root) throw new Error('Resume document root was not found.');
+
+      root.style.setProperty('width', '210mm', 'important');
+      root.style.setProperty('max-width', '210mm', 'important');
+      root.style.setProperty('min-width', '210mm', 'important');
+      root.style.setProperty('box-sizing', 'border-box', 'important');
+      root.style.setProperty('background', '#ffffff', 'important');
 
       document.documentElement.style.margin = '0';
+      document.documentElement.style.padding = '0';
       document.body.style.margin = '0';
       document.body.style.padding = '0';
       document.body.style.background = '#ffffff';
-      await new Promise((resolve) => window.setTimeout(resolve, 250));
+
+      // PDF-only pagination rules. These are injected after all application CSS so
+      // the downloaded PDF cannot inherit editor/preview positioning rules.
+      const style = document.createElement('style');
+      style.id = 'orrica-pdf-pagination-fix';
+      style.textContent = `
+        @page { size: A4; margin: 0; }
+        html, body { width: 210mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+        body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; overflow: visible !important; }
+        #resume-document-root {
+          position: relative !important;
+          width: 210mm !important;
+          min-width: 210mm !important;
+          max-width: 210mm !important;
+          min-height: 0 !important;
+          height: auto !important;
+          margin: 0 !important;
+          overflow: visible !important;
+          break-before: auto !important;
+          break-after: auto !important;
+          break-inside: auto !important;
+          page-break-before: auto !important;
+          page-break-after: auto !important;
+          page-break-inside: auto !important;
+        }
+        #resume-document-root .resume-print-header {
+          position: static !important;
+          top: auto !important;
+          right: auto !important;
+          bottom: auto !important;
+          left: auto !important;
+          float: none !important;
+          transform: none !important;
+          break-before: auto !important;
+          break-after: avoid-page !important;
+          page-break-before: auto !important;
+          page-break-after: avoid !important;
+        }
+        #resume-document-root .resume-sections-stack { display: block !important; }
+        #resume-document-root .resume-sections-stack > [data-resume-section] {
+          display: block !important;
+          break-inside: auto !important;
+          page-break-inside: auto !important;
+        }
+        #resume-document-root [data-resume-entry],
+        #resume-document-root .break-inside-avoid,
+        #resume-document-root .break-inside-avoid-page,
+        #resume-document-root .avoid-page-break {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        #resume-document-root [data-resume-section] > h1,
+        #resume-document-root [data-resume-section] > h2,
+        #resume-document-root [data-resume-section] > h3,
+        #resume-document-root [data-resume-section] .section-heading {
+          break-after: avoid-page !important;
+          page-break-after: avoid !important;
+        }
+        #resume-document-root h1,
+        #resume-document-root h2,
+        #resume-document-root h3,
+        #resume-document-root p,
+        #resume-document-root li { orphans: 3 !important; widows: 3 !important; }
+        #resume-document-root * { max-height: none !important; }
+      `;
+      document.head.appendChild(style);
+
+      // Force a fresh layout after the print rules are installed.
+      void root.offsetHeight;
+      await new Promise((resolve) => window.setTimeout(resolve, 350));
     });
 
     stage = 'pdf-generation';
