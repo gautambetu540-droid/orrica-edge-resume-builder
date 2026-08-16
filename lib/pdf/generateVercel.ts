@@ -100,8 +100,6 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       document.body.style.padding = '0';
       document.body.style.background = '#ffffff';
 
-      // PDF-only pagination rules. These are injected after all application CSS so
-      // the downloaded PDF cannot inherit editor/preview positioning rules.
       const style = document.createElement('style');
       style.id = 'orrica-pdf-pagination-fix';
       style.textContent = `
@@ -166,13 +164,65 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       `;
       document.head.appendChild(style);
 
-      // Force a fresh layout after the print rules are installed.
       void root.offsetHeight;
       await new Promise((resolve) => window.setTimeout(resolve, 350));
     });
 
     stage = 'pdf-generation';
     await page.emulateMediaType('print');
+
+    // Balance a sparse final page only for the single-column resume layout.
+    // Chromium calculates the final PDF pagination at page.pdf() time, so we
+    // inspect the rendered section positions immediately before PDF creation.
+    // If the final page contains less than ~34% useful content, move the
+    // preceding whole section to that page. This fixes outputs such as:
+    // page 1 = almost full, page 2 = only Skills/Languages/Achievements.
+    await page.evaluate(() => {
+      const root = document.getElementById('resume-document-root');
+      const stack = root?.querySelector('.resume-sections-stack');
+      if (!root || !stack) return;
+
+      const sections = Array.from(
+        stack.querySelectorAll<HTMLElement>(':scope > [data-resume-section]')
+      );
+      if (sections.length < 2) return;
+
+      const A4_HEIGHT_PX = 1122.52;
+      const rootRect = root.getBoundingClientRect();
+      const sectionRects = sections.map((section) => ({
+        section,
+        top: section.getBoundingClientRect().top - rootRect.top,
+        bottom: section.getBoundingClientRect().bottom - rootRect.top,
+      }));
+
+      const contentBottom = Math.max(
+        root.scrollHeight,
+        ...sectionRects.map(({ bottom }) => bottom),
+      );
+      const pageCount = Math.max(1, Math.ceil(contentBottom / A4_HEIGHT_PX));
+      if (pageCount < 2) return;
+
+      const lastPageStart = (pageCount - 1) * A4_HEIGHT_PX;
+      const lastPageSections = sectionRects.filter(({ top }) => top >= lastPageStart - 2);
+      if (!lastPageSections.length) return;
+
+      const lastPageBottom = Math.max(...lastPageSections.map(({ bottom }) => bottom));
+      const lastPageContentHeight = lastPageBottom - lastPageStart;
+      if (lastPageContentHeight >= A4_HEIGHT_PX * 0.34) return;
+
+      const firstOnLastPage = lastPageSections[0].section;
+      const previous = firstOnLastPage.previousElementSibling as HTMLElement | null;
+      if (!previous || !sections.includes(previous)) return;
+
+      const previousHeight = previous.getBoundingClientRect().height;
+      if (previousHeight > A4_HEIGHT_PX * 0.62) return;
+
+      previous.style.setProperty('break-before', 'page', 'important');
+      previous.style.setProperty('page-break-before', 'always', 'important');
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 75));
+
     const pdf = Buffer.from(await page.pdf({
       format: 'A4',
       printBackground: true,
