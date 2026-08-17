@@ -53,6 +53,11 @@
 }
 
 @media (max-width: 767px) {
+  .template-showcase-inner {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
   .template-showcase-inner > div:first-child > h2 {
     font-size: 30px !important;
     line-height: 1.08 !important;
@@ -63,13 +68,72 @@
     line-height: 1.55 !important;
   }
 
+  /* The desktop stylesheet turns the carousel into a 4-column grid.
+     On phones it must become a real horizontal snap carousel. */
   #oe-template-carousel {
+    display: flex !important;
+    grid-template-columns: none !important;
+    grid-auto-columns: auto !important;
+    width: 100% !important;
     gap: 14px !important;
-    padding-left: 38px !important;
-    padding-right: 38px !important;
+    padding: 0 22px 12px !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-padding-inline: 22px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  #oe-template-carousel::-webkit-scrollbar {
+    display: none !important;
   }
 
   #oe-template-carousel > a {
-    flex-basis: min(78vw, 300px) !important;
+    flex: 0 0 min(82vw, 300px) !important;
+    width: min(82vw, 300px) !important;
+    min-width: min(82vw, 300px) !important;
+    max-width: 300px !important;
+    scroll-snap-align: start !important;
+    border-radius: 14px !important;
+  }
+
+  #oe-template-carousel > a > div:first-child {
+    aspect-ratio: .77 !important;
+    padding: 8px !important;
+  }
+
+  #oe-template-carousel > a > div:last-child {
+    padding: 12px !important;
+  }
+
+  #oe-template-carousel > a > div:last-child > div:first-child {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+
+  #oe-template-carousel > a > div:last-child > div:nth-child(2) {
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+
+  #oe-template-carousel > a > div:last-child > div:last-child {
+    margin-top: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .template-showcase-inner .relative.mt-9,
+  .template-showcase-inner .relative.mt-11 {
+    margin-top: 24px !important;
+  }
+
+  .template-showcase-inner > div:last-child {
+    margin-top: 20px !important;
+  }
+
+  .template-showcase-inner > div:last-child a {
+    width: 100% !important;
+    max-width: 300px !important;
   }
 }
