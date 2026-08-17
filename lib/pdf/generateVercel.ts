@@ -193,12 +193,68 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     stage = 'pdf-generation';
     await page.emulateMediaType('print');
 
-    // Do not estimate A4 pagination using browser pixels or force whole
-    // sections onto a new page. Chromium's print engine already knows the
-    // actual A4 page geometry and should perform the pagination itself.
-    // Manual page shifting was causing sparse second pages and moving content
-    // unnecessarily. Individual resume entries remain protected with
-    // break-inside: avoid via the print CSS above.
+    // Let Chromium perform the actual A4 pagination. If it would leave a very
+    // sparse final page, compact the print-only layout and measure again.
+    // This avoids the old approach of moving an entire section with a forced
+    // page break, which produced large blank areas on page 2.
+    await page.evaluate(async () => {
+      const root = document.getElementById('resume-document-root') as HTMLElement | null;
+      if (!root) return;
+
+      const A4_HEIGHT_PX = 1122.52;
+      const sections = Array.from(
+        root.querySelectorAll<HTMLElement>('.resume-sections-stack > [data-resume-section]'),
+      );
+
+      const getPagination = () => {
+        const rootRect = root.getBoundingClientRect();
+        const contentBottom = Math.max(
+          root.scrollHeight,
+          ...sections.map((section) => section.getBoundingClientRect().bottom - rootRect.top),
+        );
+        const pageCount = Math.max(1, Math.ceil(contentBottom / A4_HEIGHT_PX));
+        if (pageCount < 2) return { pageCount, lastPageFill: 1 };
+
+        const lastPageStart = (pageCount - 1) * A4_HEIGHT_PX;
+        const lastPageBottom = Math.max(
+          ...sections
+            .filter((section) => section.getBoundingClientRect().bottom - rootRect.top > lastPageStart)
+            .map((section) => section.getBoundingClientRect().bottom - rootRect.top),
+          lastPageStart,
+        );
+
+        return {
+          pageCount,
+          lastPageFill: Math.max(0, Math.min(1, (lastPageBottom - lastPageStart) / A4_HEIGHT_PX)),
+        };
+      };
+
+      const compactLevels = [0.94, 0.90];
+      for (const factor of compactLevels) {
+        const current = getPagination();
+        if (current.pageCount < 2 || current.lastPageFill >= 0.48) break;
+
+        const computed = getComputedStyle(root);
+        const fontSize = parseFloat(computed.fontSize) || 12;
+        const lineHeight = parseFloat(computed.lineHeight) || fontSize * 1.35;
+        const sectionGap = parseFloat(computed.getPropertyValue('--section-gap')) || 16;
+        const entryGap = parseFloat(computed.getPropertyValue('--entry-gap')) || 8;
+        const headingScale = parseFloat(computed.getPropertyValue('--heading-scale')) || 1.15;
+        const paddingTop = parseFloat(computed.paddingTop) || 0;
+        const paddingBottom = parseFloat(computed.paddingBottom) || 0;
+
+        root.style.setProperty('font-size', `${Math.max(9, fontSize * factor)}px`, 'important');
+        root.style.setProperty('line-height', `${Math.max(1.15, lineHeight * factor)}px`, 'important');
+        root.style.setProperty('--section-gap', `${Math.max(8, sectionGap * factor)}px`, 'important');
+        root.style.setProperty('--entry-gap', `${Math.max(5, entryGap * factor)}px`, 'important');
+        root.style.setProperty('--heading-scale', String(Math.max(1, headingScale * factor)), 'important');
+        root.style.setProperty('padding-top', `${Math.max(20, paddingTop * factor)}px`, 'important');
+        root.style.setProperty('padding-bottom', `${Math.max(20, paddingBottom * factor)}px`, 'important');
+
+        void root.offsetHeight;
+        await new Promise((resolve) => window.setTimeout(resolve, 50));
+      }
+    });
 
     const pdf = Buffer.from(
       await page.pdf({
