@@ -48,7 +48,7 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
 
     browser = await puppeteer.launch({
       args,
-      defaultViewport: { width: 794, height: 1123, deviceScaleFactor: 2 },
+      defaultViewport: { width: 794, height: 1123, deviceScaleFactor: 1 },
       executablePath,
       headless: 'shell',
       timeout: 30_000,
@@ -58,7 +58,7 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(35_000);
     page.setDefaultTimeout(20_000);
-    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 1 });
 
     const url = new URL(`/resume/${encodeURIComponent(resumeId)}/print`, baseUrl);
     if (cookieHeader) await page.setExtraHTTPHeaders({ Cookie: cookieHeader });
@@ -80,10 +80,16 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     await page.waitForSelector('#resume-document-root', { timeout: 15_000 });
     await page.evaluate(async () => {
       if (document.fonts?.ready) await document.fonts.ready;
-      await Promise.all(Array.from(document.images).map((image) => image.complete ? Promise.resolve() : new Promise<void>((resolve) => {
-        image.addEventListener('load', () => resolve(), { once: true });
-        image.addEventListener('error', () => resolve(), { once: true });
-      })));
+      await Promise.all(
+        Array.from(document.images).map((image) =>
+          image.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => {
+                image.addEventListener('load', () => resolve(), { once: true });
+                image.addEventListener('error', () => resolve(), { once: true });
+              }),
+        ),
+      );
 
       const root = document.getElementById('resume-document-root');
       if (!root) throw new Error('Resume document root was not found.');
@@ -104,8 +110,17 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
       style.id = 'orrica-pdf-pagination-fix';
       style.textContent = `
         @page { size: A4; margin: 0; }
-        html, body { width: 210mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
-        body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; overflow: visible !important; }
+        html, body {
+          width: 210mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+        }
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          overflow: visible !important;
+        }
         #resume-document-root {
           position: relative !important;
           width: 210mm !important;
@@ -135,7 +150,9 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
           page-break-before: auto !important;
           page-break-after: avoid !important;
         }
-        #resume-document-root .resume-sections-stack { display: block !important; }
+        #resume-document-root .resume-sections-stack {
+          display: block !important;
+        }
         #resume-document-root .resume-sections-stack > [data-resume-section] {
           display: block !important;
           break-inside: auto !important;
@@ -159,8 +176,13 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
         #resume-document-root h2,
         #resume-document-root h3,
         #resume-document-root p,
-        #resume-document-root li { orphans: 3 !important; widows: 3 !important; }
-        #resume-document-root * { max-height: none !important; }
+        #resume-document-root li {
+          orphans: 3 !important;
+          widows: 3 !important;
+        }
+        #resume-document-root * {
+          max-height: none !important;
+        }
       `;
       document.head.appendChild(style);
 
@@ -171,73 +193,35 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     stage = 'pdf-generation';
     await page.emulateMediaType('print');
 
-    // Balance a sparse final page only for the single-column resume layout.
-    // Chromium calculates the final PDF pagination at page.pdf() time, so we
-    // inspect the rendered section positions immediately before PDF creation.
-    // If the final page contains less than ~34% useful content, move the
-    // preceding whole section to that page. This fixes outputs such as:
-    // page 1 = almost full, page 2 = only Skills/Languages/Achievements.
-    await page.evaluate(() => {
-      const root = document.getElementById('resume-document-root');
-      const stack = root?.querySelector('.resume-sections-stack');
-      if (!root || !stack) return;
+    // Do not estimate A4 pagination using browser pixels or force whole
+    // sections onto a new page. Chromium's print engine already knows the
+    // actual A4 page geometry and should perform the pagination itself.
+    // Manual page shifting was causing sparse second pages and moving content
+    // unnecessarily. Individual resume entries remain protected with
+    // break-inside: avoid via the print CSS above.
 
-      const sections = Array.from(
-        stack.querySelectorAll<HTMLElement>(':scope > [data-resume-section]')
-      );
-      if (sections.length < 2) return;
-
-      const A4_HEIGHT_PX = 1122.52;
-      const rootRect = root.getBoundingClientRect();
-      const sectionRects = sections.map((section) => ({
-        section,
-        top: section.getBoundingClientRect().top - rootRect.top,
-        bottom: section.getBoundingClientRect().bottom - rootRect.top,
-      }));
-
-      const contentBottom = Math.max(
-        root.scrollHeight,
-        ...sectionRects.map(({ bottom }) => bottom),
-      );
-      const pageCount = Math.max(1, Math.ceil(contentBottom / A4_HEIGHT_PX));
-      if (pageCount < 2) return;
-
-      const lastPageStart = (pageCount - 1) * A4_HEIGHT_PX;
-      const lastPageSections = sectionRects.filter(({ top }) => top >= lastPageStart - 2);
-      if (!lastPageSections.length) return;
-
-      const lastPageBottom = Math.max(...lastPageSections.map(({ bottom }) => bottom));
-      const lastPageContentHeight = lastPageBottom - lastPageStart;
-      if (lastPageContentHeight >= A4_HEIGHT_PX * 0.34) return;
-
-      const firstOnLastPage = lastPageSections[0].section;
-      const previous = firstOnLastPage.previousElementSibling as HTMLElement | null;
-      if (!previous || !sections.includes(previous)) return;
-
-      const previousHeight = previous.getBoundingClientRect().height;
-      if (previousHeight > A4_HEIGHT_PX * 0.62) return;
-
-      previous.style.setProperty('break-before', 'page', 'important');
-      previous.style.setProperty('page-break-before', 'always', 'important');
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 75));
-
-    const pdf = Buffer.from(await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      displayHeaderFooter: false,
-      margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
-      scale: 1,
-      tagged: true,
-      outline: true,
-    }));
+    const pdf = Buffer.from(
+      await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        displayHeaderFooter: false,
+        margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
+        scale: 1,
+        tagged: true,
+        outline: true,
+      }),
+    );
 
     if (pdf.length < 5) throw new Error('Generated PDF is empty.');
-    if (pdf.subarray(0, 5).toString() !== '%PDF-') throw new Error('Generated PDF failed signature validation.');
+    if (pdf.subarray(0, 5).toString() !== '%PDF-') {
+      throw new Error('Generated PDF failed signature validation.');
+    }
 
-    console.info('[PDF]', requestId, 'generation completed', { bytes: pdf.length, durationMs: Date.now() - startedAt });
+    console.info('[PDF]', requestId, 'generation completed', {
+      bytes: pdf.length,
+      durationMs: Date.now() - startedAt,
+    });
     return pdf;
   } catch (error) {
     console.error('[PDF]', requestId, 'generation failed', {
@@ -250,7 +234,9 @@ export async function generateResumePdf({ resumeId, baseUrl, cookieHeader }: Gen
     throw error;
   } finally {
     if (browser) {
-      for (const openPage of await browser.pages()) await openPage.close().catch(() => undefined);
+      for (const openPage of await browser.pages()) {
+        await openPage.close().catch(() => undefined);
+      }
       await browser.close().catch(() => undefined);
     }
   }
