@@ -27,10 +27,41 @@ export const DEFAULT_SECTION_ORDER: ResumeSectionId[] = ['header', 'summary', 'e
 export type TemplateId = string;
 export type ResumeFont = 'inter' | 'aptos' | 'arial' | 'calibri' | 'helvetica' | 'roboto' | 'ibm-plex-sans' | 'source-sans-3' | 'noto-sans' | 'open-sans' | 'lato' | 'montserrat' | 'poppins' | 'nunito-sans' | 'work-sans' | 'manrope' | 'dm-sans' | 'merriweather' | 'georgia' | 'times-new-roman' | 'proxima-nova';
 
-export interface ResumeSettings { template: TemplateId; font: ResumeFont; fontSize: number; headingScale: number; lineSpacing: number; sectionSpacing: number; margin: number; accentColor: string; sections: SectionConfig[]; }
+export interface ResumeSettings {
+  template: TemplateId;
+  font: ResumeFont;
+  fontSize: number;
+  headingScale: number;
+  lineSpacing: number;
+  sectionSpacing: number;
+  margin: number;
+  accentColor: string;
+  textColor?: string;
+  headingColor?: string;
+  mutedColor?: string;
+  dividerColor?: string;
+  sectionColors?: Partial<Record<ResumeSectionId, string>>;
+  sections: SectionConfig[];
+}
+
 export interface SectionConfig { id: ResumeSectionId; visible: boolean; order: number; }
 
-export const DEFAULT_SETTINGS: ResumeSettings = { template: 'modern-ats', font: 'inter', fontSize: 10.5, headingScale: 1.15, lineSpacing: 1.35, sectionSpacing: 16, margin: 16, accentColor: '#F97316', sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })) };
+export const DEFAULT_SETTINGS: ResumeSettings = {
+  template: 'modern-ats',
+  font: 'inter',
+  fontSize: 10.5,
+  headingScale: 1.15,
+  lineSpacing: 1.35,
+  sectionSpacing: 16,
+  margin: 16,
+  accentColor: '#F97316',
+  textColor: '#20242a',
+  headingColor: '#20242a',
+  mutedColor: '#5f6873',
+  dividerColor: '#F97316',
+  sectionColors: {},
+  sections: DEFAULT_SECTION_ORDER.map((id, i) => ({ id, visible: true, order: i })),
+};
 
 export interface ResumeData { personalInfo: PersonalInfo; summary: string; experience: ExperienceEntry[]; education: EducationEntry[]; skills: SkillCategory[]; projects: ProjectEntry[]; certifications: CertificationEntry[]; languages: LanguageEntry[]; achievements: AchievementEntry[]; targetRole?: string; }
 export const EMPTY_RESUME_DATA: ResumeData = { personalInfo: { fullName: '', professionalTitle: '', email: '', phone: '', city: '', country: '' }, summary: '', experience: [], education: [], skills: [{ category: 'technical', items: [] }, { category: 'soft', items: [] }, { category: 'tools', items: [] }, { category: 'languages', items: [] }], projects: [], certifications: [], languages: [], achievements: [] };
