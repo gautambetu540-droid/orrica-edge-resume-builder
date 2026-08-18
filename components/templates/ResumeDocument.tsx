@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ResumeData, ResumeSettings } from '@/lib/types/resume';
+import { ResumeData, ResumeSettings, DEFAULT_SETTINGS } from '@/lib/types/resume';
 import { TEMPLATE_PRESETS, FONT_STACKS } from '@/lib/templates/presets';
 import { TEMPLATE_PREVIEW_RESUME } from '@/lib/data/template-preview-resume';
 import { SingleColumnLayout } from './layouts/SingleColumn';
@@ -34,30 +34,40 @@ export function ResumeDocument({ data, settings, forPrint = false, activeSection
   const renderData = previewData ?? data;
   const preset = TEMPLATE_PRESETS[settings.template];
   const pageMargin = Math.max(10, Math.min(25, settings.margin));
+
+  // Template presets define the visual identity shown in the gallery. If the
+  // user has not explicitly changed the font from the global default, use the
+  // template's recommended font so gallery, editor preview and PDF stay in sync.
+  const effectiveFont = settings.font === DEFAULT_SETTINGS.font ? preset.recommendedFont : settings.font;
+  const effectiveSettings: ResumeSettings = effectiveFont === settings.font ? settings : { ...settings, font: effectiveFont };
+
   const pagePadding = preset.layout === 'two-column' ? 0 : preset.headerVariant === 'banner' ? `0 ${pageMargin}mm ${pageMargin}mm` : `${pageMargin}mm`;
   const style: React.CSSProperties & Record<string, string | number> = {
-    '--accent': settings.accentColor || preset.defaultAccentColor,
-    '--section-gap': `${Math.max(10, Math.min(28, settings.sectionSpacing))}px`,
-    '--entry-gap': `${Math.max(8, settings.sectionSpacing * 0.55)}px`,
-    '--heading-scale': String(Math.max(1, Math.min(1.35, settings.headingScale || 1.15))),
-    '--resume-text': settings.textColor || '#20242a',
-    '--resume-heading': settings.headingColor || settings.textColor || '#20242a',
-    '--resume-muted': settings.mutedColor || '#5f6873',
-    '--resume-divider': settings.dividerColor || settings.accentColor || preset.defaultAccentColor,
+    '--accent': effectiveSettings.accentColor || preset.defaultAccentColor,
+    '--section-gap': `${Math.max(10, Math.min(28, effectiveSettings.sectionSpacing))}px`,
+    '--entry-gap': `${Math.max(8, effectiveSettings.sectionSpacing * 0.55)}px`,
+    '--heading-scale': String(Math.max(1, Math.min(1.35, effectiveSettings.headingScale || preset.defaultHeadingScale))),
+    '--resume-text': effectiveSettings.textColor || '#20242a',
+    '--resume-heading': effectiveSettings.headingColor || effectiveSettings.textColor || '#20242a',
+    '--resume-muted': effectiveSettings.mutedColor || '#5f6873',
+    '--resume-divider': effectiveSettings.dividerColor || effectiveSettings.accentColor || preset.defaultAccentColor,
     '--resume-margin': `${pageMargin}mm`,
-    fontFamily: FONT_STACKS[settings.font],
-    fontSize: `${Math.max(9, Math.min(12, settings.fontSize))}pt`,
-    lineHeight: Math.max(1.15, Math.min(1.55, settings.lineSpacing)),
+    fontFamily: FONT_STACKS[effectiveFont],
+    fontSize: `${Math.max(9, Math.min(12, effectiveSettings.fontSize))}pt`,
+    lineHeight: Math.max(1.15, Math.min(1.55, effectiveSettings.lineSpacing)),
     padding: pagePadding,
-    color: settings.textColor || '#20242a',
+    width: '210mm',
+    minHeight: '297mm',
+    boxSizing: 'border-box',
+    color: effectiveSettings.textColor || '#20242a',
     letterSpacing: '-0.005em',
     WebkitFontSmoothing: 'antialiased',
     textRendering: 'optimizeLegibility',
   };
 
   return (
-    <div className="resume-page bg-white" style={style} id="resume-document-root" data-resume-font={settings.font} data-active-section={activeSection || ''}>
-      {preset.layout === 'two-column' ? <TwoColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} /> : <SingleColumnLayout data={renderData} settings={settings} preset={preset} activeSection={activeSection} />}
+    <div className="resume-page bg-white" style={style} id="resume-document-root" data-resume-font={effectiveFont} data-template-id={settings.template} data-active-section={activeSection || ''}>
+      {preset.layout === 'two-column' ? <TwoColumnLayout data={renderData} settings={effectiveSettings} preset={preset} activeSection={activeSection} /> : <SingleColumnLayout data={renderData} settings={effectiveSettings} preset={preset} activeSection={activeSection} />}
       <BrandFooter />
       {!forPrint && activeSection && (
         <style jsx global>{`
