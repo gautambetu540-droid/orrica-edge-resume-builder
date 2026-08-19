@@ -1,0 +1,100 @@
+name: Polish homepage hero
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    if: github.event.head_commit.message != 'Polish homepage hero for responsive mobile and desktop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update hero
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/page.tsx')
+          text = path.read_text()
+
+          old = """function TypingHeadline() {
+            const fullText = 'gets remembered.';
+            const [text, setText] = useState('');
+            useEffect(() => {
+              let index = 0;
+              let deleting = false;
+              let timeout: ReturnType<typeof setTimeout>;
+              const tick = () => {
+                if (!deleting) {
+                  index += 1;
+                  setText(fullText.slice(0, index));
+                  if (index === fullText.length) { deleting = true; timeout = setTimeout(tick, 1900); return; }
+                } else {
+                  index -= 1;
+                  setText(fullText.slice(0, index));
+                  if (index === 0) deleting = false;
+                }
+                timeout = setTimeout(tick, deleting ? 55 : 90);
+              };
+              timeout = setTimeout(tick, 500);
+              return () => clearTimeout(timeout);
+            }, []);
+            return <h1 className=\"animate-fade-in-up reveal-1 mt-6 text-balance text-4xl font-semibold tracking-[-0.055em] text-neutral-950 sm:text-6xl lg:text-[76px] lg:leading-[.98]\" aria-label=\"Build a resume that gets remembered.\">Build a resume that<br className=\"hidden sm:block\" />{' '}<span className=\"text-gradient-brand inline-block min-w-[1ch] text-left\">{text}<span className=\"ml-1 inline-block h-[0.82em] w-[2px] translate-y-[0.08em] animate-pulse rounded-full bg-orange-500 sm:w-[3px]\" aria-hidden=\"true\" /></span></h1>;
+          }
+          """
+
+          new = """function TypingHeadline() {
+            return (
+              <div className=\"animate-fade-in-up reveal-1 mt-6\">
+                <h1 className=\"text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-neutral-950 sm:text-6xl lg:text-[76px] lg:leading-[.98]\" aria-label=\"Build a resume that gets remembered.\">
+                  Build a resume that <span className=\"text-gradient-brand whitespace-nowrap\">gets remembered.</span>
+                </h1>
+                <p className=\"mx-auto mt-5 max-w-xl text-balance text-sm font-medium leading-6 text-neutral-600 sm:text-base sm:leading-7\">
+                  Behind every resume is a dream waiting for its opportunity.
+                </p>
+              </div>
+            );
+          }
+          """
+
+          if old not in text:
+              raise SystemExit('Expected TypingHeadline block was not found; stopping without changes.')
+          text = text.replace(old, new, 1)
+
+          old_copy = "Write faster, design better and apply with confidence. Orrica Edge combines AI writing, ATS-ready templates, live preview and clean PDF export in one focused workspace."
+          new_copy = "Turn your experience into a story worth remembering. Create a professional resume with AI assistance, ATS-ready templates, live preview and clean PDF export."
+          if old_copy not in text:
+              raise SystemExit('Expected hero supporting copy was not found; stopping without changes.')
+          text = text.replace(old_copy, new_copy, 1)
+
+          old_badges = "<div className=\"animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/78 px-3.5 py-1.5 text-[11px] font-bold text-neutral-600 shadow-sm backdrop-blur\">"
+          new_badges = "<div className=\"animate-fade-in-up mx-auto inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-3.5 py-1.5 text-center text-[10px] font-bold text-orange-800 shadow-sm backdrop-blur sm:text-[11px]\">"
+          if old_badges in text:
+              text = text.replace(old_badges, new_badges, 1)
+
+          path.write_text(text)
+          PY
+
+      - name: Commit hero polish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Polish homepage hero for responsive mobile and desktop"
+          git push
+
+      - name: Remove one-time workflow
+        if: success()
+        run: |
+          git rm .github/workflows/polish-home-hero.yml || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Remove one-time hero polish workflow" || true
+          git push || true
