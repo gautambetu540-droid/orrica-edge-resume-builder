@@ -11,9 +11,13 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
-    serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core', 'pdf-parse', 'openai'],
+    serverComponentsExternalPackages: [
+      '@sparticuz/chromium',
+      'puppeteer-core',
+      'pdf-parse',
+      'openai',
+    ],
     outputFileTracingIncludes: {
-      '/*': ['./node_modules/@sparticuz/chromium/**/*'],
       '/api/resume/*/pdf': ['./node_modules/@sparticuz/chromium/**/*'],
     },
   },
