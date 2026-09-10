@@ -14,6 +14,7 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       '@sparticuz/chromium',
       'puppeteer-core',
+      'pdf-parse',
       'openai',
     ],
     outputFileTracingIncludes: {
