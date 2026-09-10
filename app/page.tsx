@@ -41,28 +41,16 @@ const FAQS = [
 ];
 
 function TypingHeadline() {
-  const fullText = 'gets remembered.';
-  const [text, setText] = useState('');
-  useEffect(() => {
-    let index = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      if (!deleting) {
-        index += 1;
-        setText(fullText.slice(0, index));
-        if (index === fullText.length) { deleting = true; timeout = setTimeout(tick, 1900); return; }
-      } else {
-        index -= 1;
-        setText(fullText.slice(0, index));
-        if (index === 0) deleting = false;
-      }
-      timeout = setTimeout(tick, deleting ? 55 : 90);
-    };
-    timeout = setTimeout(tick, 500);
-    return () => clearTimeout(timeout);
-  }, []);
-  return <h1 className="animate-fade-in-up reveal-1 mt-6 text-balance text-4xl font-semibold tracking-[-0.055em] text-neutral-950 sm:text-6xl lg:text-[76px] lg:leading-[.98]" aria-label="Build a resume that gets remembered.">Build a resume that<br className="hidden sm:block" />{' '}<span className="text-gradient-brand inline-block min-w-[1ch] text-left">{text}<span className="ml-1 inline-block h-[0.82em] w-[2px] translate-y-[0.08em] animate-pulse rounded-full bg-orange-500 sm:w-[3px]" aria-hidden="true" /></span></h1>;
+  return (
+    <div className="animate-fade-in-up reveal-1 mt-6">
+      <h1 className="text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-neutral-950 sm:text-6xl lg:text-[76px] lg:leading-[.98]" aria-label="Build a resume that gets remembered.">
+        Build a resume that <span className="text-gradient-brand whitespace-nowrap">gets remembered.</span>
+      </h1>
+      <p className="mx-auto mt-5 max-w-xl text-balance text-sm font-medium leading-6 text-neutral-600 sm:text-base sm:leading-7">
+        Behind every resume is a dream waiting for its opportunity.
+      </p>
+    </div>
+  );
 }
 
 function ProductPreview() {
@@ -96,7 +84,7 @@ export default function LandingPage() {
     <div className="min-h-dvh overflow-x-hidden bg-white">
       <SiteHeader />
       <main>
-        <section className="gradient-mesh-bg relative overflow-hidden border-b border-black/[0.05]"><div className="hero-grid pointer-events-none absolute inset-0" /><div className="relative mx-auto max-w-7xl px-5 pb-20 pt-16 sm:pb-28 sm:pt-24 lg:px-8"><div className="mx-auto max-w-4xl text-center"><div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/78 px-3.5 py-1.5 text-[11px] font-bold text-neutral-600 shadow-sm backdrop-blur"><Sparkles className="h-3.5 w-3.5 text-orange-500" /> AI-powered resume builder · built for modern job applications</div><TypingHeadline /><p className="animate-fade-in-up reveal-2 mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-500 sm:text-lg">Write faster, design better and apply with confidence. Orrica Edge combines AI writing, ATS-ready templates, live preview and clean PDF export in one focused workspace.</p><div className="animate-fade-in-up reveal-3 mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/resume/new"><Button size="lg" className="h-12 w-full rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 sm:w-auto">Create my resume <ArrowRight className="ml-1 h-4 w-4" /></Button></Link><Link href="/templates"><Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-orange-200 bg-white/82 px-6 text-sm font-bold text-orange-700 hover:bg-orange-50 sm:w-auto">Explore templates</Button></Link></div></div><div className="mt-14 sm:mt-20"><ProductPreview /></div></div></section>
+        <section className="gradient-mesh-bg relative overflow-hidden border-b border-black/[0.05]"><div className="hero-grid pointer-events-none absolute inset-0" /><div className="relative mx-auto max-w-7xl px-5 pb-20 pt-16 sm:pb-28 sm:pt-24 lg:px-8"><div className="mx-auto max-w-4xl text-center"><div className="animate-fade-in-up mx-auto inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-3.5 py-1.5 text-center text-[10px] font-bold text-orange-800 shadow-sm backdrop-blur sm:text-[11px]"><Sparkles className="h-3.5 w-3.5 text-orange-500" /> AI-powered resume builder · built for modern job applications</div><TypingHeadline /><p className="animate-fade-in-up reveal-2 mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-500 sm:text-lg">Turn your experience into a story worth remembering. Create a professional resume with AI assistance, ATS-ready templates, live preview and clean PDF export.</p><div className="animate-fade-in-up reveal-3 mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/resume/new"><Button size="lg" className="h-12 w-full rounded-xl bg-orange-500 px-6 text-sm font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 sm:w-auto">Create my resume <ArrowRight className="ml-1 h-4 w-4" /></Button></Link><Link href="/templates"><Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-orange-200 bg-white/82 px-6 text-sm font-bold text-orange-700 hover:bg-orange-50 sm:w-auto">Explore templates</Button></Link></div></div><div className="mt-14 sm:mt-20"><ProductPreview /></div></div></section>
         <section id="features" className="py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><div className="max-w-2xl"><p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">A better resume workflow</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl">Everything important. Nothing noisy.</h2></div><div className="mt-12 grid gap-px overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-200 sm:grid-cols-2 lg:grid-cols-3">{FEATURES.map((feature) => <div key={feature.title} className="group bg-white p-7 hover:bg-neutral-50"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800 group-hover:bg-orange-50 group-hover:text-orange-600"><feature.icon className="h-5 w-5" /></div><h3 className="mt-5 text-sm font-bold text-neutral-950">{feature.title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{feature.desc}</p></div>)}</div></div></section>
         <TemplateShowcase />
         <FreeAccessSection />
